@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: deokhugam
+  profiles:
+    default: local
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  tomcat:
+    uri-encoding: UTF-8
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+  api-docs:
+    path: /api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
