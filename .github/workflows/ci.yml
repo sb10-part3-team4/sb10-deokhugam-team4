@@ -5,7 +5,6 @@ on:
     branches:
       - dev
 
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,23 +14,20 @@ jobs:
 
     steps:
       - name: 코드 체크아웃
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: JDK 설정
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle 캐시 (선택)
+      - name: Gradle 캐시
         uses: gradle/actions/setup-gradle@v3
 
       - name: Gradle 실행 권한 부여
         run: chmod +x gradlew
 
-      - name: 테스트 실행
-        run: ./gradlew test
-
-      - name: 테스트 커버리지 체크 (80% 이상)
-        run: ./gradlew jacocoTestCoverageVerification
-        continue-on-error: true  # 실패해도 CI 통과
+      - name: 테스트 및 커버리지 체크 실행
+        run: ./gradlew test jacocoTestCoverageVerification
+        continue-on-error: true
