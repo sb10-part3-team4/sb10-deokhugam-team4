@@ -1,15 +1,12 @@
 package com.codeit.team4.deokhugam.user.entity;
 
+import com.codeit.team4.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,11 +19,7 @@ import lombok.NoArgsConstructor;
         }
 )
 @NoArgsConstructor
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class User extends BaseUpdatableEntity {
 
     @Column(nullable = false, length = 100)
     private String email;
@@ -37,12 +30,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
@@ -50,41 +37,21 @@ public class User {
         this.email = email;
         this.nickname = nickname;
         this.password = password;
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
-        this.updatedAt = Instant.now();
     }
 
     public boolean isDeleted() {
         return this.deletedAt != null;
     }
 
-    public void softDelete() {
-        if (this.deletedAt != null) {
-            return;
-        }
-        Instant now = Instant.now();
-        this.deletedAt = now;
-        this.updatedAt = now;
-    }
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof User other)) {
-            return false;
-        }
-        return id != null && id.equals(other.id);
+        if (this == o) return true;
+        if (!(o instanceof User other)) return false;
+        return getId() != null && getId().equals(other.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(getId());
     }
 }
