@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.global.filter;
 
+import com.codeit.team4.deokhugam.global.config.AppProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +24,8 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private final List<String> ipHeaderCandidates;
 
-    public LoggingFilter(@Value("${app.client-ip-headers}") List<String> ipHeaderCandidates) {
-        this.ipHeaderCandidates = ipHeaderCandidates;
+    public LoggingFilter(AppProperties appProperties) {
+        this.ipHeaderCandidates = appProperties.clientIpHeaders();
     }
 
     @Override
@@ -39,6 +40,7 @@ public class LoggingFilter extends OncePerRequestFilter {
 
         // Request Attribute 및 MDC에 저장
         request.setAttribute(REQUEST_ID_KEY, requestId);
+        request.setAttribute(CLIENT_IP_KEY, clientIp);
         MDC.put(REQUEST_ID_KEY, requestId);
         MDC.put(CLIENT_IP_KEY, clientIp);
 

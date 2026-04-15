@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.global.filter;
 
+import com.codeit.team4.deokhugam.global.config.AppProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import java.util.List;
@@ -31,7 +32,7 @@ class LoggingFilterTest {
     @DisplayName("기본 접속 시 IP 및 식별자 MDC 저장 성공")
     void doFilterInternal_withRemoteAddr_Success() throws Exception {
         // given
-        LoggingFilter loggingFilter = new LoggingFilter(TEST_IP_HEADERS);
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRemoteAddr("192.168.0.1");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -60,7 +61,7 @@ class LoggingFilterTest {
     @DisplayName("프록시 환경 다중 헤더 시 실제 IP 추출 성공")
     void doFilterInternal_withXForwardedFor_Success() throws Exception {
         // given
-        LoggingFilter loggingFilter = new LoggingFilter(TEST_IP_HEADERS);
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("X-Forwarded-For", "10.0.0.1, 10.0.0.2");
         request.setRemoteAddr("192.168.0.1");
@@ -80,7 +81,7 @@ class LoggingFilterTest {
     @DisplayName("무효한 프록시 헤더 무시 및 대체 IP 추출 성공")
     void doFilterInternal_ignoresUnknownHeader_Success() throws Exception {
         // given
-        LoggingFilter loggingFilter = new LoggingFilter(TEST_IP_HEADERS);
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
         MockHttpServletRequest request = new MockHttpServletRequest();
         // 첫 번째 검사 대상이 unknown일 때 다음 헤더(Proxy-Client-IP)를 참조하는지 검증
         request.addHeader("X-Forwarded-For", "unknown");
@@ -103,7 +104,7 @@ class LoggingFilterTest {
     @DisplayName("필터 체인 예외 발생 실패")
     void doFilterInternal_clearsMDC_whenFilterChainThrows() {
         // given
-        LoggingFilter loggingFilter = new LoggingFilter(TEST_IP_HEADERS);
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -125,7 +126,7 @@ class LoggingFilterTest {
     @DisplayName("런타임 예외 발생 시 MDC 초기화 성공")
     void doFilterInternal_clearsMDC_whenRuntimeExceptionThrows() {
         // given
-        LoggingFilter loggingFilter = new LoggingFilter(TEST_IP_HEADERS);
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -148,7 +149,7 @@ class LoggingFilterTest {
     @DisplayName("비정상적인 다중 프록시 헤더 파싱 성공")
     void doFilterInternal_withMalformedProxyHeader_Success() throws Exception {
         // given
-        LoggingFilter loggingFilter = new LoggingFilter(TEST_IP_HEADERS);
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
         MockHttpServletRequest request = new MockHttpServletRequest();
 
         // 쉼표만 있거나 공백이 포함된 악의적/비정상적인 포맷
@@ -165,5 +166,26 @@ class LoggingFilterTest {
         // then
         // 빈 문자열("")이나 unknown을 무시하고 정확히 유효한 IP를 찾아내는지 검증
         assertThat(mdcClientIp[0]).isEqualTo("172.16.0.1");
+    }
+
+    @Test
+    @DisplayName("모든 프록시 헤더 무효 시 remoteAddr 폴백 성공")
+    void doFilterInternal_allHeadersInvalid_fallsBackToRemoteAddr() throws Exception {
+        // given
+        LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Forwarded-For", "unknown");
+        request.addHeader("Proxy-Client-IP", "");
+        request.setRemoteAddr("192.168.0.1");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        final String[] mdcClientIp = new String[1];
+        FilterChain filterChain = (req, res) -> mdcClientIp[0] = MDC.get(LoggingFilter.CLIENT_IP_KEY);
+
+        // when
+        loggingFilter.doFilter(request, response, filterChain);
+
+        // then
+        assertThat(mdcClientIp[0]).isEqualTo("192.168.0.1");
     }
 }
