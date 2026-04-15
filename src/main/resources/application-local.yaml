@@ -1,13 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./data/deokhugam
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:5432/deokhugam
+    username: deokhugam
+    password: deokhugam
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop

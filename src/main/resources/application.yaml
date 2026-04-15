@@ -1,6 +1,7 @@
 spring:
   application:
     name: deokhugam
+
   profiles:
     default: local
   jpa:
