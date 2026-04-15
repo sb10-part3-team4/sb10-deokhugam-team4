@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -46,7 +47,8 @@ public class Book extends BaseUpdatableEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    public Book(String title, String author, String description, String publisher, LocalDate publishedDate,
+    public Book(String title, String author, String description, String publisher,
+            LocalDate publishedDate,
             String isbn) {
         this.title = title;
         this.author = author;
@@ -56,5 +58,21 @@ public class Book extends BaseUpdatableEntity {
         this.isbn = isbn;
         this.reviewCount = 0;
         this.rating = BigDecimal.ZERO;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Book other)) {
+            return false;
+        }
+        return getId() != null && getId().equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getId());
     }
 }
