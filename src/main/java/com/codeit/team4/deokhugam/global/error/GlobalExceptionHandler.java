@@ -2,7 +2,6 @@ package com.codeit.team4.deokhugam.global.error;
 
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,7 +44,7 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(ErrorCode.INVALID_INPUT.getStatus())
                 .body(response);
     }
 
@@ -59,11 +58,11 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response = new ErrorResponse(
                 ErrorCode.INVALID_INPUT.name(),
-                e.getMessage()
+                ErrorCode.INVALID_INPUT.getMessage()
         );
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(ErrorCode.INVALID_INPUT.getStatus())
                 .body(response);
     }
 
@@ -72,11 +71,13 @@ public class GlobalExceptionHandler {
         log.warn("[NOT_FOUND] {}", e.getMessage());
 
         ErrorResponse response = new ErrorResponse(
-                "NOT_FOUND",
-                "요청한 리소스를 찾을 수 없습니다"
+                ErrorCode.NOT_FOUND.name(),
+                ErrorCode.NOT_FOUND.getMessage()
         );
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return ResponseEntity
+                .status(ErrorCode.NOT_FOUND.getStatus())
+                .body(response);
     }
 
     @ExceptionHandler(Exception.class)
@@ -87,6 +88,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.INTERNAL_SERVER_ERROR.name(),
                 ErrorCode.INTERNAL_SERVER_ERROR.getMessage()
         );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseEntity
+                .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(response);
     }
 }
