@@ -64,6 +64,7 @@ jobs:
           export AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
           export AWS_REGION=${{ secrets.AWS_REGION }}
           export IMAGE_TAG=${{ env.IMAGE_TAG }}
+          export ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }}
           envsubst < ecs-task-def.json > task-def.rendered.json
 
       - name: 새로운 작업 정의 등록
