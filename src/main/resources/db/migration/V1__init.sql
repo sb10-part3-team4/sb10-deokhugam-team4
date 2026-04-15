@@ -3,13 +3,16 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- users
 CREATE TABLE users (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email       VARCHAR(100) NOT NULL UNIQUE,
+    email       VARCHAR(100) NOT NULL,
     nickname    VARCHAR(50)  NOT NULL,
     password    VARCHAR(255) NOT NULL,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
     deleted_at  TIMESTAMPTZ
 );
+CREATE UNIQUE INDEX uq_users_email_alive
+    ON users (email)
+    WHERE deleted_at IS NULL;
 CREATE INDEX idx_users_deleted_at ON users (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- books
@@ -89,7 +92,11 @@ CREATE TABLE notifications (
     confirmed       BOOLEAN      NOT NULL DEFAULT false,
     confirmed_at    TIMESTAMPTZ,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    CONSTRAINT ck_notifications_confirmation_state CHECK (
+        (confirmed = true AND confirmed_at IS NOT NULL) OR
+        (confirmed = false AND confirmed_at IS NULL)
+    )
 );
 CREATE INDEX idx_notifications_user_created ON notifications (user_id, created_at DESC);
 CREATE INDEX idx_notifications_confirmed_at ON notifications (confirmed_at) WHERE confirmed = true;
@@ -106,8 +113,9 @@ CREATE TABLE popular_books (
     score         NUMERIC(10,4) NOT NULL,
     review_count  INT          NOT NULL,
     rating        NUMERIC(3,2) NOT NULL,
+    snapshot_date DATE         NOT NULL DEFAULT CURRENT_DATE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    CONSTRAINT uq_popular_books UNIQUE (period, book_id, created_at)
+    CONSTRAINT uq_popular_books UNIQUE (period, book_id, snapshot_date)
 );
 CREATE INDEX idx_popular_books_period_rank ON popular_books (period, rank);
 
@@ -127,8 +135,9 @@ CREATE TABLE popular_reviews (
     score                NUMERIC(10,4) NOT NULL,
     like_count           INT          NOT NULL,
     comment_count        INT          NOT NULL,
+    snapshot_date        DATE         NOT NULL DEFAULT CURRENT_DATE,
     created_at           TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    CONSTRAINT uq_popular_reviews UNIQUE (period, review_id, created_at)
+    CONSTRAINT uq_popular_reviews UNIQUE (period, review_id, snapshot_date)
 );
 CREATE INDEX idx_popular_reviews_period_rank ON popular_reviews (period, rank);
 
@@ -143,7 +152,8 @@ CREATE TABLE power_users (
     review_score_sum  NUMERIC(10,4) NOT NULL,
     like_count        INT          NOT NULL,
     comment_count     INT          NOT NULL,
+    snapshot_date     DATE         NOT NULL DEFAULT CURRENT_DATE,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    CONSTRAINT uq_power_users UNIQUE (period, user_id, created_at)
+    CONSTRAINT uq_power_users UNIQUE (period, user_id, snapshot_date)
 );
 CREATE INDEX idx_power_users_period_rank ON power_users (period, rank);
