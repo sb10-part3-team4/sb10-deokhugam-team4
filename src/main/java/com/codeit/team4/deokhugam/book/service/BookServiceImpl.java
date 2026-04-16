@@ -57,6 +57,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Book findById(UUID bookId) {
         return bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> new BusinessException(
