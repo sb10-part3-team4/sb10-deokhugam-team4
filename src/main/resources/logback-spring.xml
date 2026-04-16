@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+  <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{request_id:-SYSTEM}] [%X{client_ip:-NONE}] %msg%n" />
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [REQ: %X{request_id}] [IP: %X{client_ip}] %msg%n</pattern>
+      <pattern>${LOG_PATTERN}</pattern>
     </encoder>
   </appender>
 
-  <root level="INFO">
-    <appender-ref ref="CONSOLE" />
-  </root>
+  <springProfile name="local, test">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE" />
+    </root>
+    <logger name="com.codeit.team4.deokhugam" level="DEBUG" />
+  </springProfile>
+
+  <springProfile name="prod">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE" />
+    </root>
+    <logger name="com.codeit.team4.deokhugam" level="INFO" />
+  </springProfile>
 </configuration>
