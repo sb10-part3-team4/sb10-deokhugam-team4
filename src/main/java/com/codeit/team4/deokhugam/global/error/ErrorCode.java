@@ -14,7 +14,10 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),
 
     // Review
-    INVALID_RATING(HttpStatus.BAD_REQUEST, "평점은 1~5 사이여야 합니다");
+    INVALID_RATING(HttpStatus.BAD_REQUEST, "평점은 1~5 사이여야 합니다"),
+
+    // Book
+    DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다.");
 
     private final HttpStatus status;
     private final String message;

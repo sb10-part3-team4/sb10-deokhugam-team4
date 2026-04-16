@@ -14,6 +14,7 @@ import com.codeit.team4.deokhugam.book.dto.BookDto;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -68,7 +69,7 @@ class BookServiceTest {
 
         // when & then
         assertThatThrownBy(() -> bookService.createBook(request))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessException.class);
 
         verify(bookRepository, never()).save(any(Book.class));
         verify(bookMapper, never()).toBookDto(any(Book.class));
