@@ -26,7 +26,9 @@ public class ReviewController implements ReviewApi {
     public ResponseEntity<ReviewResponse> createReview(
             @Valid @RequestBody ReviewCreateRequest request
     ) {
+        log.info("리뷰 생성 요청: bookId={}, userId={}", request.bookId(), request.userId());
         ReviewResponse response = reviewService.createReview(request);
+        log.info("리뷰 생성 완료: reviewId={}", response.id());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
