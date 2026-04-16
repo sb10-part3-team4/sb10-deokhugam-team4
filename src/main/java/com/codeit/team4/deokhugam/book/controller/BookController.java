@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RequestMapping("/api/books")
 @Slf4j
-public class BookController {
+public class BookController implements BookApi{
 
     private final BookService bookService;
 
