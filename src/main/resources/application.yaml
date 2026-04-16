@@ -24,3 +24,6 @@ management:
     web:
       exposure:
         include: health, info
+
+app:
+  client-ip-headers: X-Forwarded-For,Proxy-Client-IP,WL-Proxy-Client-IP,HTTP_CLIENT_IP,HTTP_X_FORWARDED_FOR
