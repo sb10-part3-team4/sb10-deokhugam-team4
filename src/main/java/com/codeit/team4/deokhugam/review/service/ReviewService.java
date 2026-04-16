@@ -1,13 +1,13 @@
 package com.codeit.team4.deokhugam.review.service;
 
-import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.entity.Review;
+import java.util.UUID;
 
-@Service
-@RequiredArgsConstructor
-public class ReviewService {
+public interface ReviewService {
 
-    private final ReviewRepository reviewRepository;
+    ReviewResponse createReview(ReviewCreateRequest request);
 
+    Review findById(UUID reviewId);
 }
