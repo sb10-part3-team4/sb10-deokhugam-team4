@@ -47,9 +47,7 @@ public class Book extends BaseUpdatableEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    public Book(String title, String author, String description, String publisher,
-            LocalDate publishedDate,
-            String isbn) {
+    public Book(String title, String author, String description, String publisher, LocalDate publishedDate, String isbn) {
         this.title = title;
         this.author = author;
         this.description = description;
