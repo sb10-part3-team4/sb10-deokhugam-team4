@@ -15,15 +15,14 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.codeit.team4.deokhugam.global.filter.LoggingFilter;
+
 @Slf4j
 @SpringBootTest
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @ExtendWith(OutputCaptureExtension.class)
 class DeokhugamApplicationTests {
-
-    public static final String REQUEST_ID_KEY = "request_id";
-    public static final String CLIENT_IP_KEY = "client_ip";
 
     @Test
     void contextLoads() {
@@ -36,8 +35,8 @@ class DeokhugamApplicationTests {
         String testRequestId = UUID.randomUUID().toString();
         String testClientIp = "192.168.0.1";
 
-        MDC.put(REQUEST_ID_KEY, testRequestId);
-        MDC.put(CLIENT_IP_KEY, testClientIp);
+        MDC.put(LoggingFilter.REQUEST_ID_KEY, testRequestId);
+        MDC.put(LoggingFilter.CLIENT_IP_KEY, testClientIp);
 
         // when
         log.info("요청 단위 로그 추적을 위한 테스트 메시지입니다.");
