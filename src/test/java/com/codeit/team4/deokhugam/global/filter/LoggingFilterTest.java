@@ -122,6 +122,10 @@ class LoggingFilterTest {
         // 예외가 발생했어도 2개의 Key 모두 안전하게 지워졌는지 검증 (메모리 누수 방지 실패 케이스 검증)
         assertThat(MDC.get(LoggingFilter.REQUEST_ID_KEY)).isNull();
         assertThat(MDC.get(LoggingFilter.CLIENT_IP_KEY)).isNull();
+
+        // 예외가 발생했어도 응답 객체에 포함된 헤더들은 클라이언트에게 전달되어야 함
+        assertThat(response.getHeader(LoggingFilter.RESPONSE_HEADER_REQUEST_ID)).isNotBlank();
+        assertThat(UUID.fromString(response.getHeader(LoggingFilter.RESPONSE_HEADER_REQUEST_ID))).isNotNull();
     }
 
     @Test
@@ -145,6 +149,10 @@ class LoggingFilterTest {
         // 런타임 예외가 밖으로 던져졌음에도 finally 블록이 정상 작동하여 MDC를 비웠는지 검증
         assertThat(MDC.get(LoggingFilter.REQUEST_ID_KEY)).isNull();
         assertThat(MDC.get(LoggingFilter.CLIENT_IP_KEY)).isNull();
+
+        // 예외가 발생했어도 응답 객체에 포함된 헤더들은 클라이언트에게 전달되어야 함
+        assertThat(response.getHeader(LoggingFilter.RESPONSE_HEADER_REQUEST_ID)).isNotBlank();
+        assertThat(UUID.fromString(response.getHeader(LoggingFilter.RESPONSE_HEADER_REQUEST_ID))).isNotNull();
     }
 
     @Test
