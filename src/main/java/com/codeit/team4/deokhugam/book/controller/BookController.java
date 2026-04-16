@@ -1,7 +1,7 @@
 package com.codeit.team4.deokhugam.book.controller;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
-import com.codeit.team4.deokhugam.book.dto.BookDto;
+import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,11 +25,12 @@ public class BookController implements BookApi{
 
     // 도서 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BookDto> createBook(
+    public ResponseEntity<BookResponse> createBook(
             @RequestPart("bookData") @Valid BookCreateRequest request,
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
         log.info("도서 등록 요청: title={}", request.title());
-        BookDto result = bookService.createBook(request);
+        BookResponse result = bookService.createBook(request, thumbnailImage);
+        log.info("도서 등록 완료: bookId={}", result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 

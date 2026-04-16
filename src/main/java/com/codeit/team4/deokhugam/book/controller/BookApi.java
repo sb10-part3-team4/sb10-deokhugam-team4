@@ -1,7 +1,7 @@
 package com.codeit.team4.deokhugam.book.controller;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
-import com.codeit.team4.deokhugam.book.dto.BookDto;
+import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,11 +18,11 @@ public interface BookApi {
     @Operation(summary = "도서 등록")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "도서 등록 성공",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookDto.class))),
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
             @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
             @ApiResponse(responseCode = "409", description = "ISBN 중복")
     })
-    ResponseEntity<BookDto> createBook(
+    ResponseEntity<BookResponse> createBook(
         @RequestPart("bookData") BookCreateRequest request,
                 @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 

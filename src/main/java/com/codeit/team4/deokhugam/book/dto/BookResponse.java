@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record BookDto(
+public record BookResponse(
         UUID id,
         String title,
         String author,
