@@ -87,7 +87,8 @@ class ReviewControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("rating")));
     }
 
     @Test
@@ -105,7 +106,8 @@ class ReviewControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("content")));
     }
 
     @Test
