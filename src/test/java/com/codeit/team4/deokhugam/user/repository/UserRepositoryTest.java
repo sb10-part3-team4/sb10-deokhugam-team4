@@ -155,7 +155,7 @@ class UserRepositoryTest {
      * 유저를 생성하고 저장하는 헬퍼 메서드
      */
     private User saveUser(String email, String nickname) {
-        return userRepository.save(new User(email, nickname, "password1234"));
+        return userRepository.save(new User(email, nickname, "password1!"));
     }
 
     /**
