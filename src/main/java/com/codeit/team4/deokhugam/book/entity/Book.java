@@ -58,6 +58,26 @@ public class Book extends BaseUpdatableEntity {
         this.rating = BigDecimal.ZERO;
     }
 
+    public void updateTitle(String newTitle) {
+        this.title = newTitle;
+    }
+
+    public void updateAuthor(String newAuthor) {
+        this.author = newAuthor;
+    }
+
+    public void updatePublisher(String newPublisher) {
+        this.publisher = newPublisher;
+    }
+
+    public void updateDescription(String newDescription) {
+        this.description = newDescription;
+    }
+
+    public void updatePublishedDate(LocalDate newPublishedDate) {
+        this.publishedDate = newPublishedDate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

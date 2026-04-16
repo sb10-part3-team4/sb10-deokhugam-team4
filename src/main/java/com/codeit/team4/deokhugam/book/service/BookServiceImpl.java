@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.book.service;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
+import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
@@ -31,7 +32,7 @@ public class BookServiceImpl implements BookService {
         String isbn = request.isbn() != null ? request.isbn().trim().replace("-", "") : null;
 
         // isbn 중복 체크
-        if(isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(isbn)){
+        if (isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(isbn)) {
             log.warn("도서 등록 실패 - ISBN 중복: isbn={}", isbn);
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
         }
@@ -45,7 +46,7 @@ public class BookServiceImpl implements BookService {
         // db 저장, 동시 요청 대비 save 시 catch
         try {
             bookRepository.save(book);
-        } catch (DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
         }
 
@@ -62,5 +63,28 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
+    }
+
+    @Transactional
+    public BookResponse updateBook(UUID bookId, BookUpdateRequest request,
+            MultipartFile thumbnailImage) {
+        log.info("도서 수정 시작: bookId={}", bookId);
+        // 해당 id의 도서 찾기
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
+                .orElseThrow(() -> {
+                            log.warn("도서 수정 실패 - 존재하지 않는 도서: bookId={}", bookId);
+                            return new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+                        });
+
+        // update
+        book.updateTitle(request.title());
+        book.updateAuthor(request.author());
+        book.updateDescription(request.description());
+        book.updatePublisher(request.publisher());
+        book.updatePublishedDate(request.publishedDate());
+
+        BookResponse bookResponse = bookMapper.toBookDto(book);
+        log.info("도서 수정 완료: bookId={}", bookId);
+        return bookResponse;
     }
 }
