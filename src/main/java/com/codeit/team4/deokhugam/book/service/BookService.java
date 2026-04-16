@@ -30,14 +30,14 @@ public class BookService {
         String isbn = request.isbn() != null ? request.isbn().trim().replace("-", "") : null;
 
         // isbn 중복 체크
-        if(request.isbn() != null && bookRepository.existsByIsbnAndDeletedAtIsNull(request.isbn())){
-            log.warn("도서 등록 실패 - ISBN 중복: isbn={}", request.isbn());
+        if(isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(request.isbn())){
+            log.warn("도서 등록 실패 - ISBN 중복: isbn={}", isbn);
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
         }
 
         // 엔티티 생성
         Book book = new Book(request.title(), request.author(), request.description(),
-                request.publisher(), request.publishedDate(), request.isbn());
+                request.publisher(), request.publishedDate(), isbn);
 
         // db 저장, 동시 요청 대비 save 시 catch
         try {
