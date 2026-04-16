@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,6 +20,7 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     public static final String REQUEST_ID_KEY = "request_id";
     public static final String CLIENT_IP_KEY = "client_ip";
+    public static final String RESPONSE_HEADER_REQUEST_ID = "X-Request-Id";
 
     private final List<String> ipHeaderCandidates;
 
@@ -43,6 +43,9 @@ public class LoggingFilter extends OncePerRequestFilter {
         request.setAttribute(CLIENT_IP_KEY, clientIp);
         MDC.put(REQUEST_ID_KEY, requestId);
         MDC.put(CLIENT_IP_KEY, clientIp);
+
+        // 응답 반환 전 헤더에 고유 요청 ID 주입
+        response.setHeader(RESPONSE_HEADER_REQUEST_ID, requestId);
 
         try {
             // 다음 필터 또는 컨트롤러로 요청 전달

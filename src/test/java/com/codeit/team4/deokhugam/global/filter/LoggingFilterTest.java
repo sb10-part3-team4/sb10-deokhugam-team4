@@ -29,7 +29,7 @@ class LoggingFilterTest {
     );
 
     @Test
-    @DisplayName("기본 접속 시 IP 및 식별자 MDC 저장 성공")
+    @DisplayName("기본 접속 시 IP와 식별자 MDC 저장, 응답 헤더 반환 성공")
     void doFilterInternal_withRemoteAddr_Success() throws Exception {
         // given
         LoggingFilter loggingFilter = new LoggingFilter(new AppProperties(TEST_IP_HEADERS));
@@ -52,6 +52,8 @@ class LoggingFilterTest {
         assertThat(mdcRequestId[0]).isNotNull();
         assertThat(UUID.fromString(mdcRequestId[0])).isNotNull();
         assertThat(mdcClientIp[0]).isEqualTo("192.168.0.1");
+
+        assertThat(response.getHeader(LoggingFilter.RESPONSE_HEADER_REQUEST_ID)).isEqualTo(mdcRequestId[0]);
 
         assertThat(MDC.get(LoggingFilter.REQUEST_ID_KEY)).isNull();
         assertThat(MDC.get(LoggingFilter.CLIENT_IP_KEY)).isNull();
