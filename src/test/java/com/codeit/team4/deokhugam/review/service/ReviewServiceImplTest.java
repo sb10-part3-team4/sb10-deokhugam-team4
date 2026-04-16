@@ -102,7 +102,7 @@ class ReviewServiceImplTest {
         UUID reviewId = UUID.randomUUID();
         Review review = mock(Review.class);
 
-        given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
 
         Review result = reviewService.findById(reviewId);
 
@@ -114,11 +114,45 @@ class ReviewServiceImplTest {
     void test4() {
         UUID reviewId = UUID.randomUUID();
 
-        given(reviewRepository.findById(reviewId)).willReturn(Optional.empty());
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> reviewService.findById(reviewId))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자로 리뷰 생성 실패")
+    void test5() {
+        UUID userId = UUID.randomUUID();
+        UUID bookId = UUID.randomUUID();
+        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+        given(userService.findById(userId))
+                .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        assertThatThrownBy(() -> reviewService.createReview(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서로 리뷰 생성 실패")
+    void test6() {
+        UUID userId = UUID.randomUUID();
+        UUID bookId = UUID.randomUUID();
+        User user = mock(User.class);
+        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+        given(userService.findById(userId)).willReturn(user);
+        given(bookService.findById(bookId))
+                .willThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND));
+
+        assertThatThrownBy(() -> reviewService.createReview(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.BOOK_NOT_FOUND));
     }
 }

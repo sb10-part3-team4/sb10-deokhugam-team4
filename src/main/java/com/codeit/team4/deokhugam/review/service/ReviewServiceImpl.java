@@ -42,7 +42,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review findById(UUID reviewId) {
-        return reviewRepository.findById(reviewId)
+        return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.REVIEW_NOT_FOUND, "reviewId=" + reviewId));
     }
