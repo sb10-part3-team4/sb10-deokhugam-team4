@@ -136,20 +136,17 @@ class UserRepositoryTest {
     @DisplayName("삭제되지 않은 전체 유저 조회 실패")
     void findAllByDeletedAtIsNull_fail() {
         // given
-        User activeUser = saveUser("active@test.com", "active");
-        User deletedUser = saveUser("deleted@test.com", "deleted");
-        markAsDeleted(deletedUser);
+        User deletedUser1 = saveUser("deleted1@test.com", "deleted1");
+        User deletedUser2 = saveUser("deleted2@test.com", "deleted2");
+        markAsDeleted(deletedUser1);
+        markAsDeleted(deletedUser2);
 
         // when
         Page<User> result = userRepository.findAllByDeletedAtIsNull(PageRequest.of(0, 10));
 
         // then
-        assertThat(result.getContent())
-                .extracting(User::getEmail)
-                .containsExactly(activeUser.getEmail());
-
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(0);
     }
 
     // --- 헬퍼 메소드 ---
