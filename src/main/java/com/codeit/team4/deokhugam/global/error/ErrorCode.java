@@ -17,10 +17,7 @@ public enum ErrorCode {
     INVALID_RATING(HttpStatus.BAD_REQUEST, "평점은 1~5 사이여야 합니다"),
 
     // Book
-    DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다."),
-
-    // User
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다");
+    DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다.");
 
     private final HttpStatus status;
     private final String message;
