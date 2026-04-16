@@ -13,6 +13,7 @@ import java.util.UUID;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +36,12 @@ public class ReviewServiceImpl implements ReviewService {
         validateDuplicateReview(book.getId(), user.getId());
 
         Review review = new Review(book, user, request.content(), request.rating());
-        reviewRepository.save(review);
+        try {
+            reviewRepository.save(review);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(
+                    ErrorCode.DUPLICATE_REVIEW, "bookId=" + book.getId() + ", userId=" + user.getId());
+        }
 
         return reviewMapper.toResponse(review, false);
     }
