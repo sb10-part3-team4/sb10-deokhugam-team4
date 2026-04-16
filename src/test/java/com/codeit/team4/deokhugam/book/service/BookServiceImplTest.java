@@ -3,7 +3,6 @@ package com.codeit.team4.deokhugam.book.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class BookServiceTest {
+class BookServiceImplTest {
 
     @Mock
     BookRepository bookRepository;
@@ -36,7 +35,7 @@ class BookServiceTest {
     BookMapper bookMapper;
 
     @InjectMocks
-    BookService bookService;
+    BookServiceImpl bookServiceImpl;
 
     @Test
     @DisplayName("도서 등록 성공")
@@ -53,7 +52,7 @@ class BookServiceTest {
         when(bookMapper.toBookDto(any(Book.class))).thenReturn(bookResponse);
 
         // when
-        BookResponse book = bookService.createBook(request, null);
+        BookResponse book = bookServiceImpl.createBook(request, null);
 
         // then
         assertThat(book.title()).isEqualTo(request.title());
@@ -75,7 +74,7 @@ class BookServiceTest {
         when(bookRepository.existsByIsbnAndDeletedAtIsNull(normalizedIsbn)).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> bookService.createBook(request, null))
+        assertThatThrownBy(() -> bookServiceImpl.createBook(request, null))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.DUPLICATE_ISBN);

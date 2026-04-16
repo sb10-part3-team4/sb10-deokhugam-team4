@@ -2,7 +2,7 @@ package com.codeit.team4.deokhugam.book.controller;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
-import com.codeit.team4.deokhugam.book.service.BookService;
+import com.codeit.team4.deokhugam.book.service.BookServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class BookController implements BookApi{
 
-    private final BookService bookService;
+    private final BookServiceImpl bookServiceImpl;
 
     // 도서 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -29,7 +29,7 @@ public class BookController implements BookApi{
             @RequestPart("bookData") @Valid BookCreateRequest request,
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
         log.info("도서 등록 요청: title={}", request.title());
-        BookResponse result = bookService.createBook(request, thumbnailImage);
+        BookResponse result = bookServiceImpl.createBook(request, thumbnailImage);
         log.info("도서 등록 완료: bookId={}", result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }

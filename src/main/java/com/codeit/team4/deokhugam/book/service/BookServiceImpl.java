@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class BookService {
+public class BookServiceImpl {
 
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
