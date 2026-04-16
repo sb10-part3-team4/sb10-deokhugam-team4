@@ -50,5 +50,23 @@ class DeokhugamApplicationTests {
         assertThat(output.getOut()).contains("[" + testClientIp + "]");
     }
 
+    // Spring Boot 처음 실행 시, 혹은 백그라운드 스케줄러(배치) 구동 시
+    // HTTP 요청이 없어 필터를 거치지 않아 MDC가 비어있는 경우 테스트
+    @Test
+    @DisplayName("MDC 값이 없을 때 fallback 포맷(-SYSTEM, -NONE) 적용 성공")
+    void logFormat_appliesFallback_whenMdcIsEmpty(CapturedOutput output) {
+        // given
+        MDC.clear(); // HTTP 요청이 아닌 내부 스케줄러/시스템 로직 상황을 가정하여 MDC를 완전히 비움
+
+        // when
+        log.info("MDC가 없는 백그라운드 배치의 로그 메시지입니다.");
+
+        // then
+        // logback-spring.xml의 `:-SYSTEM`, `:-NONE` 설정이 정상 작동하여 기본값이 찍히는지 검증
+        assertThat(output.getOut()).contains("MDC가 없는 백그라운드 배치의 로그 메시지입니다.");
+        assertThat(output.getOut()).contains("[SYSTEM]");
+        assertThat(output.getOut()).contains("[NONE]");
+    }
+
 }
 
