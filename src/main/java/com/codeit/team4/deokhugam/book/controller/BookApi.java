@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +24,7 @@ public interface BookApi {
             @ApiResponse(responseCode = "409", description = "ISBN 중복")
     })
     ResponseEntity<BookResponse> createBook(
-        @RequestPart("bookData") BookCreateRequest request,
+        @RequestPart("bookData") @Valid BookCreateRequest request,
                 @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
 }

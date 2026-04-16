@@ -30,10 +30,12 @@ public class BookService {
         String isbn = request.isbn() != null ? request.isbn().trim().replace("-", "") : null;
 
         // isbn 중복 체크
-        if(isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(request.isbn())){
+        if(isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(isbn)){
             log.warn("도서 등록 실패 - ISBN 중복: isbn={}", isbn);
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
         }
+
+        // Todo : 썸네일 이미지 저장 로직 구현
 
         // 엔티티 생성
         Book book = new Book(request.title(), request.author(), request.description(),

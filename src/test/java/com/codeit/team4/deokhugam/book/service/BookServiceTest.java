@@ -44,11 +44,12 @@ class BookServiceTest {
         // given
         BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.", "달출판사", LocalDate.of(2026, 1, 1),
                 "978-89-91995-00-1");
+        String normalizedIsbn = request.isbn().trim().replace("-", "");
         BookResponse bookResponse = new BookResponse(UUID.randomUUID(), request.title(), request.author(),
-                request.description(), request.publisher(), request.publishedDate(), request.isbn(),
+                request.description(), request.publisher(), request.publishedDate(), normalizedIsbn,
                 null, 0, BigDecimal.ZERO, Instant.now(), Instant.now());
 
-        when(bookRepository.existsByIsbnAndDeletedAtIsNull(anyString())).thenReturn(false);
+        when(bookRepository.existsByIsbnAndDeletedAtIsNull(normalizedIsbn)).thenReturn(false);
         when(bookMapper.toBookDto(any(Book.class))).thenReturn(bookResponse);
 
         // when
@@ -57,7 +58,7 @@ class BookServiceTest {
         // then
         assertThat(book.title()).isEqualTo(request.title());
         assertThat(book.author()).isEqualTo(request.author());
-        assertThat(book.isbn()).isEqualTo(request.isbn());
+        assertThat(book.isbn()).isEqualTo(normalizedIsbn);
         verify(bookRepository).save(any(Book.class));
         verify(bookMapper).toBookDto(any(Book.class));
     }
@@ -69,7 +70,9 @@ class BookServiceTest {
         BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.", "달출판사", LocalDate.of(2026, 1, 1),
                 "978-89-91995-00-1");
 
-        when(bookRepository.existsByIsbnAndDeletedAtIsNull(request.isbn())).thenReturn(true);
+        String normalizedIsbn = request.isbn().trim().replace("-", "");
+
+        when(bookRepository.existsByIsbnAndDeletedAtIsNull(normalizedIsbn)).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> bookService.createBook(request, null))
