@@ -8,6 +8,7 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,7 +20,15 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "reviews")
+@Table(
+        name = "reviews",
+        indexes = {
+                @Index(name = "idx_reviews_created_at", columnList = "created_at"),
+                @Index(name = "idx_reviews_rating", columnList = "rating"),
+                @Index(name = "idx_reviews_user_id", columnList = "user_id"),
+                @Index(name = "idx_reviews_deleted_at", columnList = "deleted_at")
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Review extends BaseUpdatableEntity {
 
