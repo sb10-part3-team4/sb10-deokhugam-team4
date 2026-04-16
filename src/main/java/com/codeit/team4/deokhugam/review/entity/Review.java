@@ -2,6 +2,8 @@ package com.codeit.team4.deokhugam.review.entity;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.global.entity.BaseUpdatableEntity;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,6 +22,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "reviews")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Review extends BaseUpdatableEntity {
+
+    private static final int MIN_RATING = 1;
+    private static final int MAX_RATING = 5;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
@@ -45,12 +50,22 @@ public class Review extends BaseUpdatableEntity {
     private Instant deletedAt;
 
     public Review(Book book, User user, String content, int rating) {
+        validateRating(rating);
         this.book = book;
         this.user = user;
         this.content = content;
         this.rating = rating;
         this.likeCount = 0;
         this.commentCount = 0;
+    }
+
+    private void validateRating(int rating) {
+        if (rating < MIN_RATING || rating > MAX_RATING) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_RATING,
+                    "rating=" + rating
+            );
+        }
     }
 
     public boolean isDeleted() {
