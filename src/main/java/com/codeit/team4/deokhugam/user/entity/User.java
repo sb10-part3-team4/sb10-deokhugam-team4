@@ -39,6 +39,10 @@ public class User extends BaseUpdatableEntity {
         this.password = password;
     }
 
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public boolean isDeleted() {
         return this.deletedAt != null;
     }

@@ -5,6 +5,7 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.dto.UserLoginRequest;
 import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
+import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
@@ -61,6 +62,19 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.USER_NOT_FOUND, "userId=" + userId));
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateUser(UUID userId, UserUpdateRequest request) {
+
+        User user = findById(userId);
+
+        user.updateNickname(request.nickname());
+
+        log.info("유저 수정 성공: userId={}", userId);
+
+        return userMapper.toResponse(user);
     }
 
     // 헬퍼 메서드
