@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -189,6 +191,34 @@ class BookControllerTest {
         mockMvc.perform(multipart(HttpMethod.PATCH, "/api/books/{bookId}", bookId)
                         .part(bookDataPart)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("도서 삭제 성공")
+    void delete_success() throws Exception {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        // when & then
+        mockMvc.perform(delete("/api/books/{bookId}", bookId))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서 삭제 실패")
+    void delete_fail_not_found() throws Exception {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        doThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND))
+                .when(bookService).deleteBook(bookId);
+
+        // when & then
+        mockMvc.perform(delete("/api/books/{bookId}", bookId))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));

@@ -27,7 +27,6 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
-        log.info("도서 등록 시작: title={}", request.title());
 
         // isbn 정규화
         String isbn = request.isbn() != null ? request.isbn().trim().replace("-", "") : null;
@@ -69,7 +68,6 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public BookResponse updateBook(UUID bookId, BookUpdateRequest request,
             MultipartFile thumbnailImage) {
-        log.info("도서 수정 시작: bookId={}", bookId);
         // 해당 id의 도서 찾기
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> {
@@ -85,5 +83,16 @@ public class BookServiceImpl implements BookService {
         return bookResponse;
 
         // todo: 썸네일 업데이트 로직 구현
+    }
+
+    @Override
+    @Transactional
+    public void deleteBook(UUID bookId) {
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
+
+        book.softDelete();
+        log.info("도서 삭제 완료: bookId={}", bookId);
     }
 }

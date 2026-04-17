@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,7 +48,7 @@ public interface BookApi {
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
     @Operation(summary = "도서 수정")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    @RequestBody(
             content = @Content(
                     mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
                     encoding = {
@@ -71,5 +72,14 @@ public interface BookApi {
             @RequestPart("bookData") @Valid BookUpdateRequest request,
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
+    @Operation(summary = "도서 삭제")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "도서 삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "도서 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<Void> deleteBook(@PathVariable UUID bookId);
 
 }

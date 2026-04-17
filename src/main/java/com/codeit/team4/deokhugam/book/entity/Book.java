@@ -79,6 +79,10 @@ public class Book extends BaseUpdatableEntity {
         this.publishedDate = publishedDate;
     }
 
+    public void softDelete(){
+        this.deletedAt = Instant.now();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
