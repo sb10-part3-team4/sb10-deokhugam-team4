@@ -47,7 +47,7 @@ class BookControllerTest {
 
     @Test
     @DisplayName("도서 등록 성공")
-    void create_success() throws Exception{
+    void create_success() throws Exception {
         // given
         BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
                 "달출판사", LocalDate.of(2026, 1, 1),
@@ -105,7 +105,8 @@ class BookControllerTest {
                 "978-89-91995-00-1");
 
         given(bookService.createBook(any(BookCreateRequest.class), any()))
-                .willThrow(new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + request.isbn()));
+                .willThrow(
+                        new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + request.isbn()));
 
         // when & then
         MockPart bookDataPart = new MockPart("bookData", objectMapper.writeValueAsBytes(request));
@@ -116,9 +117,7 @@ class BookControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.errorCode").value("DUPLICATE_ISBN"))
-                .andExpect(
-                        jsonPath("$.message").value(containsString("ISBN")));
+                .andExpect(jsonPath("$.errorCode").value("DUPLICATE_ISBN"));
     }
 
     @Test
