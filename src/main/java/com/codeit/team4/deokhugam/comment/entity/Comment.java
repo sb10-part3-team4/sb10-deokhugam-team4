@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,7 +25,7 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_comments_deleted_at", columnList = "deleted_at"),
                 @Index(name = "idx_comments_created_at", columnList = "created_at")
         })
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseUpdatableEntity {
     @ManyToOne(fetch = FetchType.LAZY) // N+1 방지를 위해 항상 LAZY
     @JoinColumn(name = "user_id", nullable = false)

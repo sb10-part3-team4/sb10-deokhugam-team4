@@ -48,7 +48,7 @@ class CommentServiceTest {
         UUID reviewId = UUID.randomUUID();
         CommentCreateRequest request = new CommentCreateRequest("좋습니다");
 
-        User mockUser = new User("test@test.com", "닉네임", "pwd");
+        User mockUser = mock(User.class);
         Review mockReview = mock(Review.class);
         Comment mockComment = new Comment(mockUser, mockReview, request.content());
         CommentResponse mockResponse = new CommentResponse(UUID.randomUUID(), request.content(), userId, reviewId);

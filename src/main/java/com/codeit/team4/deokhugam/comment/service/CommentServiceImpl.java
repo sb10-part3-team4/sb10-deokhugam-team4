@@ -11,9 +11,11 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -32,6 +34,7 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = new Comment(user, review, request.content());
         Comment savedComment = commentRepository.save(comment);
+        log.info("댓글 생성 완료: commentId={}, userId={}, reviewId={}", savedComment.getId(), user.getId(), review.getId());
         
         return commentMapper.toResponse(savedComment);
     }
