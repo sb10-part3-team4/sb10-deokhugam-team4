@@ -47,7 +47,8 @@ public class Book extends BaseUpdatableEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    public Book(String title, String author, String description, String publisher, LocalDate publishedDate, String isbn) {
+    public Book(String title, String author, String description, String publisher,
+            LocalDate publishedDate, String isbn) {
         this.title = title;
         this.author = author;
         this.description = description;
@@ -58,24 +59,13 @@ public class Book extends BaseUpdatableEntity {
         this.rating = BigDecimal.ZERO;
     }
 
-    public void updateTitle(String newTitle) {
-        this.title = newTitle;
-    }
-
-    public void updateAuthor(String newAuthor) {
-        this.author = newAuthor;
-    }
-
-    public void updatePublisher(String newPublisher) {
-        this.publisher = newPublisher;
-    }
-
-    public void updateDescription(String newDescription) {
-        this.description = newDescription;
-    }
-
-    public void updatePublishedDate(LocalDate newPublishedDate) {
-        this.publishedDate = newPublishedDate;
+    public void update(String title, String author, String description,
+            String publisher, LocalDate publishedDate) {
+        this.title = title;
+        this.author = author;
+        this.description = description;
+        this.publisher = publisher;
+        this.publishedDate = publishedDate;
     }
 
     @Override

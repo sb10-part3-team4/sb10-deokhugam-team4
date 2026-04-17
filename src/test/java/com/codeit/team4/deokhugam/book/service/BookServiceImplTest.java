@@ -77,7 +77,8 @@ class BookServiceImplTest {
     @DisplayName("도서 수정 성공")
     void update_book_success() {
         // given
-        BookCreateRequest createRequest = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+        BookCreateRequest createRequest = new BookCreateRequest("달선이의 하루", "달선",
+                "달선이의 하루를 담은 책입니다.",
                 "달출판사", LocalDate.of(2026, 1, 1),
                 "978-89-91995-00-1");
         BookResponse createdBook = bookService.createBook(createRequest, null);
@@ -99,11 +100,14 @@ class BookServiceImplTest {
         Book updatedBook = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow();
         assertThat(updatedBook.getTitle()).isEqualTo(request.title());
         assertThat(updatedBook.getAuthor()).isEqualTo(request.author());
+        // ISBN은 수정 대상이 아니므로 변경되지 않아야 함
+        assertThat(updatedBook.getIsbn())
+                .isEqualTo(createRequest.isbn().replace("-", ""));
     }
 
     @Test
     @DisplayName("존재하지 않는 도서 수정 실패")
-    void update_fail_not_found(){
+    void update_fail_not_found() {
         // given
         UUID bookId = UUID.randomUUID();
 

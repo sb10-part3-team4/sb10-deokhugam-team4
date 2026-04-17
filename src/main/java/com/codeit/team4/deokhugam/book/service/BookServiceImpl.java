@@ -72,19 +72,18 @@ public class BookServiceImpl implements BookService {
         // 해당 id의 도서 찾기
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> {
-                            log.warn("도서 수정 실패 - 존재하지 않는 도서: bookId={}", bookId);
-                            return new BusinessException(ErrorCode.BOOK_NOT_FOUND);
-                        });
+                    log.warn("도서 수정 실패 - 존재하지 않는 도서: bookId={}", bookId);
+                    return new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+                });
 
         // update
-        book.updateTitle(request.title());
-        book.updateAuthor(request.author());
-        book.updateDescription(request.description());
-        book.updatePublisher(request.publisher());
-        book.updatePublishedDate(request.publishedDate());
+        book.update(request.title(), request.author(), request.description(), request.publisher(),
+                request.publishedDate());
 
         BookResponse bookResponse = bookMapper.toBookDto(book);
         log.info("도서 수정 완료: bookId={}", bookId);
         return bookResponse;
+
+        // todo: 썸네일 업데이트 로직 구현
     }
 }
