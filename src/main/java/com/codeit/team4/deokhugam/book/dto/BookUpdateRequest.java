@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-@Schema(description = "도서 등록 요청")
-public record BookCreateRequest(
+@Schema(description = "도서 수정 요청")
+public record BookUpdateRequest(
         @Schema(description = "도서 제목", example = "클린 코드")
         @NotBlank String title,
 
@@ -20,8 +20,5 @@ public record BookCreateRequest(
         @NotBlank String publisher,
 
         @Schema(description = "출간일", example = "2023-01-01")
-        @NotNull LocalDate publishedDate,
-
-        @Schema(description = "ISBN", example = "9788991995001")
-        String isbn
+        @NotNull LocalDate publishedDate
 ) {}
