@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -88,6 +90,36 @@ class UserServiceImplTest {
 
         verify(userMapper, never()).toEntity(any());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("DB 무결성 위반으로 회원가입 실패")
+    void registerUser_fail_dataIntegrityViolation() {
+        // given
+        UserRegisterRequest request = new UserRegisterRequest(
+                "test@test.com",
+                "user1",
+                "password1!"
+        );
+
+        User user = mock(User.class);
+
+        when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(false);
+
+        when(userMapper.toEntity(request)).thenReturn(user);
+
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate"));
+
+        // when & then
+        assertThatThrownBy(() -> userService.registerUser(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
+
+        verify(userMapper).toEntity(request);
+        verify(userRepository).save(user);
     }
 
     @Test
