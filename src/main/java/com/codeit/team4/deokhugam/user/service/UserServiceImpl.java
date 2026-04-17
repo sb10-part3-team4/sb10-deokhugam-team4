@@ -77,6 +77,17 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(user);
     }
 
+    @Override
+    @Transactional
+    public void deleteUser(UUID userId) {
+
+        User user = findById(userId);
+
+        user.softDelete();
+
+        log.info("유저 삭제 완료: userId={}", userId);
+    }
+
     // 헬퍼 메서드
     private void validateEmailNotExists(String email) {
         if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {

@@ -43,6 +43,11 @@ public class User extends BaseUpdatableEntity {
         this.nickname = nickname;
     }
 
+    public void softDelete() {
+        if (this.deletedAt != null) return;
+        this.deletedAt = Instant.now();
+    }
+
     public boolean isDeleted() {
         return this.deletedAt != null;
     }
