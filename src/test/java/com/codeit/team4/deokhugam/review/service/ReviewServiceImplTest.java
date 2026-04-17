@@ -16,19 +16,21 @@ import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
+import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
-import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
@@ -40,6 +42,9 @@ class ReviewServiceImplTest {
     private ReviewRepository reviewRepository;
 
     @Mock
+    private ReviewLikeRepository reviewLikeRepository;
+
+    @Mock
     private UserService userService;
 
     @Mock
@@ -48,135 +53,147 @@ class ReviewServiceImplTest {
     @Mock
     private ReviewMapper reviewMapper;
 
-    @Test
-    @DisplayName("리뷰 생성 성공")
-    void createReview_success() {
-        UUID userId = UUID.randomUUID();
-        UUID bookId = UUID.randomUUID();
-        User user = mock(User.class);
-        Book book = mock(Book.class);
-        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
-        ReviewResponse expectedResponse = new ReviewResponse(
-                UUID.randomUUID(), bookId, "클린 코드", null,
-                userId, "테스터", "좋은 책입니다", 5, 0, 0, false,
-                Instant.now(), Instant.now());
+    @Nested
+    @DisplayName("리뷰 생성")
+    class CreateReview {
 
-        given(userService.findById(userId)).willReturn(user);
-        given(bookService.findById(bookId)).willReturn(book);
-        given(book.getId()).willReturn(bookId);
-        given(user.getId()).willReturn(userId);
-        given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(false);
-        given(reviewRepository.save(any(Review.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(reviewMapper.toResponse(any(Review.class), eq(false))).willReturn(expectedResponse);
+        @Test
+        @DisplayName("리뷰 생성 성공")
+        void createReview_success() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            User user = mock(User.class);
+            Book book = mock(Book.class);
+            ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+            ReviewResponse expectedResponse = new ReviewResponse(
+                    UUID.randomUUID(), bookId, "클린 코드", null,
+                    userId, "테스터", "좋은 책입니다", 5, 0, 0, false,
+                    Instant.now(), Instant.now());
 
-        ReviewResponse response = reviewService.createReview(request);
+            given(userService.findById(userId)).willReturn(user);
+            given(bookService.findById(bookId)).willReturn(book);
+            given(book.getId()).willReturn(bookId);
+            given(user.getId()).willReturn(userId);
+            given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(false);
+            given(reviewRepository.save(any(Review.class))).willAnswer(invocation -> invocation.getArgument(0));
+            given(reviewMapper.toResponse(any(Review.class), eq(false))).willReturn(expectedResponse);
 
-        assertThat(response.content()).isEqualTo("좋은 책입니다");
-        assertThat(response.rating()).isEqualTo(5);
-        verify(reviewRepository).save(any(Review.class));
+            ReviewResponse response = reviewService.createReview(request);
+
+            assertThat(response.content()).isEqualTo("좋은 책입니다");
+            assertThat(response.rating()).isEqualTo(5);
+            verify(reviewRepository).save(any(Review.class));
+        }
+
+        @Test
+        @DisplayName("중복 리뷰 생성 실패")
+        void createReview_duplicate_fail() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            User user = mock(User.class);
+            Book book = mock(Book.class);
+            ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(bookService.findById(bookId)).willReturn(book);
+            given(book.getId()).willReturn(bookId);
+            given(user.getId()).willReturn(userId);
+            given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(true);
+
+            assertThatThrownBy(() -> reviewService.createReview(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 사용자로 리뷰 생성 실패")
+        void createReview_userNotFound_fail() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+            given(userService.findById(userId))
+                    .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> reviewService.createReview(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.USER_NOT_FOUND));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 도서로 리뷰 생성 실패")
+        void createReview_bookNotFound_fail() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            User user = mock(User.class);
+            ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(bookService.findById(bookId))
+                    .willThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND));
+
+            assertThatThrownBy(() -> reviewService.createReview(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.BOOK_NOT_FOUND));
+        }
+
+        @Test
+        @DisplayName("DB 무결성 위반으로 리뷰 생성 실패")
+        void createReview_dataIntegrityViolation_fail() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            User user = mock(User.class);
+            Book book = mock(Book.class);
+            ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(bookService.findById(bookId)).willReturn(book);
+            given(book.getId()).willReturn(bookId);
+            given(user.getId()).willReturn(userId);
+            given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(false);
+            given(reviewRepository.save(any(Review.class)))
+                    .willThrow(new DataIntegrityViolationException("duplicate key"));
+
+            assertThatThrownBy(() -> reviewService.createReview(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
+        }
     }
 
-    @Test
-    @DisplayName("중복 리뷰 생성 실패")
-    void createReview_duplicate_fail() {
-        UUID userId = UUID.randomUUID();
-        UUID bookId = UUID.randomUUID();
-        User user = mock(User.class);
-        Book book = mock(Book.class);
-        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+    @Nested
+    @DisplayName("리뷰 조회")
+    class FindById {
 
-        given(userService.findById(userId)).willReturn(user);
-        given(bookService.findById(bookId)).willReturn(book);
-        given(book.getId()).willReturn(bookId);
-        given(user.getId()).willReturn(userId);
-        given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(true);
+        @Test
+        @DisplayName("리뷰 ID로 조회 성공")
+        void findById_success() {
+            UUID reviewId = UUID.randomUUID();
+            Review review = mock(Review.class);
 
-        assertThatThrownBy(() -> reviewService.createReview(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
-                        .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+
+            Review result = reviewService.findById(reviewId);
+
+            assertThat(result).isEqualTo(review);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 ID로 조회 실패")
+        void findById_notFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> reviewService.findById(reviewId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+        }
     }
 
-    @Test
-    @DisplayName("리뷰 ID로 조회 성공")
-    void findById_success() {
-        UUID reviewId = UUID.randomUUID();
-        Review review = mock(Review.class);
-
-        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
-
-        Review result = reviewService.findById(reviewId);
-
-        assertThat(result).isEqualTo(review);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 리뷰 ID로 조회 실패")
-    void findById_notFound_fail() {
-        UUID reviewId = UUID.randomUUID();
-
-        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> reviewService.findById(reviewId))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
-                        .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 사용자로 리뷰 생성 실패")
-    void createReview_userNotFound_fail() {
-        UUID userId = UUID.randomUUID();
-        UUID bookId = UUID.randomUUID();
-        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
-
-        given(userService.findById(userId))
-                .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        assertThatThrownBy(() -> reviewService.createReview(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
-                        .isEqualTo(ErrorCode.USER_NOT_FOUND));
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 도서로 리뷰 생성 실패")
-    void createReview_bookNotFound_fail() {
-        UUID userId = UUID.randomUUID();
-        UUID bookId = UUID.randomUUID();
-        User user = mock(User.class);
-        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
-
-        given(userService.findById(userId)).willReturn(user);
-        given(bookService.findById(bookId))
-                .willThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND));
-
-        assertThatThrownBy(() -> reviewService.createReview(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
-                        .isEqualTo(ErrorCode.BOOK_NOT_FOUND));
-    }
-
-    @Test
-    @DisplayName("DB 무결성 위반으로 리뷰 생성 실패")
-    void createReview_dataIntegrityViolation_fail() {
-        UUID userId = UUID.randomUUID();
-        UUID bookId = UUID.randomUUID();
-        User user = mock(User.class);
-        Book book = mock(Book.class);
-        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
-
-        given(userService.findById(userId)).willReturn(user);
-        given(bookService.findById(bookId)).willReturn(book);
-        given(book.getId()).willReturn(bookId);
-        given(user.getId()).willReturn(userId);
-        given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(false);
-        given(reviewRepository.save(any(Review.class)))
-                .willThrow(new DataIntegrityViolationException("duplicate key"));
-
-        assertThatThrownBy(() -> reviewService.createReview(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
-                        .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
     }
 }
