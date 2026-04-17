@@ -4,6 +4,7 @@ import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,5 +29,8 @@ public interface ReviewApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<ReviewResponse> createReview(@RequestBody ReviewCreateRequest request);
+    ResponseEntity<ReviewResponse> createReview(
+            @Parameter(description = "리뷰 생성 요청 정보", required = true)
+            @RequestBody ReviewCreateRequest request
+    );
 }
