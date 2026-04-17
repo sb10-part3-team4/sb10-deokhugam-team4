@@ -24,7 +24,8 @@ public interface BookApi {
             @ApiResponse(responseCode = "201", description = "도서 등록 성공",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)"),
-            @ApiResponse(responseCode = "409", description = "ISBN 중복")
+            @ApiResponse(responseCode = "409", description = "ISBN 중복"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     ResponseEntity<BookResponse> createBook(
         @RequestPart("bookData") @Valid BookCreateRequest request,
