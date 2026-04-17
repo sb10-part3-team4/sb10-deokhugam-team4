@@ -33,8 +33,7 @@ public class BookServiceImpl implements BookService {
 
         // isbn 중복 체크
         if (isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(isbn)) {
-            log.warn("도서 등록 실패 - ISBN 중복: isbn={}", isbn);
-            throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
+            throw new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + isbn);
         }
 
         // Todo : 썸네일 이미지 저장 로직 구현
@@ -72,8 +71,7 @@ public class BookServiceImpl implements BookService {
         // 해당 id의 도서 찾기
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> {
-                    log.warn("도서 수정 실패 - 존재하지 않는 도서: bookId={}", bookId);
-                    return new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+                    return new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId);
                 });
 
         // update

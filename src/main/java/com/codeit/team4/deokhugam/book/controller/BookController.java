@@ -34,7 +34,6 @@ public class BookController implements BookApi{
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
         log.info("도서 등록 요청: title={}", request.title());
         BookResponse result = bookService.createBook(request, thumbnailImage);
-        log.info("도서 등록 완료: bookId={}", result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 

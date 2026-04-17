@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.book.entity;
 import com.codeit.team4.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,7 +14,16 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "books")
+@Table(
+        name = "books",
+        indexes = {
+                @Index(name = "uq_books_isbn_alive", columnList = "isbn"),
+                @Index(name = "idx_books_title", columnList = "title"),
+                @Index(name = "idx_books_published_date", columnList = "published_date"),
+                @Index(name = "idx_books_rating", columnList = "rating"),
+                @Index(name = "idx_books_review_count", columnList = "review_count")
+        }
+)
 @NoArgsConstructor
 public class Book extends BaseUpdatableEntity {
 
