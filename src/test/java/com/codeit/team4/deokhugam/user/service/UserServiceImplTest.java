@@ -261,25 +261,4 @@ class UserServiceImplTest {
         verify(userMapper, never()).toResponse(any());
         verify(userRepository).findByIdAndDeletedAtIsNull(userId);
     }
-
-    @Test
-    @DisplayName("닉네임이 공백이라 수정 실패")
-    void updateUser_fail_invalid_nickname() {
-        // given
-        UUID userId = UUID.randomUUID();
-        UserUpdateRequest request = new UserUpdateRequest(" ");
-
-        User user = new User("test@test.com", "oldNick", "password1!");
-
-        when(userRepository.findByIdAndDeletedAtIsNull(userId))
-                .thenReturn(Optional.of(user));
-
-        // when & then
-        assertThatThrownBy(() -> userService.updateUser(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .extracting(e -> ((BusinessException) e).getErrorCode())
-                .isEqualTo(ErrorCode.INVALID_NICKNAME);
-
-        verify(userMapper, never()).toResponse(any());
-    }
 }

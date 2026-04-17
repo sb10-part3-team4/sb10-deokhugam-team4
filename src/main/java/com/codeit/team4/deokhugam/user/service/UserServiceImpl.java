@@ -70,8 +70,6 @@ public class UserServiceImpl implements UserService {
 
         User user = findById(userId);
 
-        validateNickname(request.nickname());
-
         user.updateNickname(request.nickname());
 
         log.info("유저 수정 성공: userId={}", userId);
@@ -89,13 +87,6 @@ public class UserServiceImpl implements UserService {
     private void validatePassword(User user, String password) {
         if (!Objects.equals(user.getPassword(), password)) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
-        }
-    }
-
-    private void validateNickname(String nickname) {
-        if (nickname == null || nickname.isBlank()) {
-            throw new BusinessException(
-                    ErrorCode.INVALID_NICKNAME, "nickname=" + nickname);
         }
     }
 
