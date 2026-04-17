@@ -94,7 +94,8 @@ public class UserServiceImpl implements UserService {
 
     private void validateNickname(String nickname) {
         if (nickname == null || nickname.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_NICKNAME);
+            throw new BusinessException(
+                    ErrorCode.INVALID_NICKNAME, "nickname=" + nickname);
         }
     }
 
