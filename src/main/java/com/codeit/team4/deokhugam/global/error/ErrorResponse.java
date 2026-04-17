@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "에러 응답")
 public record ErrorResponse(
 
-        @Schema(description = "에러 코드", example = "INVALID_INPUT")
+        @Schema(description = "에러 코드")
         String errorCode,
 
-        @Schema(description = "에러 메시지", example = "잘못된 입력입니다")
+        @Schema(description = "에러 메시지")
         String message
 ) {
 
