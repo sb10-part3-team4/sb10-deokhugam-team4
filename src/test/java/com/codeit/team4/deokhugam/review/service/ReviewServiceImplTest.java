@@ -50,7 +50,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("리뷰 생성 성공")
-    void test1() {
+    void createReview_success() {
         UUID userId = UUID.randomUUID();
         UUID bookId = UUID.randomUUID();
         User user = mock(User.class);
@@ -78,7 +78,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("중복 리뷰 생성 실패")
-    void test2() {
+    void createReview_duplicate_fail() {
         UUID userId = UUID.randomUUID();
         UUID bookId = UUID.randomUUID();
         User user = mock(User.class);
@@ -99,7 +99,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("리뷰 ID로 조회 성공")
-    void test3() {
+    void findById_success() {
         UUID reviewId = UUID.randomUUID();
         Review review = mock(Review.class);
 
@@ -112,7 +112,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("존재하지 않는 리뷰 ID로 조회 실패")
-    void test4() {
+    void findById_notFound_fail() {
         UUID reviewId = UUID.randomUUID();
 
         given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
@@ -125,7 +125,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("존재하지 않는 사용자로 리뷰 생성 실패")
-    void test5() {
+    void createReview_userNotFound_fail() {
         UUID userId = UUID.randomUUID();
         UUID bookId = UUID.randomUUID();
         ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
@@ -141,7 +141,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("존재하지 않는 도서로 리뷰 생성 실패")
-    void test6() {
+    void createReview_bookNotFound_fail() {
         UUID userId = UUID.randomUUID();
         UUID bookId = UUID.randomUUID();
         User user = mock(User.class);
@@ -159,7 +159,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("DB 무결성 위반으로 리뷰 생성 실패")
-    void test7() {
+    void createReview_dataIntegrityViolation_fail() {
         UUID userId = UUID.randomUUID();
         UUID bookId = UUID.randomUUID();
         User user = mock(User.class);
