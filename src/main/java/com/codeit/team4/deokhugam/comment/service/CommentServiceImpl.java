@@ -9,7 +9,6 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,9 +27,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentResponse createComment(UUID userId, UUID reviewId, CommentCreateRequest request){
-        User user = userService.findById(userId);
-        Review review = reviewService.findById(reviewId);
+    public CommentResponse createComment(CommentCreateRequest request){
+        User user = userService.findById(request.userId());
+        Review review = reviewService.findById(request.reviewId());
 
         Comment comment = new Comment(user, review, request.content());
         Comment savedComment = commentRepository.save(comment);

@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,8 +34,6 @@ class CommentServiceTest {
     @Mock private CommentRepository commentRepository;
     @Mock private UserService userService;
     @Mock private ReviewService reviewService;
-
-    // 💡 변경점: Service 구현체에 추가된 Mapper를 모킹
     @Mock private CommentMapper commentMapper;
 
     @InjectMocks
@@ -46,7 +45,7 @@ class CommentServiceTest {
         // given
         UUID userId = UUID.randomUUID();
         UUID reviewId = UUID.randomUUID();
-        CommentCreateRequest request = new CommentCreateRequest("좋습니다");
+        CommentCreateRequest request = new CommentCreateRequest(reviewId, userId, "좋습니다");
 
         User mockUser = mock(User.class);
         Review mockReview = mock(Review.class);
@@ -56,18 +55,25 @@ class CommentServiceTest {
         given(userService.findById(userId)).willReturn(mockUser);
         given(reviewService.findById(reviewId)).willReturn(mockReview);
         given(commentRepository.save(any(Comment.class))).willReturn(mockComment);
-
-        // 💡 변경점: Mapper의 변환 동작을 가정
         given(commentMapper.toResponse(any(Comment.class))).willReturn(mockResponse);
 
         // when
-        CommentResponse response = commentService.createComment(userId, reviewId, request);
+        CommentResponse response = commentService.createComment(request);
 
         // then
-        assertThat(response.content()).isEqualTo("좋습니다");
+        assertThat(response).isEqualTo(mockResponse);
+
+        // ArgumentCaptor로 mapper나 repository에 전달된 객체를 잡아서 확인
+        ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
+        verify(commentRepository).save(commentCaptor.capture());
+
+        Comment savedComment = commentCaptor.getValue();
+        assertThat(savedComment.getContent()).isEqualTo(request.content());
+        assertThat(savedComment.getUser()).isEqualTo(mockUser);
+        assertThat(savedComment.getReview()).isEqualTo(mockReview);
+
         verify(userService).findById(userId);
         verify(reviewService).findById(reviewId);
-        verify(commentRepository).save(any(Comment.class));
         verify(commentMapper).toResponse(any(Comment.class));
     }
 
@@ -77,14 +83,14 @@ class CommentServiceTest {
         // given
         UUID invalidUserId = UUID.randomUUID();
         UUID reviewId = UUID.randomUUID();
-        CommentCreateRequest request = new CommentCreateRequest("유익한 리뷰네요!");
+        CommentCreateRequest request = new CommentCreateRequest(reviewId, invalidUserId, "유익한 리뷰네요!");
 
         given(userService.findById(invalidUserId))
                 .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // when & then
-        assertThatThrownBy(() -> commentService.createComment(invalidUserId, reviewId, request))
+        assertThatThrownBy(() -> commentService.createComment(request))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("사용자를 찾을 수 없습니다");
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
     }
 }
