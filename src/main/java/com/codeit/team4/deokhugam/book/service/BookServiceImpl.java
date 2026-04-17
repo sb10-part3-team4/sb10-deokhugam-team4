@@ -7,6 +7,7 @@ import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class BookServiceImpl {
+public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
@@ -53,5 +54,13 @@ public class BookServiceImpl {
         // dto 변환
         BookResponse bookResponse = bookMapper.toBookDto(book);
         return bookResponse;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Book findById(UUID bookId) {
+        return bookRepository.findByIdAndDeletedAtIsNull(bookId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
     }
 }
