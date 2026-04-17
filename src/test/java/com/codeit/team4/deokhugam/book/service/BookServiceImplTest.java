@@ -32,9 +32,6 @@ class BookServiceImplTest {
     BookRepository bookRepository;
 
     @Autowired
-    BookMapper bookMapper;
-
-    @Autowired
     BookService bookService;
 
     @Test
@@ -118,7 +115,5 @@ class BookServiceImplTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
-
-
     }
 }
