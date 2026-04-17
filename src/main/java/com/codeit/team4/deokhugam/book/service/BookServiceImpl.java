@@ -24,6 +24,7 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
 
+    @Override
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
         log.info("도서 등록 시작: title={}", request.title());
@@ -64,6 +65,7 @@ public class BookServiceImpl implements BookService {
                         ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
     }
 
+    @Override
     @Transactional
     public BookResponse updateBook(UUID bookId, BookUpdateRequest request,
             MultipartFile thumbnailImage) {

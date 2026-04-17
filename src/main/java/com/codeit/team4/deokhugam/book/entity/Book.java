@@ -21,7 +21,8 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_books_title", columnList = "title"),
                 @Index(name = "idx_books_published_date", columnList = "published_date"),
                 @Index(name = "idx_books_rating", columnList = "rating"),
-                @Index(name = "idx_books_review_count", columnList = "review_count")
+                @Index(name = "idx_books_review_count", columnList = "review_count"),
+                @Index(name = "idx_books_deleted_at", columnList = "deleted_at")
         }
 )
 @NoArgsConstructor
