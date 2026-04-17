@@ -6,18 +6,27 @@ import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/comments")
 public class CommentController implements CommentApi {
 
     private final CommentService commentService;
 
-    @Override
-    public ResponseEntity createComment(CommentCreateRequest request) {
+    @PostMapping
+    public ResponseEntity<CommentResponse> createComment(CommentCreateRequest request) {
+
+        log.info("댓글 등록 요청: reviewId={}, userId={}, content={}", request.reviewId(),
+                request.userId(), request.content());
+
         CommentResponse response = commentService.createComment(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
