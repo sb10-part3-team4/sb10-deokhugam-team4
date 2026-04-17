@@ -1,6 +1,6 @@
 package com.codeit.team4.deokhugam.book.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -44,6 +44,81 @@ class BookControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Test
+    @DisplayName("도서 등록 성공")
+    void create_success() throws Exception {
+        // given
+        BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+        UUID bookId = UUID.randomUUID();
+        BookResponse response = new BookResponse(
+                bookId, "달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1), null, null, 0, BigDecimal.ZERO,
+                Instant.now(), Instant.now());
+
+        given(bookService.createBook(any(BookCreateRequest.class), any()))
+                .willReturn(response);
+
+        // when & then
+        MockPart bookDataPart = new MockPart("bookData", objectMapper.writeValueAsBytes(request));
+        bookDataPart.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/books")
+                        .part(bookDataPart)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("달선이의 하루"))
+                .andExpect(jsonPath("$.author").value("달선"));
+    }
+
+    @Test
+    @DisplayName("제목 누락으로 등록 실패")
+    void create_fail_blank_title() throws Exception {
+        // given
+        BookCreateRequest request = new BookCreateRequest("", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+
+        // when & then
+        MockPart bookDataPart = new MockPart("bookData", objectMapper.writeValueAsBytes(request));
+        bookDataPart.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/books")
+                        .part(bookDataPart)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"))
+                .andExpect(
+                        jsonPath("$.message").value(containsString("title")));
+    }
+
+    @Test
+    @DisplayName("isbn 중복으로 등록 실패")
+    void create_fail_duplicate_isbn() throws Exception {
+        // given
+        BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+
+        given(bookService.createBook(any(BookCreateRequest.class), any()))
+                .willThrow(
+                        new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + request.isbn()));
+
+        // when & then
+        MockPart bookDataPart = new MockPart("bookData", objectMapper.writeValueAsBytes(request));
+        bookDataPart.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/books")
+                        .part(bookDataPart)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("DUPLICATE_ISBN"));
+    }
 
     @Test
     @DisplayName("도서 수정 성공")
@@ -92,7 +167,7 @@ class BookControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"))
                 .andExpect(
-                        jsonPath("$.message").value(org.hamcrest.Matchers.containsString("title")));
+                        jsonPath("$.message").value(containsString("title")));
     }
 
     @Test
