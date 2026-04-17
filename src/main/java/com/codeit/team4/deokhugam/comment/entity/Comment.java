@@ -48,6 +48,13 @@ public class Comment extends BaseUpdatableEntity {
         this.content = content;
     }
 
+    private void setReview(Review review) {
+        this.review = review;
+        if(review != null) {
+            review.increaseCommentCount();
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
