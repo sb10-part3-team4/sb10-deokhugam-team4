@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.user.dto.UserLoginRequest;
 import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -120,6 +121,65 @@ class UserServiceImplTest {
 
         verify(userMapper).toEntity(request);
         verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("로그인 성공")
+    void loginUser_success() {
+        // given
+        UserLoginRequest request = new UserLoginRequest("test@test.com", "password1!");
+        User user = new User("test@test.com", "user1", "password1!");
+
+        when(userRepository.findByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(Optional.of(user));
+
+        when(userMapper.toResponse(user))
+                .thenReturn(new UserResponse(user.getId(), user.getEmail(), user.getNickname(), null));
+
+        // when
+        UserResponse result = userService.loginUser(request);
+
+        // then
+        assertThat(result.email()).isEqualTo(request.email());
+
+        verify(userRepository).findByEmailAndDeletedAtIsNull(request.email());
+        verify(userMapper).toResponse(user);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 로그인 실패")
+    void loginUser_fail_user_not_found() {
+        // given
+        UserLoginRequest request = new UserLoginRequest("test@test.com", "password1!");
+
+        when(userRepository.findByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.loginUser(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("비밀번호 불일치로 로그인 실패")
+    void loginUser_fail_invalid_password() {
+        // given
+        UserLoginRequest request = new UserLoginRequest("test@test.com", "wrongPassword");
+        User user = new User("test@test.com", "user1", "password1!");
+
+        when(userRepository.findByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(Optional.of(user));
+
+        // when & then
+        assertThatThrownBy(() -> userService.loginUser(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_PASSWORD);
+
+        verify(userRepository).findByEmailAndDeletedAtIsNull(request.email());
+        verify(userMapper, never()).toResponse(any());
     }
 
     @Test

@@ -2,11 +2,13 @@ package com.codeit.team4.deokhugam.user.service;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.user.dto.UserLoginRequest;
 import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse loginUser(UserLoginRequest request) {
+
+        User user = findActiveUserByEmail(request.email());
+        validatePassword(user, request.password());
+
+        log.info("로그인 성공: userId={}", user.getId());
+
+        return userMapper.toResponse(user);
+    }
+
+    @Override
     public User findById(UUID userId) {
         return userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessException(
@@ -55,5 +68,17 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
+    }
+
+    private void validatePassword(User user, String password) {
+        if (!Objects.equals(user.getPassword(), password)) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
+
+    private User findActiveUserByEmail(String email) {
+        return userRepository.findByEmailAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.USER_NOT_FOUND, "email=" + email));
     }
 }
