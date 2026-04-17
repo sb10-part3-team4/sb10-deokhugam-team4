@@ -6,12 +6,14 @@ import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -21,6 +23,15 @@ import org.springframework.web.multipart.MultipartFile;
 public interface BookApi {
 
     @Operation(summary = "도서 등록")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    encoding = {
+                            @Encoding(name = "bookData", contentType = MediaType.APPLICATION_JSON_VALUE),
+                            @Encoding(name = "thumbnailImage", contentType = "image/*")
+                    }
+            )
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "도서 등록 성공",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
@@ -35,8 +46,16 @@ public interface BookApi {
             @RequestPart("bookData") @Valid BookCreateRequest request,
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
-
     @Operation(summary = "도서 수정")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    encoding = {
+                            @Encoding(name = "bookData", contentType = MediaType.APPLICATION_JSON_VALUE),
+                            @Encoding(name = "thumbnailImage", contentType = "image/*")
+                    }
+            )
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "도서 수정 성공",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
