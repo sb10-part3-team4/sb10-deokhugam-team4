@@ -14,6 +14,7 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
@@ -66,9 +67,20 @@ class ReviewServiceImplTest {
             Book book = mock(Book.class);
             ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
             ReviewResponse expectedResponse = new ReviewResponse(
-                    UUID.randomUUID(), bookId, "클린 코드", null,
-                    userId, "테스터", "좋은 책입니다", 5, 0, 0, false,
-                    Instant.now(), Instant.now());
+                    UUID.randomUUID(),
+                    bookId,
+                    "클린 코드",
+                    null,
+                    userId,
+                    "테스터",
+                    "좋은 책입니다",
+                    5,
+                    0,
+                    0,
+                    false,
+                    Instant.now(),
+                    Instant.now()
+            );
 
             given(userService.findById(userId)).willReturn(user);
             given(bookService.findById(bookId)).willReturn(book);
@@ -195,5 +207,91 @@ class ReviewServiceImplTest {
         }
     }
 
+    @Nested
+    @DisplayName("리뷰 수정")
+    class UpdateReview {
+
+        @Test
+        @DisplayName("리뷰 수정 성공")
+        void updateReview_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            Review review = mock(Review.class);
+            ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 내용", 3);
+            ReviewResponse expectedResponse = new ReviewResponse(
+                    reviewId, UUID.randomUUID(), "클린 코드", null,
+                    userId, "테스터", "수정된 내용", 3, 0, 0, true,
+                    Instant.now(),
+                    Instant.now()
+            );
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(user)).willReturn(true);
+            given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
+            given(reviewMapper.toResponse(review, true)).willReturn(expectedResponse);
+
+            ReviewResponse response = reviewService.updateReview(reviewId, userId, request);
+
+            assertThat(response.content()).isEqualTo("수정된 내용");
+            assertThat(response.rating()).isEqualTo(3);
+            assertThat(response.likedByMe()).isTrue();
+            verify(review).update("수정된 내용", 3);
+        }
+
+        @Test
+        @DisplayName("본인의 리뷰가 아니면 수정 실패")
+        void updateReview_notOwner_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            Review review = mock(Review.class);
+            ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 내용", 3);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(user)).willReturn(false);
+            given(review.getId()).willReturn(reviewId);
+            given(user.getId()).willReturn(userId);
+
+            assertThatThrownBy(() -> reviewService.updateReview(reviewId, userId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 수정 실패")
+        void updateReview_notFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 내용", 3);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> reviewService.updateReview(reviewId, userId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 사용자로 리뷰 수정 실패")
+        void updateReview_userNotFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 내용", 3);
+
+            given(userService.findById(userId))
+                    .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> reviewService.updateReview(reviewId, userId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.USER_NOT_FOUND));
+        }
     }
 }

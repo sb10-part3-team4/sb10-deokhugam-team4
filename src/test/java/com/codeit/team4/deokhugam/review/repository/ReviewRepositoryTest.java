@@ -10,7 +10,10 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -35,48 +38,88 @@ class ReviewRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
 
-    @Test
-    @DisplayName("같은 도서에 같은 사용자의 리뷰 존재 확인 성공")
-    void existsByBookIdAndUserIdAndDeletedAtIsNull_exists() {
-        User user = userRepository.save(new User("test@test.com", "테스터", "password123"));
-        Book book = bookRepository.save(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
-        reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+    private User user;
+    private Book book;
 
-        boolean exists = reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(
-                book.getId(), user.getId());
-
-        assertThat(exists).isTrue();
+    @BeforeEach
+    void setUp() {
+        user = userRepository.save(new User("test@test.com", "테스터", "password123"));
+        book = bookRepository.save(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
     }
 
-    @Test
-    @DisplayName("같은 도서에 같은 사용자의 리뷰 미존재 확인 성공")
-    void existsByBookIdAndUserIdAndDeletedAtIsNull_notExists() {
-        User user = userRepository.save(new User("test@test.com", "테스터", "password123"));
-        Book book = bookRepository.save(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
+    @Nested
+    @DisplayName("중복 리뷰 존재 확인")
+    class ExistsByBookIdAndUserIdAndDeletedAtIsNull {
 
-        boolean exists = reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(
-                book.getId(), user.getId());
+        @Test
+        @DisplayName("리뷰가 존재하면 true 반환 성공")
+        void exists_returnsTrue() {
+            reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
 
-        assertThat(exists).isFalse();
+            boolean exists = reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(
+                    book.getId(), user.getId());
+
+            assertThat(exists).isTrue();
+        }
+
+        @Test
+        @DisplayName("리뷰가 없으면 false 반환 성공")
+        void notExists_returnsFalse() {
+            boolean exists = reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(
+                    book.getId(), user.getId());
+
+            assertThat(exists).isFalse();
+        }
+
+        @Test
+        @DisplayName("소프트 삭제된 리뷰는 false 반환 성공")
+        void softDeleted_returnsFalse() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+
+            entityManager.getEntityManager()
+                    .createQuery("UPDATE Review r SET r.deletedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
+                    .setParameter("id", review.getId())
+                    .executeUpdate();
+            entityManager.flush();
+            entityManager.clear();
+
+            boolean exists = reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(
+                    book.getId(), user.getId());
+
+            assertThat(exists).isFalse();
+        }
     }
 
-    @Test
-    @DisplayName("소프트 삭제된 리뷰는 존재하지 않는 것으로 확인 성공")
-    void existsByBookIdAndUserIdAndDeletedAtIsNull_softDeleted() {
-        User user = userRepository.save(new User("test@test.com", "테스터", "password123"));
-        Book book = bookRepository.save(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
-        Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+    @Nested
+    @DisplayName("리뷰 ID로 조회 (soft delete 제외)")
+    class FindByIdAndDeletedAtIsNull {
 
-        entityManager.getEntityManager()
-                .createQuery("UPDATE Review r SET r.deletedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
-                .setParameter("id", review.getId())
-                .executeUpdate();
-        entityManager.flush();
-        entityManager.clear();
+        @Test
+        @DisplayName("리뷰 조회 성공")
+        void findById_success() {
+            Review saved = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
 
-        boolean exists = reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(
-                book.getId(), user.getId());
+            Optional<Review> result = reviewRepository.findByIdAndDeletedAtIsNull(saved.getId());
 
-        assertThat(exists).isFalse();
+            assertThat(result).isPresent();
+            assertThat(result.get().getContent()).isEqualTo("좋은 책입니다");
+        }
+
+        @Test
+        @DisplayName("소프트 삭제된 리뷰는 조회 실패")
+        void findById_softDeleted_fail() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+
+            entityManager.getEntityManager()
+                    .createQuery("UPDATE Review r SET r.deletedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
+                    .setParameter("id", review.getId())
+                    .executeUpdate();
+            entityManager.flush();
+            entityManager.clear();
+
+            Optional<Review> result = reviewRepository.findByIdAndDeletedAtIsNull(review.getId());
+
+            assertThat(result).isEmpty();
+        }
     }
 }

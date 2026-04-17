@@ -6,23 +6,28 @@ import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
+import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import java.util.UUID;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
     private final UserService userService;
     private final BookService bookService;
     private final ReviewMapper reviewMapper;
@@ -36,12 +41,14 @@ public class ReviewServiceImpl implements ReviewService {
         validateDuplicateReview(book.getId(), user.getId());
 
         Review review = new Review(book, user, request.content(), request.rating());
+
         try {
             reviewRepository.save(review);
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_REVIEW, "bookId=" + book.getId() + ", userId=" + user.getId());
         }
+        log.info("리뷰 생성 완료: reviewId={}", review.getId());
 
         return reviewMapper.toResponse(review, false);
     }
@@ -53,10 +60,32 @@ public class ReviewServiceImpl implements ReviewService {
                         ErrorCode.REVIEW_NOT_FOUND, "reviewId=" + reviewId));
     }
 
+    @Override
+    @Transactional
+    public ReviewResponse updateReview(UUID reviewId, UUID userId, ReviewUpdateRequest request) {
+        User user = userService.findById(userId);
+        Review review = findById(reviewId);
+
+        validateReviewOwner(review, user);
+
+        review.update(request.content(), request.rating());
+        log.info("리뷰 수정 완료: reviewId={}", review.getId());
+
+        boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
+        return reviewMapper.toResponse(review, likedByMe);
+    }
+
     private void validateDuplicateReview(UUID bookId, UUID userId) {
         if (reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)) {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_REVIEW, "bookId=" + bookId + ", userId=" + userId);
+        }
+    }
+
+    private static void validateReviewOwner(Review review, User user) {
+        if (!review.isOwner(user)) {
+            throw new BusinessException(
+                    ErrorCode.REVIEW_NOT_OWNER, "reviewId=" + review.getId() + ", userId=" + user.getId());
         }
     }
 }

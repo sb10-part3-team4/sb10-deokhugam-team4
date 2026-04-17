@@ -22,6 +22,7 @@ public enum ErrorCode {
     INVALID_RATING(HttpStatus.BAD_REQUEST, "평점은 1~5 사이여야 합니다"),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다"),
     DUPLICATE_REVIEW(HttpStatus.CONFLICT, "이미 리뷰를 작성했습니다"),
+    REVIEW_NOT_OWNER(HttpStatus.FORBIDDEN, "본인의 리뷰만 수정할 수 있습니다"),
 
     // Book
     DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다"),

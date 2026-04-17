@@ -68,6 +68,16 @@ public class Review extends BaseUpdatableEntity {
         this.commentCount = 0;
     }
 
+    public void update(String content, int rating) {
+        validateRating(rating);
+        this.content = content;
+        this.rating = rating;
+    }
+
+    public boolean isOwner(User user) {
+        return this.user.equals(user);
+    }
+
     private void validateRating(int rating) {
         if (rating < MIN_RATING || rating > MAX_RATING) {
             throw new BusinessException(
@@ -75,10 +85,6 @@ public class Review extends BaseUpdatableEntity {
                     "rating=" + rating
             );
         }
-    }
-
-    public boolean isDeleted() {
-        return this.deletedAt != null;
     }
 
     @Override
