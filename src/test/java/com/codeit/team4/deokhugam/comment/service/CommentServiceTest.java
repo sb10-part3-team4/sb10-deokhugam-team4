@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.review.entity.Review;
@@ -49,12 +50,12 @@ class CommentServiceTest {
 
         User mockUser = mock(User.class);
         Review mockReview = mock(Review.class);
-        Comment mockComment = new Comment(mockUser, mockReview, request.content());
         CommentResponse mockResponse = new CommentResponse(UUID.randomUUID(), request.content(), userId, reviewId);
 
         given(userService.findById(userId)).willReturn(mockUser);
         given(reviewService.findById(reviewId)).willReturn(mockReview);
-        given(commentRepository.save(any(Comment.class))).willReturn(mockComment);
+        given(commentRepository.save(any(Comment.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
         given(commentMapper.toResponse(any(Comment.class))).willReturn(mockResponse);
 
         // when
@@ -72,9 +73,9 @@ class CommentServiceTest {
         assertThat(savedComment.getUser()).isEqualTo(mockUser);
         assertThat(savedComment.getReview()).isEqualTo(mockReview);
 
+        verify(mockReview, times(1)).increaseCommentCount();
         verify(userService).findById(userId);
         verify(reviewService).findById(reviewId);
-        verify(commentMapper).toResponse(any(Comment.class));
     }
 
     @Test
@@ -92,5 +93,21 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.createComment(request))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 리뷰 - 댓글 등록 실패")
+    void createComment_Fail_ReviewNotFound() {
+        UUID userId = UUID.randomUUID();
+        UUID invalidReviewId = UUID.randomUUID();
+        CommentCreateRequest request = new CommentCreateRequest(invalidReviewId, userId, "내용");
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        given(reviewService.findById(invalidReviewId))
+                .willThrow(new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+
+        assertThatThrownBy(() -> commentService.createComment(request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.REVIEW_NOT_FOUND);
     }
 }

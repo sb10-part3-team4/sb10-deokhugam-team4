@@ -71,7 +71,7 @@ class CommentControllerTest {
         CommentCreateRequest invalidRequest = new CommentCreateRequest(reviewId, userId, "");
 
         // when & then
-        mockMvc.perform(post("/api/comments", reviewId)
+        mockMvc.perform(post("/api/comments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andDo(print())

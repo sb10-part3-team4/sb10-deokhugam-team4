@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
         })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseUpdatableEntity {
+
     @ManyToOne(fetch = FetchType.LAZY) // N+1 방지를 위해 항상 LAZY
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -44,30 +45,29 @@ public class Comment extends BaseUpdatableEntity {
 
     public Comment(User user, Review review, String content) {
         this.user = user;
-        this.review = review;
         this.content = content;
+        assignReview(review);
     }
 
-    private void setReview(Review review) {
+    private void assignReview(Review review) {
         this.review = review;
-        if(review != null) {
+        if (review != null) {
             review.increaseCommentCount();
         }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Review other)) {
+        if (!(o instanceof Comment comment)) {
             return false;
         }
-        return getId() != null && getId().equals(other.getId());
+        return Objects.equals(user, comment.user) && Objects.equals(review,
+                comment.review) && Objects.equals(content, comment.content)
+                && Objects.equals(deletedAt, comment.deletedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(getId());
+        return Objects.hash(user, review, content, deletedAt);
     }
 }
