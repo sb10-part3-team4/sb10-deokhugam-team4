@@ -1,0 +1,125 @@
+package com.codeit.team4.deokhugam.user.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
+import com.codeit.team4.deokhugam.user.dto.UserResponse;
+import com.codeit.team4.deokhugam.user.entity.User;
+import com.codeit.team4.deokhugam.user.mapper.UserMapper;
+import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class UserServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    @Test
+    @DisplayName("회원가입 성공")
+    void registerUser_success() {
+        // given
+        UserRegisterRequest request = new UserRegisterRequest(
+                "test@test.com",
+                "user1",
+                "password1!"
+        );
+        User user = new User("test@test.com", "user1", "password1!");
+        User savedUser = new User("test@test.com", "user1", "password1!");
+
+        when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(false);
+        when(userMapper.toEntity(request)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userMapper.toResponse(any(User.class)))
+                .thenReturn(new UserResponse(null, "test@test.com", "user1", null));
+
+        // when
+        UserResponse result = userService.registerUser(request);
+
+        // then
+        assertThat(result)
+                .extracting(UserResponse::email, UserResponse::nickname)
+                .contains(request.email(), request.nickname());
+
+        verify(userMapper).toEntity(request);
+        verify(userRepository).save(user);
+        verify(userMapper).toResponse(savedUser);
+    }
+
+    @Test
+    @DisplayName("이메일 중복으로 인한 회원가입 실패")
+    void registerUser_fail_duplicate_email() {
+        // given
+        UserRegisterRequest request = new UserRegisterRequest(
+                "test@test.com",
+                "user1",
+                "password1!"
+        );
+
+        when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userService.registerUser(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
+
+        verify(userMapper, never()).toEntity(any());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("유저 조회 성공")
+    void findById_success() {
+        // given
+        UUID userId = UUID.randomUUID();
+        User user = new User("test@test.com", "user1", "password1!");
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.of(user));
+
+        // when
+        User result = userService.findById(userId);
+
+        // then
+        assertThat(result).isEqualTo(user);
+    }
+
+    @Test
+    @DisplayName("유저 조회 실패")
+    void findById_fail() {
+        // given
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.findById(userId))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+}
