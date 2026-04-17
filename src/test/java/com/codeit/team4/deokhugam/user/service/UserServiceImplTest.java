@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.dto.UserLoginRequest;
 import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
+import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
@@ -213,5 +214,51 @@ class UserServiceImplTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("유저 닉네임 수정 성공")
+    void updateUser_success() {
+        // given
+        UUID userId = UUID.randomUUID();
+        UserUpdateRequest request = new UserUpdateRequest("newNick");
+
+        User user = new User("test@test.com", "oldNick", "password1!");
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.of(user));
+
+        when(userMapper.toResponse(user))
+                .thenReturn(new UserResponse(userId, user.getEmail(), "newNick", null));
+
+        // when
+        UserResponse result = userService.updateUser(userId, request);
+
+        // then
+        assertThat(user.getNickname()).isEqualTo("newNick");
+        assertThat(result.nickname()).isEqualTo("newNick");
+
+        verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+        verify(userMapper).toResponse(user);
+    }
+
+    @Test
+    @DisplayName("유저가 존재하지 않아 수정 실패")
+    void updateUser_fail_user_not_found() {
+        // given
+        UUID userId = UUID.randomUUID();
+        UserUpdateRequest request = new UserUpdateRequest("newNick");
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.updateUser(userId, request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+
+        verify(userMapper, never()).toResponse(any());
+        verify(userRepository).findByIdAndDeletedAtIsNull(userId);
     }
 }
