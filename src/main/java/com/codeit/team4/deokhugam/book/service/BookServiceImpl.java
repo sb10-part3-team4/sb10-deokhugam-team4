@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.book.service;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
+import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
@@ -23,6 +24,7 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
 
+    @Override
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
         log.info("도서 등록 시작: title={}", request.title());
@@ -31,9 +33,8 @@ public class BookServiceImpl implements BookService {
         String isbn = request.isbn() != null ? request.isbn().trim().replace("-", "") : null;
 
         // isbn 중복 체크
-        if(isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(isbn)){
-            log.warn("도서 등록 실패 - ISBN 중복: isbn={}", isbn);
-            throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
+        if (isbn != null && bookRepository.existsByIsbnAndDeletedAtIsNull(isbn)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + isbn);
         }
 
         // Todo : 썸네일 이미지 저장 로직 구현
@@ -45,7 +46,7 @@ public class BookServiceImpl implements BookService {
         // db 저장, 동시 요청 대비 save 시 catch
         try {
             bookRepository.save(book);
-        } catch (DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
         }
 
@@ -62,5 +63,27 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
+    }
+
+    @Override
+    @Transactional
+    public BookResponse updateBook(UUID bookId, BookUpdateRequest request,
+            MultipartFile thumbnailImage) {
+        log.info("도서 수정 시작: bookId={}", bookId);
+        // 해당 id의 도서 찾기
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
+                .orElseThrow(() -> {
+                    return new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId);
+                });
+
+        // update
+        book.update(request.title(), request.author(), request.description(), request.publisher(),
+                request.publishedDate());
+
+        BookResponse bookResponse = bookMapper.toBookDto(book);
+        log.info("도서 수정 완료: bookId={}", bookId);
+        return bookResponse;
+
+        // todo: 썸네일 업데이트 로직 구현
     }
 }

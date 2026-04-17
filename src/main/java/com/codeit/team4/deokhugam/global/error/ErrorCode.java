@@ -16,6 +16,7 @@ public enum ErrorCode {
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다"),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다"),
 
     // Review
     INVALID_RATING(HttpStatus.BAD_REQUEST, "평점은 1~5 사이여야 합니다"),
@@ -23,9 +24,9 @@ public enum ErrorCode {
     DUPLICATE_REVIEW(HttpStatus.CONFLICT, "이미 리뷰를 작성했습니다"),
 
     // Book
-    BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "도서를 찾을 수 없습니다"),
-    DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다."),
-
+    DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다"),
+    BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 도서가 존재하지 않습니다"),
+    
     // Comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다"),
     UNAUTHORIZED_COMMENT_ACCESS(HttpStatus.FORBIDDEN, "해당 댓글을 수정/삭제할 권한이 없습니다");

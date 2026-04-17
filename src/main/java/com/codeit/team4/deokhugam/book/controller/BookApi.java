@@ -2,14 +2,20 @@ package com.codeit.team4.deokhugam.book.controller;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
+import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,14 +23,53 @@ import org.springframework.web.multipart.MultipartFile;
 public interface BookApi {
 
     @Operation(summary = "도서 등록")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    encoding = {
+                            @Encoding(name = "bookData", contentType = MediaType.APPLICATION_JSON_VALUE),
+                            @Encoding(name = "thumbnailImage", contentType = "image/*")
+                    }
+            )
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "도서 등록 성공",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "409", description = "ISBN 중복")
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "ISBN 중복",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<BookResponse> createBook(
-        @RequestPart("bookData") @Valid BookCreateRequest request,
-                @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
+            @RequestPart("bookData") @Valid BookCreateRequest request,
+            @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
+
+    @Operation(summary = "도서 수정")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    encoding = {
+                            @Encoding(name = "bookData", contentType = MediaType.APPLICATION_JSON_VALUE),
+                            @Encoding(name = "thumbnailImage", contentType = "image/*")
+                    }
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "도서 수정 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "도서 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<BookResponse> updateBook(
+            @PathVariable UUID bookId,
+            @RequestPart("bookData") @Valid BookUpdateRequest request,
+            @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
+
 
 }

@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.book.entity;
 import com.codeit.team4.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,7 +14,17 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "books")
+@Table(
+        name = "books",
+        indexes = {
+                @Index(name = "uq_books_isbn_alive", columnList = "isbn"),
+                @Index(name = "idx_books_title", columnList = "title"),
+                @Index(name = "idx_books_published_date", columnList = "published_date"),
+                @Index(name = "idx_books_rating", columnList = "rating"),
+                @Index(name = "idx_books_review_count", columnList = "review_count"),
+                @Index(name = "idx_books_deleted_at", columnList = "deleted_at")
+        }
+)
 @NoArgsConstructor
 public class Book extends BaseUpdatableEntity {
 
@@ -47,7 +58,8 @@ public class Book extends BaseUpdatableEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    public Book(String title, String author, String description, String publisher, LocalDate publishedDate, String isbn) {
+    public Book(String title, String author, String description, String publisher,
+            LocalDate publishedDate, String isbn) {
         this.title = title;
         this.author = author;
         this.description = description;
@@ -56,6 +68,15 @@ public class Book extends BaseUpdatableEntity {
         this.isbn = isbn;
         this.reviewCount = 0;
         this.rating = BigDecimal.ZERO;
+    }
+
+    public void update(String title, String author, String description,
+            String publisher, LocalDate publishedDate) {
+        this.title = title;
+        this.author = author;
+        this.description = description;
+        this.publisher = publisher;
+        this.publishedDate = publishedDate;
     }
 
     @Override
