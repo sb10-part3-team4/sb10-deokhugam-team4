@@ -10,6 +10,7 @@ import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,16 +27,20 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse registerUser(UserRegisterRequest request) {
 
-        log.info("회원가입 요청: email={}", request.email());
-
         validateEmailNotExists(request.email());
 
-        User user = userMapper.toEntity(request);
-        User savedUser = userRepository.save(user);
+        try {
+            User user = userMapper.toEntity(request);
+            User savedUser = userRepository.save(user);
 
-        log.info("회원가입 완료: userId={}", savedUser.getId());
+            log.info("회원가입 성공: userId={}", savedUser.getId());
 
-        return userMapper.toResponse(savedUser);
+            return userMapper.toResponse(savedUser);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(
+                    ErrorCode.DUPLICATE_EMAIL,
+                    "email=" + request.email());
+        }
     }
 
     @Override
