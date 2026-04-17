@@ -8,6 +8,7 @@ import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UserResponse loginUser(UserLoginRequest request) {
 
         User user = findActiveUserByEmail(request.email());
@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validatePassword(User user, String password) {
-        if (!user.getPassword().equals(password)) {
+        if (!Objects.equals(user.getPassword(), password)) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
     }

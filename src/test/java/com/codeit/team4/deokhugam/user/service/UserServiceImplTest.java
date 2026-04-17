@@ -177,6 +177,9 @@ class UserServiceImplTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.INVALID_PASSWORD);
+
+        verify(userRepository).findByEmailAndDeletedAtIsNull(request.email());
+        verify(userMapper, never()).toResponse(any());
     }
 
     @Test
