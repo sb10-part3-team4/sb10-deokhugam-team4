@@ -19,6 +19,7 @@ import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -154,5 +155,28 @@ class ReviewServiceImplTest {
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ErrorCode.BOOK_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("DB 무결성 위반으로 리뷰 생성 실패")
+    void test7() {
+        UUID userId = UUID.randomUUID();
+        UUID bookId = UUID.randomUUID();
+        User user = mock(User.class);
+        Book book = mock(Book.class);
+        ReviewCreateRequest request = new ReviewCreateRequest(bookId, userId, "좋은 책입니다", 5);
+
+        given(userService.findById(userId)).willReturn(user);
+        given(bookService.findById(bookId)).willReturn(book);
+        given(book.getId()).willReturn(bookId);
+        given(user.getId()).willReturn(userId);
+        given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(false);
+        given(reviewRepository.save(any(Review.class)))
+                .willThrow(new DataIntegrityViolationException("duplicate key"));
+
+        assertThatThrownBy(() -> reviewService.createReview(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
     }
 }
