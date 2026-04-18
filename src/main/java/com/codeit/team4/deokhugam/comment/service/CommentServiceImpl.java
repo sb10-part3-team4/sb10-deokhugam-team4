@@ -35,6 +35,8 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         log.info("댓글 생성 완료: commentId={}, userId={}, reviewId={}", savedComment.getId(), user.getId(), review.getId());
+
+        review.increaseCommentCount();
         
         return commentMapper.toResponse(savedComment);
     }

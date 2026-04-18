@@ -45,15 +45,8 @@ public class Comment extends BaseUpdatableEntity {
 
     public Comment(User user, Review review, String content) {
         this.user = user;
-        this.content = content;
-        assignReview(review);
-    }
-
-    private void assignReview(Review review) {
         this.review = review;
-        if (review != null) {
-            review.increaseCommentCount();
-        }
+        this.content = content;
     }
 
     @Override

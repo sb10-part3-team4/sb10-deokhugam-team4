@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -63,19 +64,19 @@ class CommentServiceTest {
 
         // then
         assertThat(response).isEqualTo(mockResponse);
+        then(mockReview).should(times(1)).increaseCommentCount();
 
         // ArgumentCaptor로 mapper나 repository에 전달된 객체를 잡아서 확인
         ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
-        verify(commentRepository).save(commentCaptor.capture());
+        then(commentRepository).should().save(commentCaptor.capture());
 
         Comment savedComment = commentCaptor.getValue();
         assertThat(savedComment.getContent()).isEqualTo(request.content());
         assertThat(savedComment.getUser()).isEqualTo(mockUser);
         assertThat(savedComment.getReview()).isEqualTo(mockReview);
 
-        verify(mockReview, times(1)).increaseCommentCount();
-        verify(userService).findById(userId);
-        verify(reviewService).findById(reviewId);
+        then(userService).should().findById(userId);
+        then(reviewService).should().findById(reviewId);
     }
 
     @Test
