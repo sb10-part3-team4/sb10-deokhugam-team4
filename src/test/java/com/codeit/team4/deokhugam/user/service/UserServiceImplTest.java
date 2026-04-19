@@ -261,4 +261,41 @@ class UserServiceImplTest {
         verify(userMapper, never()).toResponse(any());
         verify(userRepository).findByIdAndDeletedAtIsNull(userId);
     }
+
+    @Test
+    @DisplayName("유저 삭제 성공")
+    void deleteUser_success() {
+        // given
+        UUID userId = UUID.randomUUID();
+        User user = new User("test@test.com", "user1", "password1!");
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.of(user));
+
+        // when
+        userService.deleteUser(userId);
+
+        // then
+        assertThat(user.isDeleted()).isTrue();
+
+        verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    }
+
+    @Test
+    @DisplayName("유저가 존재하지 않아 삭제 실패")
+    void deleteUser_fail_user_not_found() {
+        // given
+        UUID userId = UUID.randomUUID();
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.deleteUser(userId))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+
+        verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    }
 }
