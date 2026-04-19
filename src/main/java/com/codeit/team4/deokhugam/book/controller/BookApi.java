@@ -72,7 +72,7 @@ public interface BookApi {
             @RequestPart("bookData") @Valid BookUpdateRequest request,
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
-    @Operation(summary = "도서 삭제")
+    @Operation(summary = "도서 논리 삭제")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "도서 삭제 성공"),
             @ApiResponse(responseCode = "404", description = "도서 정보 없음",
@@ -81,5 +81,15 @@ public interface BookApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<Void> deleteBook(@PathVariable UUID bookId);
+
+    @Operation(summary = "도서 물리 삭제")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "도서 삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "도서 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<Void> permanentDeleteBook(@PathVariable UUID bookId);
 
 }

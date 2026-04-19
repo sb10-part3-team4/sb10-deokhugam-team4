@@ -197,7 +197,7 @@ class BookControllerTest {
     }
 
     @Test
-    @DisplayName("도서 삭제 성공")
+    @DisplayName("도서 논리 삭제 성공")
     void delete_success() throws Exception {
         // given
         UUID bookId = UUID.randomUUID();
@@ -209,7 +209,7 @@ class BookControllerTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 도서 삭제 실패")
+    @DisplayName("존재하지 않는 도서 논리 삭제 실패")
     void delete_fail_not_found() throws Exception {
         // given
         UUID bookId = UUID.randomUUID();
@@ -219,6 +219,34 @@ class BookControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/books/{bookId}", bookId))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("도서 물리 삭제 성공")
+    void permanent_delete_success() throws Exception {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        // when & then
+        mockMvc.perform(delete("/api/books/{bookId}/permanent", bookId))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서 물리 삭제 실패")
+    void permanent_delete_fail_not_found() throws Exception {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        doThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND))
+                .when(bookService).permanentDeleteBook(bookId);
+
+        // when & then
+        mockMvc.perform(delete("/api/books/{bookId}/permanent", bookId))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));

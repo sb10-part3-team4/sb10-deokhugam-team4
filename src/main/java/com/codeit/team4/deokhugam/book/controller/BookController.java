@@ -49,7 +49,7 @@ public class BookController implements BookApi {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    // 도서 삭제
+    // 도서 논리 삭제
     @DeleteMapping("/{bookId}")
     public ResponseEntity<Void> deleteBook(
             @PathVariable UUID bookId
@@ -59,4 +59,13 @@ public class BookController implements BookApi {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
+    // 도서 물리 삭제
+    @DeleteMapping("/{bookId}/permanent")
+    public ResponseEntity<Void> permanentDeleteBook(
+            @PathVariable UUID bookId
+    ) {
+        log.info("도서 물리 삭제 요청: bookId={}", bookId);
+        bookService.permanentDeleteBook(bookId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
 }

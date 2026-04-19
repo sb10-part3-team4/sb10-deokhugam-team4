@@ -16,4 +16,6 @@ public interface BookService {
     BookResponse updateBook(UUID bookId, BookUpdateRequest request, MultipartFile thumbnailImage);
 
     void deleteBook(UUID bookId);
+
+    void permanentDeleteBook(UUID bookId);
 }

@@ -95,4 +95,15 @@ public class BookServiceImpl implements BookService {
         book.softDelete();
         log.info("도서 삭제 완료: bookId={}", bookId);
     }
+
+    @Override
+    @Transactional
+    public void permanentDeleteBook(UUID bookId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
+
+        bookRepository.delete(book);
+        log.info("도서 물리 삭제 완료: bookId={}", bookId);
+    }
 }
