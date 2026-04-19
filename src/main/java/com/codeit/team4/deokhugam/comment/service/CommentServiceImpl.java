@@ -27,7 +27,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentResponse createComment(CommentCreateRequest request){
+    public CommentResponse createComment(CommentCreateRequest request) {
         User user = userService.findById(request.userId());
         Review review = reviewService.findById(request.reviewId());
 
@@ -35,8 +35,8 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         review.increaseCommentCount();
 
-        log.info("댓글 생성 완료: commentId={}, userId={}, reviewId={}", savedComment.getId(), user.getId(), review.getId());
-
+        log.info("댓글 생성 완료: commentId={}, userId={}, reviewId={}", savedComment.getId(),
+                user.getId(), review.getId());
 
         return commentMapper.toResponse(savedComment);
     }

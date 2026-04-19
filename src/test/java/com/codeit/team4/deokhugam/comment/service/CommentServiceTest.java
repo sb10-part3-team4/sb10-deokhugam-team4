@@ -33,10 +33,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("CommentService 단위 테스트")
 class CommentServiceTest {
 
-    @Mock private CommentRepository commentRepository;
-    @Mock private UserService userService;
-    @Mock private ReviewService reviewService;
-    @Mock private CommentMapper commentMapper;
+    @Mock
+    private CommentRepository commentRepository;
+    @Mock
+    private UserService userService;
+    @Mock
+    private ReviewService reviewService;
+    @Mock
+    private CommentMapper commentMapper;
 
     @InjectMocks
     private CommentServiceImpl commentService;
@@ -51,7 +55,8 @@ class CommentServiceTest {
 
         User mockUser = mock(User.class);
         Review mockReview = mock(Review.class);
-        CommentResponse mockResponse = new CommentResponse(UUID.randomUUID(), request.content(), userId, reviewId);
+        CommentResponse mockResponse = new CommentResponse(UUID.randomUUID(), request.content(),
+                userId, reviewId);
 
         given(userService.findById(userId)).willReturn(mockUser);
         given(reviewService.findById(reviewId)).willReturn(mockReview);
@@ -85,7 +90,8 @@ class CommentServiceTest {
         // given
         UUID invalidUserId = UUID.randomUUID();
         UUID reviewId = UUID.randomUUID();
-        CommentCreateRequest request = new CommentCreateRequest(reviewId, invalidUserId, "유익한 리뷰네요!");
+        CommentCreateRequest request = new CommentCreateRequest(reviewId, invalidUserId,
+                "유익한 리뷰네요!");
 
         given(userService.findById(invalidUserId))
                 .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
