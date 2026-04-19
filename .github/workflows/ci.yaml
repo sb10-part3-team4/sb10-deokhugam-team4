@@ -29,5 +29,5 @@ jobs:
         run: chmod +x gradlew
 
       - name: 테스트 및 커버리지 체크 실행
-        run: ./gradlew test jacocoTestCoverageVerification
+        run: ./gradlew test jacocoTestCoverageVerification -PgenerateJooq
         continue-on-error: true

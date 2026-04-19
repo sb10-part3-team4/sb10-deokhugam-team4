@@ -136,8 +136,10 @@ tasks.register('generateJooq') {
     }
 }
 
-tasks.named('compileJava') {
-    dependsOn 'generateJooq'
+if (project.hasProperty('generateJooq')) {
+    tasks.named('compileJava') {
+        dependsOn 'generateJooq'
+    }
 }
 
 tasks.named('test') {
