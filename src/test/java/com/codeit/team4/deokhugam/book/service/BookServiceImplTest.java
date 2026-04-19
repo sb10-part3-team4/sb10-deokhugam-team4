@@ -134,6 +134,8 @@ class BookServiceImplTest {
 
         // then
         // DB 확인
+        assertThat(bookRepository.findById(result.id()))
+                .hasValueSatisfying(book -> assertThat(book.getDeletedAt()).isNotNull());
         assertThat(bookRepository.findByIdAndDeletedAtIsNull(result.id())).isEmpty();
     }
 

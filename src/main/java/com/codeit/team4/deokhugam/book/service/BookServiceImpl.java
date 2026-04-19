@@ -8,6 +8,7 @@ import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +93,7 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
 
-        book.softDelete();
+        book.softDelete(Instant.now());
         log.info("도서 삭제 완료: bookId={}", bookId);
     }
 
