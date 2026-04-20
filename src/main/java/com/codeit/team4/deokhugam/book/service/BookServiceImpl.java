@@ -109,6 +109,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookResponse getBook(UUID bookId) {
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(

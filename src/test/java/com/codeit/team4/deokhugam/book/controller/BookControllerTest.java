@@ -272,7 +272,9 @@ class BookControllerTest {
         // then
         mockMvc.perform(get("/api/books/{bookId}", bookId))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("달선이의 하루"))
+                .andExpect(jsonPath("$.author").value("달선"));
     }
 
     @Test

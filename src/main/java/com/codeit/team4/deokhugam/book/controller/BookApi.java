@@ -94,7 +94,8 @@ public interface BookApi {
 
     @Operation(summary = "도서 정보 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공"),
+            @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
             @ApiResponse(responseCode = "404", description = "도서 정보 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",

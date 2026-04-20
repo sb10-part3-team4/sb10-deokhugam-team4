@@ -74,7 +74,7 @@ public class BookController implements BookApi {
     @GetMapping("/{bookId}")
     public ResponseEntity<BookResponse> getBook(
             @PathVariable UUID bookId
-    ){
+    ) {
         log.info("도서 정보 조회 요청: bookId={}", bookId);
         BookResponse result = bookService.getBook(bookId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
