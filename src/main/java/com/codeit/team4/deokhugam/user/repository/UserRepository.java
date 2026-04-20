@@ -1,6 +1,8 @@
 package com.codeit.team4.deokhugam.user.repository;
 
 import com.codeit.team4.deokhugam.user.entity.User;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -12,4 +14,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmailAndDeletedAtIsNull(String email);
     boolean existsByEmailAndDeletedAtIsNull(String email);
     Page<User> findAllByDeletedAtIsNull(Pageable pageable);
+    List<User> findAllByDeletedAtBefore(Instant time);
 }

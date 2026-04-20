@@ -6,6 +6,8 @@ import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.config.JpaAuditingConfig;
 import com.codeit.team4.deokhugam.user.entity.User;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,6 +90,31 @@ class UserRepositoryTest {
                 );
     }
 
+    @Test
+    @DisplayName("삭제 기준 시간 이전 사용자 조회 성공")
+    void findAllByDeletedAtBefore_success() {
+        // given
+        Instant now = Instant.now();
+
+        User oldUser = saveUser("old@test.com", "old");
+        markAsDeleted(oldUser, now.minus(2, ChronoUnit.DAYS)); // 기준 이전
+
+        User recentUser = saveUser("recent@test.com", "recent");
+        markAsDeleted(recentUser, now.minus(1, ChronoUnit.HOURS)); // 기준 이후
+
+        // when
+        List<User> result = userRepository.findAllByDeletedAtBefore(
+                now.minus(1, ChronoUnit.DAYS)
+        );
+
+        // then
+        assertThat(result).hasSize(1);
+
+        assertThat(result)
+                .extracting(User::getEmail)
+                .containsExactly("old@test.com");
+    }
+
     // --- 실패 케이스 ---
 
     @Test
@@ -149,6 +176,27 @@ class UserRepositoryTest {
         assertThat(result.getTotalElements()).isEqualTo(0);
     }
 
+    @Test
+    @DisplayName("삭제 기준 시간 이전 사용자가 없어 조회 실패")
+    void findAllByDeletedAtBefore_fail() {
+        // given
+        Instant now = Instant.now();
+
+        User recentUser1 = saveUser("recent1@test.com", "recent1");
+        markAsDeleted(recentUser1, now.minus(1, ChronoUnit.HOURS));
+
+        User recentUser2 = saveUser("recent2@test.com", "recent2");
+        markAsDeleted(recentUser2, now.minus(30, ChronoUnit.MINUTES));
+
+        // when
+        List<User> result = userRepository.findAllByDeletedAtBefore(
+                now.minus(1, ChronoUnit.DAYS)
+        );
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
     // --- 헬퍼 메소드 ---
 
     /**
@@ -166,6 +214,21 @@ class UserRepositoryTest {
         em.getEntityManager()
                 .createQuery("update User u set u.deletedAt = :now where u.id = :id")
                 .setParameter("now", Instant.now())
+                .setParameter("id", user.getId())
+                .executeUpdate();
+        em.clear();
+    }
+
+    /**
+     * 영속성 컨텍스트를 동기화하고,
+     * 지정한 시간으로 deletedAt을 설정하여 소프트 딜리트 상태로 변경한다
+     */
+
+    private void markAsDeleted(User user, Instant deletedAt) {
+        em.flush();
+        em.getEntityManager()
+                .createQuery("update User u set u.deletedAt = :time where u.id = :id")
+                .setParameter("time", deletedAt)
                 .setParameter("id", user.getId())
                 .executeUpdate();
         em.clear();
