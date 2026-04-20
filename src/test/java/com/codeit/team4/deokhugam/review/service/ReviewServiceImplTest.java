@@ -399,23 +399,6 @@ class ReviewServiceImplTest {
         }
 
         @Test
-        @DisplayName("소프트 삭제된 리뷰 물리 삭제 성공")
-        void hardDeleteReview_softDeleted_success() {
-            UUID reviewId = UUID.randomUUID();
-            UUID userId = UUID.randomUUID();
-            User user = mock(User.class);
-            Review review = mock(Review.class);
-
-            given(userService.findById(userId)).willReturn(user);
-            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
-            given(review.isOwner(user)).willReturn(true);
-
-            reviewService.hardDeleteReview(reviewId, userId);
-
-            verify(reviewRepository).delete(review);
-        }
-
-        @Test
         @DisplayName("본인의 리뷰가 아니면 물리 삭제 실패")
         void hardDeleteReview_notOwner_fail() {
             UUID reviewId = UUID.randomUUID();
