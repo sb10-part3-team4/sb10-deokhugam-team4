@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -49,6 +50,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
+            MissingRequestHeaderException.class,
             MissingServletRequestParameterException.class,
             HttpMessageNotReadableException.class,
             MethodArgumentTypeMismatchException.class
