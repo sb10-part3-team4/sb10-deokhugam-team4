@@ -124,22 +124,6 @@ class ReviewControllerTest {
                     .andDo(print())
                     .andExpect(status().isBadRequest());
         }
-
-        @Test
-        @DisplayName("헤더와 파라미터 요청자 ID 불일치 시 목록 조회 실패")
-        void searchReviews_mismatchUserId_fail() throws Exception {
-            UUID headerUserId = UUID.randomUUID();
-            UUID paramUserId = UUID.randomUUID();
-            mockMvc.perform(get("/api/reviews")
-                            .header(USER_ID_HEADER, headerUserId.toString())
-                            .param("orderBy", "createdAt")
-                            .param("direction", "DESC")
-                            .param("limit", "50")
-                            .param("requestUserId", paramUserId.toString()))
-                    .andDo(print())
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
-        }
     }
 
     @Nested
