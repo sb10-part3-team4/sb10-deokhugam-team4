@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
@@ -36,6 +37,8 @@ class CommentServiceTest {
     @Mock
     private CommentRepository commentRepository;
     @Mock
+    private ReviewRepository reviewRepository;
+    @Mock
     private UserService userService;
     @Mock
     private ReviewService reviewService;
@@ -55,6 +58,7 @@ class CommentServiceTest {
 
         User mockUser = mock(User.class);
         Review mockReview = mock(Review.class);
+        given(mockReview.getId()).willReturn(reviewId);
         CommentResponse mockResponse = new CommentResponse(UUID.randomUUID(), request.content(),
                 userId, reviewId);
 
@@ -69,7 +73,7 @@ class CommentServiceTest {
 
         // then
         assertThat(response).isEqualTo(mockResponse);
-        then(mockReview).should(times(1)).increaseCommentCount();
+        then(reviewRepository).should(times(1)).increaseCommentCount(reviewId);
 
         // ArgumentCaptor로 mapper나 repository에 전달된 객체를 잡아서 확인
         ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
