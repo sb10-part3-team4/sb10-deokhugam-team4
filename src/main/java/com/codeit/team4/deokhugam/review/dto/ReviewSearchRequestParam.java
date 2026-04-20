@@ -4,6 +4,8 @@ import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -94,7 +96,12 @@ public record ReviewSearchRequestParam(
         OffsetDateTime afterTime = after.atOffset(ZoneOffset.UTC);
 
         if (ReviewOrderBy.rating == orderBy) {
-            int cursorValue = Integer.parseInt(cursor);
+            int cursorValue;
+            try {
+                cursorValue = Integer.parseInt(cursor);
+            } catch (NumberFormatException e) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "rating 정렬에서 cursor는 정수여야 합니다");
+            }
             return isAsc
                     ? DSL.row(REVIEWS.RATING, REVIEWS.CREATED_AT).gt(cursorValue, afterTime)
                     : DSL.row(REVIEWS.RATING, REVIEWS.CREATED_AT).lt(cursorValue, afterTime);
