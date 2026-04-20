@@ -177,6 +177,57 @@ class ReviewServiceImplTest {
     }
 
     @Nested
+    @DisplayName("리뷰 단건 조회")
+    class GetReview {
+
+        @Test
+        @DisplayName("리뷰 단건 조회 성공")
+        void getReview_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            Review review = mock(Review.class);
+            ReviewResponse expectedResponse = new ReviewResponse(
+                    reviewId,
+                    UUID.randomUUID(),
+                    "클린 코드",
+                    null,
+                    userId,
+                    "테스터",
+                    "좋은 책입니다",
+                    5,
+                    0,
+                    0,
+                    true,
+                    Instant.now(),
+                    Instant.now()
+            );
+
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
+            given(reviewMapper.toResponse(review, true)).willReturn(expectedResponse);
+
+            ReviewResponse response = reviewService.getReview(reviewId, userId);
+
+            assertThat(response.content()).isEqualTo("좋은 책입니다");
+            assertThat(response.likedByMe()).isTrue();
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 단건 조회 실패")
+        void getReview_notFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> reviewService.getReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+        }
+    }
+
+    @Nested
     @DisplayName("리뷰 조회")
     class FindById {
 

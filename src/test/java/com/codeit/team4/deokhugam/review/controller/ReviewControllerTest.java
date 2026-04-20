@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -49,6 +50,71 @@ class ReviewControllerTest {
 
     @MockitoBean
     private ReviewService reviewService;
+
+    @Nested
+    @DisplayName("리뷰 단건 조회")
+    class GetReview {
+
+        private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
+
+        @Test
+        @DisplayName("리뷰 단건 조회 성공")
+        void getReview_success() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            ReviewResponse response = new ReviewResponse(
+                    reviewId,
+                    UUID.randomUUID(),
+                    "클린 코드",
+                    null,
+                    userId,
+                    "테스터",
+                    "좋은 책입니다",
+                    5,
+                    0,
+                    0,
+                    true,
+                    Instant.now(),
+                    Instant.now()
+            );
+
+            given(reviewService.getReview(reviewId, userId)).willReturn(response);
+
+            mockMvc.perform(get("/api/reviews/{reviewId}", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").value("좋은 책입니다"))
+                    .andExpect(jsonPath("$.rating").value(5))
+                    .andExpect(jsonPath("$.likedByMe").value(true));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 단건 조회 실패")
+        void getReview_notFound_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            given(reviewService.getReview(reviewId, userId))
+                    .willThrow(new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+
+            mockMvc.perform(get("/api/reviews/{reviewId}", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("요청자 ID 누락 시 리뷰 단건 조회 실패")
+        void getReview_missingUserId_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+
+            mockMvc.perform(get("/api/reviews/{reviewId}", reviewId))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+        }
+    }
 
     @Nested
     @DisplayName("리뷰 생성")

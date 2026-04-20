@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReviewController implements ReviewApi {
 
     private final ReviewService reviewService;
+
+    @GetMapping("/{reviewId}")
+    public ResponseEntity<ReviewResponse> getReview(
+            @PathVariable UUID reviewId,
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    ) {
+        log.info("리뷰 단건 조회 요청: reviewId={}, userId={}", reviewId, userId);
+        ReviewResponse response = reviewService.getReview(reviewId, userId);
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(
