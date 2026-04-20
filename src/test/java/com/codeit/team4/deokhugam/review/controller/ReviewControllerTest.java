@@ -20,7 +20,6 @@ import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
-import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Map;
@@ -36,11 +35,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ReviewController.class)
 @Import(AppProperties.class)
+@ActiveProfiles("test")
 class ReviewControllerTest {
 
     @Autowired
@@ -48,9 +49,6 @@ class ReviewControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private UserService userService;
 
     @MockitoBean
     private ReviewService reviewService;

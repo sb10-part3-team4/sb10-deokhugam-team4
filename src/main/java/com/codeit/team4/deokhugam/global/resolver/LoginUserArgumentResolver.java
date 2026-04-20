@@ -1,14 +1,12 @@
 package com.codeit.team4.deokhugam.global.resolver;
 
-import static org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET;
-
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.util.UUID;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -17,7 +15,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
-@ConditionalOnWebApplication(type = SERVLET)
+@Profile("!test")
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
 
     private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
@@ -31,7 +29,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(LoginUser.class)
-                && User.class.isAssignableFrom(parameter.getParameterType());
+                && User.class.equals(parameter.getParameterType());
     }
 
     @Override

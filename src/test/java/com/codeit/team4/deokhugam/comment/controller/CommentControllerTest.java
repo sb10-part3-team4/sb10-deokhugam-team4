@@ -13,7 +13,6 @@ import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
-import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -22,11 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(CommentController.class)
 @EnableConfigurationProperties(AppProperties.class)
+@ActiveProfiles("test")
 class CommentControllerTest {
 
     @Autowired
@@ -34,9 +35,6 @@ class CommentControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private UserService userService;
 
     @MockitoBean
     private CommentService commentService;
