@@ -31,7 +31,7 @@ public interface ReviewApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
-            ReviewSearchRequestParam param,
+            @org.springdoc.core.annotations.ParameterObject ReviewSearchRequestParam param,
             @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId
     );
