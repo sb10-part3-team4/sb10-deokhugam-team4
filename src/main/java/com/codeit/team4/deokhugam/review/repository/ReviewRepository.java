@@ -17,6 +17,6 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     // 동시성 제어 + 서버 부하를 고려해 원자적 UPDATE 처리
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Review r SET r.commentCount = r.commentCount + 1 WHERE r.id = :id")
+    @Query("UPDATE Review r SET r.commentCount = r.commentCount + 1 WHERE r.id = :reviewId")
     void increaseCommentCount(@Param("reviewId") UUID reviewId);
 }
