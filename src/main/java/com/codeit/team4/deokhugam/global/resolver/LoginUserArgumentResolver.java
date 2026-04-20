@@ -6,6 +6,7 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.util.UUID;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -14,6 +15,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
+@Profile("!test")
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
 
     private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
