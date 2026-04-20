@@ -3,6 +3,9 @@ package com.codeit.team4.deokhugam.review.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -298,6 +301,105 @@ class ReviewControllerTest {
                             .header(USER_ID_HEADER, userId.toString())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
+                    .andDo(print())
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 삭제")
+    class DeleteReview {
+
+        private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
+
+        @Test
+        @DisplayName("리뷰 삭제 성공")
+        void softDeleteReview_success() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            doNothing().when(reviewService).softDeleteReview(reviewId, userId);
+
+            mockMvc.perform(delete("/api/reviews/{reviewId}", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        @DisplayName("본인의 리뷰가 아니면 삭제 실패")
+        void softDeleteReview_notOwner_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            doThrow(new BusinessException(ErrorCode.REVIEW_NOT_OWNER))
+                    .when(reviewService).softDeleteReview(reviewId, userId);
+
+            mockMvc.perform(delete("/api/reviews/{reviewId}", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_OWNER"));
+        }
+
+        @Test
+        @DisplayName("리뷰 물리 삭제 성공")
+        void hardDeleteReview_success() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            doNothing().when(reviewService).hardDeleteReview(reviewId, userId);
+
+            mockMvc.perform(delete("/api/reviews/{reviewId}/hard", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        @DisplayName("본인의 리뷰가 아니면 물리 삭제 실패")
+        void hardDeleteReview_notOwner_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            doThrow(new BusinessException(ErrorCode.REVIEW_NOT_OWNER))
+                    .when(reviewService).hardDeleteReview(reviewId, userId);
+
+            mockMvc.perform(delete("/api/reviews/{reviewId}/hard", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_OWNER"));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 물리 삭제 실패")
+        void hardDeleteReview_notFound_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            doThrow(new BusinessException(ErrorCode.REVIEW_NOT_FOUND))
+                    .when(reviewService).hardDeleteReview(reviewId, userId);
+
+            mockMvc.perform(delete("/api/reviews/{reviewId}/hard", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 삭제 실패")
+        void softDeleteReview_notFound_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            doThrow(new BusinessException(ErrorCode.REVIEW_NOT_FOUND))
+                    .when(reviewService).softDeleteReview(reviewId, userId);
+
+            mockMvc.perform(delete("/api/reviews/{reviewId}", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
                     .andDo(print())
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_FOUND"));

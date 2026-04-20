@@ -74,6 +74,10 @@ public class Review extends BaseUpdatableEntity {
         this.rating = rating;
     }
 
+    public void softDelete() {
+        this.deletedAt = Instant.now();
+    }
+
     public boolean isOwner(User user) {
         return this.user.equals(user);
     }
