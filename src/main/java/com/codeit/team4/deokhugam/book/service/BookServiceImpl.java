@@ -53,7 +53,7 @@ public class BookServiceImpl implements BookService {
         log.info("도서 등록 완료: bookId={}", book.getId());
 
         // dto 변환
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         return bookResponse;
     }
 
@@ -79,7 +79,7 @@ public class BookServiceImpl implements BookService {
         book.update(request.title(), request.author(), request.description(), request.publisher(),
                 request.publishedDate());
 
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 수정 완료: bookId={}", bookId);
         return bookResponse;
 
@@ -116,8 +116,9 @@ public class BookServiceImpl implements BookService {
                         () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId)
                 );
 
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 단건 조회 완료: bookId={}", bookId);
         return bookResponse;
     }
+
 }

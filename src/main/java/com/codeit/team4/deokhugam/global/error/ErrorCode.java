@@ -26,7 +26,12 @@ public enum ErrorCode {
 
     // Book
     DUPLICATE_ISBN(HttpStatus.CONFLICT, "이미 존재하는 ISBN입니다"),
-    BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 도서가 존재하지 않습니다");
+    BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 도서가 존재하지 않습니다"),
+
+    // Comment
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다"),
+    // TODO: 댓글 수정/삭제 기능 구현에서 사용 예정
+    UNAUTHORIZED_COMMENT_ACCESS(HttpStatus.FORBIDDEN, "해당 댓글을 수정/삭제할 권한이 없습니다");
 
     private final HttpStatus status;
     private final String message;
