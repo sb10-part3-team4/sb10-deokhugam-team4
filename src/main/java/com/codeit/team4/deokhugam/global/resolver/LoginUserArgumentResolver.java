@@ -43,7 +43,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
         try {
             userId = UUID.fromString(header);
         } catch (IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
 
         return userService.findById(userId);
