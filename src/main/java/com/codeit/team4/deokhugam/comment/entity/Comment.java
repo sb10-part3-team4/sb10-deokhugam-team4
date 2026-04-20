@@ -51,16 +51,17 @@ public class Comment extends BaseUpdatableEntity {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
         if (!(o instanceof Comment comment)) {
             return false;
         }
-        return Objects.equals(user, comment.user) && Objects.equals(review,
-                comment.review) && Objects.equals(content, comment.content)
-                && Objects.equals(deletedAt, comment.deletedAt);
+        return this.getId() != null && Objects.equals(this.getId(), comment.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(user, review, content, deletedAt);
+        return getClass().hashCode();
     }
 }
