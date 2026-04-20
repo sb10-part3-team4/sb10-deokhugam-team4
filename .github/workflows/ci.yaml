@@ -33,4 +33,3 @@ jobs:
 
       - name: 커버리지 체크
         run: ./gradlew jacocoTestCoverageVerification -PgenerateJooq
-        continue-on-error: true
