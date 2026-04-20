@@ -13,7 +13,7 @@ public class UserCleanupScheduler {
 
     private final UserService userService;
 
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRateString = "${user.cleanup.fixed-rate}")
     public void runCleanup() {
         userService.deleteExpiredUsers();
     }
