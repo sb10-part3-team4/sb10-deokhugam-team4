@@ -17,3 +17,4 @@ logging:
 user:
   cleanup:
     cron: "0 0 4 * * *"
+    zone: "Asia/Seoul"
