@@ -124,6 +124,76 @@ class ReviewControllerTest {
                     .andDo(print())
                     .andExpect(status().isBadRequest());
         }
+
+        @Test
+        @DisplayName("커서 포함 다음 페이지 조회 성공")
+        void searchReviews_withCursor_success() throws Exception {
+            UUID requestUserId = UUID.randomUUID();
+            Instant nextAfter = Instant.parse("2025-04-06T15:04:05Z");
+            ReviewResponse review = new ReviewResponse(
+                    UUID.randomUUID(), UUID.randomUUID(), "클린 코드", null,
+                    requestUserId, "테스터", "좋은 책", 5, 0, 0, false,
+                    Instant.now(), Instant.now()
+            );
+            PageResponse<ReviewResponse> response = new PageResponse<>(
+                    List.of(review), "2025-04-05T10:00:00Z", nextAfter, 1, null, true
+            );
+
+            given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))
+                    .willReturn(response);
+
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, requestUserId.toString())
+                            .param("orderBy", "createdAt")
+                            .param("direction", "DESC")
+                            .param("limit", "1")
+                            .param("cursor", "2025-04-06T15:04:05Z")
+                            .param("after", "2025-04-06T15:04:05Z")
+                            .param("requestUserId", requestUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isNotEmpty())
+                    .andExpect(jsonPath("$.nextCursor").isNotEmpty())
+                    .andExpect(jsonPath("$.nextAfter").isNotEmpty())
+                    .andExpect(jsonPath("$.hasNext").value(true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, -1, 101})
+        @DisplayName("limit 경계값이면 목록 조회 실패")
+        void searchReviews_invalidLimit_fail(int limit) throws Exception {
+            UUID requestUserId = UUID.randomUUID();
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, requestUserId.toString())
+                            .param("orderBy", "createdAt")
+                            .param("direction", "DESC")
+                            .param("limit", String.valueOf(limit))
+                            .param("requestUserId", requestUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("keyword 파라미터가 서비스에 올바르게 전달 성공")
+        void searchReviews_withKeyword_success() throws Exception {
+            UUID requestUserId = UUID.randomUUID();
+            PageResponse<ReviewResponse> response = new PageResponse<>(
+                    List.of(), null, null, 50, null, false
+            );
+
+            given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))
+                    .willReturn(response);
+
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, requestUserId.toString())
+                            .param("orderBy", "createdAt")
+                            .param("direction", "DESC")
+                            .param("limit", "50")
+                            .param("keyword", "홍길동")
+                            .param("requestUserId", requestUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isOk());
+        }
     }
 
     @Nested

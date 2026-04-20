@@ -68,7 +68,7 @@ class ReviewServiceImplTest {
     class SearchReviews {
 
         @Test
-        @DisplayName("리뷰 목록 조회 성공")
+        @DisplayName("리뷰 목록 조회 위임 성공")
         void searchReviews_success() {
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
                     null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
@@ -82,8 +82,24 @@ class ReviewServiceImplTest {
 
             PageResponse<ReviewResponse> response = reviewService.searchReviews(param);
 
-            assertThat(response.content()).isEmpty();
-            assertThat(response.hasNext()).isFalse();
+            assertThat(response).isSameAs(expectedResponse);
+            verify(reviewSearchRepository).searchReviews(param);
+        }
+
+        @Test
+        @DisplayName("리뷰 목록 조회 시 예외 전파 성공")
+        void searchReviews_exceptionPropagation_success() {
+            ReviewSearchRequestParam param = new ReviewSearchRequestParam(
+                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, 50, UUID.randomUUID()
+            );
+
+            given(reviewSearchRepository.searchReviews(param))
+                    .willThrow(new RuntimeException("DB 오류"));
+
+            assertThatThrownBy(() -> reviewService.searchReviews(param))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB 오류");
         }
     }
 
