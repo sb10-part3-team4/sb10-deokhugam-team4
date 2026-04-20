@@ -80,7 +80,7 @@ public class ReviewSearchRepository {
             nextAfter = last.createdAt();
         }
 
-        return new PageResponse<>(content, nextCursor, nextAfter, param.limit(), 0L, hasNext);
+        return new PageResponse<>(content, nextCursor, nextAfter, param.limit(), null, hasNext);
     }
 
     private Field<Boolean> likedByMeField(UUID requestUserId) {

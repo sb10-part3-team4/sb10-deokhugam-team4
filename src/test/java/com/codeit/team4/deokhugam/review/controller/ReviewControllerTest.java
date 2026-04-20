@@ -67,7 +67,7 @@ class ReviewControllerTest {
         void searchReviews_success() throws Exception {
             UUID requestUserId = UUID.randomUUID();
             PageResponse<ReviewResponse> response = new PageResponse<>(
-                    List.of(), null, null, 50, 0L, false
+                    List.of(), null, null, 50, null, false
             );
 
             given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))

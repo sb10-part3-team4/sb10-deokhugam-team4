@@ -19,8 +19,8 @@ public record PageResponse<T>(
         @Schema(description = "페이지 크기")
         int size,
 
-        @Schema(description = "전체 요소 수")
-        long totalElements,
+        @Schema(description = "전체 요소 수 (제공되지 않을 경우 null)")
+        Long totalElements,
 
         @Schema(description = "다음 페이지 존재 여부")
         boolean hasNext

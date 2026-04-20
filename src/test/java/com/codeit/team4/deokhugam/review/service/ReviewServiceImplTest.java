@@ -75,7 +75,7 @@ class ReviewServiceImplTest {
                     null, null, 50, UUID.randomUUID()
             );
             PageResponse<ReviewResponse> expectedResponse = new PageResponse<>(
-                    List.of(), null, null, 50, 0L, false
+                    List.of(), null, null, 50, null, false
             );
 
             given(reviewSearchRepository.searchReviews(param)).willReturn(expectedResponse);
