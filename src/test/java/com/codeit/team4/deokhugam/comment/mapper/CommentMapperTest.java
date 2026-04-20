@@ -17,7 +17,6 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CommentMapper 단위 테스트")
 class CommentMapperTest {
 
     private final CommentMapper commentMapper = Mappers.getMapper(CommentMapper.class);
@@ -133,7 +132,7 @@ class CommentMapperTest {
         }
 
         @Test
-        @DisplayName("입력 엔티티가 null일 경우 null을 반환 성공 (MapStruct Null-Check 방어 로직)")
+        @DisplayName("입력 엔티티가 null일 경우 null을 반환 성공")
         void toResponse_NullInput_Success() {
             // given
             Comment nullComment = null;
@@ -146,7 +145,7 @@ class CommentMapperTest {
         }
 
         @Test
-        @DisplayName("연관된 User가 null일 경우 매핑 시 NPE 없이 userId와 nickname이 null로 반환 성공")
+        @DisplayName("연관된 User가 null일 경우 매핑 시 NPE 없이 userId가 null로 반환 성공")
         void toResponse_NullUser_Success() {
             // given
             Review mockReview = mock(Review.class);
