@@ -59,7 +59,7 @@ class ReviewMapperTest {
     }
 
     @Test
-    @DisplayName("좋아요 한 리뷰 매핑 시 likedByMe false 반환 성공")
+    @DisplayName("좋아요 한 리뷰 매핑 시 likedByMe true 반환 성공")
     void toResponse_liked_success() {
         Book book = mock(Book.class);
         User user = mock(User.class);
