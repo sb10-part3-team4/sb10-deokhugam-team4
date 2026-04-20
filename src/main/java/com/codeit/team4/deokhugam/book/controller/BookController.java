@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RequestMapping("/api/books")
 @Slf4j
-public class BookController implements BookApi{
+public class BookController implements BookApi {
 
     private final BookService bookService;
 
@@ -48,6 +49,23 @@ public class BookController implements BookApi{
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    // 도서 논리 삭제
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<Void> deleteBook(
+            @PathVariable UUID bookId
+    ) {
+        log.info("도서 삭제 요청: bookId={}", bookId);
+        bookService.deleteBook(bookId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
 
-
+    // 도서 물리 삭제
+    @DeleteMapping("/{bookId}/permanent")
+    public ResponseEntity<Void> permanentDeleteBook(
+            @PathVariable UUID bookId
+    ) {
+        log.info("도서 물리 삭제 요청: bookId={}", bookId);
+        bookService.permanentDeleteBook(bookId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
 }

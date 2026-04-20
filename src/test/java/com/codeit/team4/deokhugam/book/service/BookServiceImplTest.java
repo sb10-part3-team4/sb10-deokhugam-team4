@@ -119,4 +119,66 @@ class BookServiceImplTest {
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
     }
+
+    @Test
+    @DisplayName("도서 논리 삭제 성공")
+    void delete_success() {
+        // given
+        BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+        BookResponse result = bookService.createBook(request, null);
+
+        // when
+        bookService.deleteBook(result.id());
+
+        // then
+        // DB 확인
+        assertThat(bookRepository.findById(result.id()))
+                .hasValueSatisfying(book -> assertThat(book.getDeletedAt()).isNotNull());
+        assertThat(bookRepository.findByIdAndDeletedAtIsNull(result.id())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서로 인한 도서 논리 삭제 실패")
+    void delete_fail_not_found() {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(() -> bookService.deleteBook(bookId))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("도서 물리 삭제 성공")
+    void permanent_delete_success() {
+        // given
+        BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+        BookResponse result = bookService.createBook(request, null);
+
+        // when
+        bookService.permanentDeleteBook(result.id());
+
+        // then
+        // DB 확인
+        assertThat(bookRepository.findById(result.id())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서로 인한 도서 물리 삭제 실패")
+    void permanent_delete_fail_not_found() {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(() -> bookService.permanentDeleteBook(bookId))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
 }
