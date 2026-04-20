@@ -33,6 +33,12 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewMapper reviewMapper;
 
     @Override
+    public ReviewResponse getReview(UUID reviewId, UUID userId) {
+        Review review = findById(reviewId);
+        return reviewMapper.toResponse(review, isLikedByUser(reviewId, userId));
+    }
+
+    @Override
     @Transactional
     public ReviewResponse createReview(ReviewCreateRequest request) {
         User user = userService.findById(request.userId());
@@ -78,8 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.update(request.content(), request.rating());
         log.info("리뷰 수정 완료: reviewId={}", review.getId());
 
-        boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
-        return reviewMapper.toResponse(review, likedByMe);
+        return reviewMapper.toResponse(review, isLikedByUser(reviewId, userId));
     }
 
     @Override
@@ -109,6 +114,10 @@ public class ReviewServiceImpl implements ReviewService {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_REVIEW, "bookId=" + bookId + ", userId=" + userId);
         }
+    }
+
+    private boolean isLikedByUser(UUID reviewId, UUID userId) {
+        return reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
     }
 
     private static void validateReviewOwner(Review review, User user) {
