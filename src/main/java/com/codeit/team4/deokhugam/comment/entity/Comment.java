@@ -49,6 +49,10 @@ public class Comment extends BaseUpdatableEntity {
         this.content = content;
     }
 
+    public void updateContent(String newContent) {
+        this.content = newContent;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

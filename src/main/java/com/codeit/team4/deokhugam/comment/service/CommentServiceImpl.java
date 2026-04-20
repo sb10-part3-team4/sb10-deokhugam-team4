@@ -2,14 +2,18 @@ package com.codeit.team4.deokhugam.comment.service;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
+import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.comment.entity.Comment;
 import com.codeit.team4.deokhugam.comment.mapper.CommentMapper;
 import com.codeit.team4.deokhugam.comment.repository.CommentRepository;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +45,23 @@ public class CommentServiceImpl implements CommentService {
                 user.getId(), review.getId());
 
         return commentMapper.toResponse(savedComment);
+    }
+
+    @Override
+    @Transactional
+    public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS, "userId: " + userId);
+        }
+
+        comment.updateContent(request.content());
+
+        log.info("댓글 수정 완료: commentId: {}, userId: {}", commentId, userId);
+        return commentMapper.toResponse(comment);
     }
 
 
