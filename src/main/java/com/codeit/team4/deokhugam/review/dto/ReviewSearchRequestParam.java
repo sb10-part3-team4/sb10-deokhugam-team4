@@ -5,6 +5,9 @@ import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
 import com.codeit.team4.deokhugam.global.response.SortDirection;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -41,10 +44,12 @@ public record ReviewSearchRequestParam(
         Instant after,
 
         @Schema(description = "페이지 크기", example = "50", defaultValue = "50")
+        @Min(1)
+        @Max(100)
         int limit,
 
         @Schema(description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.REQUIRED)
-        @jakarta.validation.constraints.NotNull
+        @NotNull
         UUID requestUserId
 ) {
 

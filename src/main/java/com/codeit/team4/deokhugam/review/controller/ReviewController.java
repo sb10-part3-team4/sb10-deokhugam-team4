@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.review.controller;
 
 import com.codeit.team4.deokhugam.global.response.PageResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
@@ -35,7 +36,7 @@ public class ReviewController implements ReviewApi {
     @GetMapping
     public ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
             @Valid @ParameterObject ReviewSearchRequestParam param,
-            @io.swagger.v3.oas.annotations.Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId
     ) {
         log.info("리뷰 목록 조회 요청: orderBy={}, direction={}, limit={}", param.orderBy(), param.direction(), param.limit());
