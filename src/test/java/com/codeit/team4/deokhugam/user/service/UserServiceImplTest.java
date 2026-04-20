@@ -3,9 +3,11 @@ package com.codeit.team4.deokhugam.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -16,12 +18,18 @@ import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
+import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +40,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserJooqRepository userJooqRepository;
 
     @Mock
     private UserMapper userMapper;
@@ -297,5 +308,52 @@ class UserServiceImplTest {
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
 
         verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    }
+
+    @Test
+    @DisplayName("삭제 대상 사용자 물리 삭제 성공")
+    void deleteExpiredUsers_success() {
+        // when
+        userService.deleteExpiredUsers();
+
+        // then
+        ArgumentCaptor<Instant> captor = ArgumentCaptor.forClass(Instant.class);
+
+        verify(userJooqRepository).deleteExpiredUsers(captor.capture());
+
+        Instant threshold = captor.getValue();
+        Instant now = Instant.now();
+
+        assertThat(threshold)
+                .isBeforeOrEqualTo(now)
+                .isAfter(now.minus(1, ChronoUnit.DAYS).minusSeconds(5));
+    }
+
+    @Test
+    @DisplayName("삭제 대상 사용자가 없어도 물리 삭제 성공")
+    void deleteExpiredUsers_no_target_success() {
+        // given
+        when(userJooqRepository.deleteExpiredUsers(any())).thenReturn(0);
+
+        // when
+        userService.deleteExpiredUsers();
+
+        // then
+        verify(userJooqRepository).deleteExpiredUsers(any(Instant.class));
+        verifyNoMoreInteractions(userJooqRepository);
+    }
+
+    @Test
+    @DisplayName("JOOQ 저장소 예외 발생 시 물리 삭제 실패")
+    void deleteExpiredUsers_fail_repository_exception() {
+        // given
+        doThrow(new RuntimeException("DB error"))
+                .when(userJooqRepository).deleteExpiredUsers(any());
+
+        // when & then
+        assertThatThrownBy(() -> userService.deleteExpiredUsers())
+                .isInstanceOf(RuntimeException.class);
+
+        verify(userJooqRepository).deleteExpiredUsers(any());
     }
 }

@@ -8,7 +8,10 @@ import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
+import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserJooqRepository userJooqRepository;
     private final UserMapper userMapper;
 
     @Override
@@ -86,6 +90,17 @@ public class UserServiceImpl implements UserService {
         user.softDelete();
 
         log.info("유저 삭제 완료: userId={}", userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteExpiredUsers() {
+
+        Instant threshold = Instant.now().minus(1, ChronoUnit.DAYS);
+
+        int deletedCount = userJooqRepository.deleteExpiredUsers(threshold);
+
+        log.info("유저 물리 삭제 완료: count={}, threshold={}", deletedCount, threshold);
     }
 
     // 헬퍼 메서드

@@ -13,3 +13,8 @@ logging:
   level:
     root: WARN
     com.codeit.team4: INFO
+
+user:
+  cleanup:
+    cron: "0 0 4 * * *"
+    zone: "Asia/Seoul"

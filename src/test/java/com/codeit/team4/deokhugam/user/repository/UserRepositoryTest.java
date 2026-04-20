@@ -6,6 +6,8 @@ import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.config.JpaAuditingConfig;
 import com.codeit.team4.deokhugam.user.entity.User;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -166,6 +168,20 @@ class UserRepositoryTest {
         em.getEntityManager()
                 .createQuery("update User u set u.deletedAt = :now where u.id = :id")
                 .setParameter("now", Instant.now())
+                .setParameter("id", user.getId())
+                .executeUpdate();
+        em.clear();
+    }
+
+    /**
+     * 영속성 컨텍스트를 동기화하고,
+     * 지정한 시간으로 deletedAt을 설정하여 소프트 딜리트 상태로 변경한다
+     */
+    private void markAsDeleted(User user, Instant deletedAt) {
+        em.flush();
+        em.getEntityManager()
+                .createQuery("update User u set u.deletedAt = :time where u.id = :id")
+                .setParameter("time", deletedAt)
                 .setParameter("id", user.getId())
                 .executeUpdate();
         em.clear();
