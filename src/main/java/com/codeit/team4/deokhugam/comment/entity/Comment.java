@@ -66,6 +66,6 @@ public class Comment extends BaseUpdatableEntity {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Comment.class.hashCode();
     }
 }
