@@ -9,6 +9,7 @@ import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,7 @@ public class BookServiceImpl implements BookService {
         log.info("도서 등록 완료: bookId={}", book.getId());
 
         // dto 변환
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         return bookResponse;
     }
 
@@ -79,7 +80,7 @@ public class BookServiceImpl implements BookService {
         book.update(request.title(), request.author(), request.description(), request.publisher(),
                 request.publishedDate());
 
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 수정 완료: bookId={}", bookId);
         return bookResponse;
 
@@ -116,8 +117,13 @@ public class BookServiceImpl implements BookService {
                         () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId)
                 );
 
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 단건 조회 완료: bookId={}", bookId);
         return bookResponse;
+    }
+
+    @Override
+    public List<BookResponse> getBookList() {
+        return List.of();
     }
 }
