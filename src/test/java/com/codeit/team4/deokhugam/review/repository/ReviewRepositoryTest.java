@@ -191,5 +191,26 @@ class ReviewRepositoryTest {
             assertThat(reviewRepository.findById(review.getId())).isEmpty();
             assertThat(commentRepository.findById(comment.getId())).isEmpty();
         }
+
+        @Test
+        @DisplayName("리뷰 소프트 삭제 시 댓글은 유지 성공")
+        void softDelete_preservesComments() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+            Comment comment = new Comment(user, review, "좋은 리뷰입니다");
+            entityManager.persist(comment);
+            entityManager.flush();
+            entityManager.clear();
+
+            entityManager.getEntityManager()
+                    .createQuery("UPDATE Review r SET r.deletedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
+                    .setParameter("id", review.getId())
+                    .executeUpdate();
+            entityManager.flush();
+            entityManager.clear();
+
+            assertThat(reviewRepository.findById(review.getId())).isPresent();
+            assertThat(reviewRepository.findByIdAndDeletedAtIsNull(review.getId())).isEmpty();
+            assertThat(commentRepository.findById(comment.getId())).isPresent();
+        }
     }
 }
