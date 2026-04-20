@@ -34,6 +34,7 @@ class CommentMapperTest {
 
             User mockUser = mock(User.class);
             given(mockUser.getId()).willReturn(userId);
+            given(mockUser.getNickname()).willReturn("nickname");
 
             Review mockReview = mock(Review.class);
             given(mockReview.getId()).willReturn(reviewId);
@@ -47,6 +48,7 @@ class CommentMapperTest {
             assertThat(response).isNotNull();
             assertThat(response.content()).isEqualTo("정말 좋은 리뷰입니다");
             assertThat(response.userId()).isEqualTo(userId);
+            assertThat(response.userNickname()).isEqualTo("nickname");
             assertThat(response.reviewId()).isEqualTo(reviewId);
         }
 
@@ -78,9 +80,11 @@ class CommentMapperTest {
 
             User mockUser1 = mock(User.class);
             given(mockUser1.getId()).willReturn(userId1);
+            given(mockUser1.getNickname()).willReturn("유저1");
 
             User mockUser2 = mock(User.class);
             given(mockUser2.getId()).willReturn(userId2);
+            given(mockUser2.getNickname()).willReturn("유저2");
 
             Review mockReview = mock(Review.class);
 
@@ -89,7 +93,9 @@ class CommentMapperTest {
 
             // when & then
             assertThat(commentMapper.toResponse(comment1).userId()).isEqualTo(userId1);
+            assertThat(commentMapper.toResponse(comment1).userNickname()).isEqualTo("유저1");
             assertThat(commentMapper.toResponse(comment2).userId()).isEqualTo(userId2);
+            assertThat(commentMapper.toResponse(comment1).userNickname()).isEqualTo("유저2");
         }
 
         @Test
@@ -145,7 +151,7 @@ class CommentMapperTest {
         }
 
         @Test
-        @DisplayName("연관된 User가 null일 경우 매핑 시 NPE 없이 userId가 null로 반환 성공")
+        @DisplayName("연관된 User가 null일 경우 매핑 시 NPE 없이 userId와 nickname이 null로 반환 성공")
         void toResponse_NullUser_Success() {
             // given
             Review mockReview = mock(Review.class);
@@ -160,6 +166,7 @@ class CommentMapperTest {
             // then
             assertThat(response).isNotNull();
             assertThat(response.userId()).isNull();
+            assertThat(response.userNickname()).isNull();
             assertThat(response.reviewId()).isEqualTo(reviewId);
         }
 
@@ -170,6 +177,7 @@ class CommentMapperTest {
             User mockUser = mock(User.class);
             UUID userId = UUID.randomUUID();
             given(mockUser.getId()).willReturn(userId);
+            given(mockUser.getNickname()).willReturn("독후감러버");
 
             Comment comment = new Comment(mockUser, null, "리뷰가 없는 댓글");
 
@@ -180,6 +188,7 @@ class CommentMapperTest {
             assertThat(response).isNotNull();
             assertThat(response.reviewId()).isNull();
             assertThat(response.userId()).isEqualTo(userId);
+            assertThat(response.userNickname()).isEqualTo("독후감러버");
         }
     }
 }
