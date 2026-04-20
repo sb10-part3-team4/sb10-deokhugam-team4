@@ -59,4 +59,38 @@ public interface ReviewApi {
             @Parameter(description = "리뷰 수정 요청 정보", required = true)
             @RequestBody ReviewUpdateRequest request
     );
+
+    @Operation(summary = "리뷰 삭제", description = "본인이 작성한 리뷰를 삭제합니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "리뷰 삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "본인의 리뷰가 아님",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<Void> softDeleteReview(
+            @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID reviewId,
+            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    );
+
+    @Operation(summary = "리뷰 물리 삭제", description = "본인이 작성한 리뷰를 영구적으로 삭제합니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "리뷰 물리 삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "본인의 리뷰가 아님",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<Void> hardDeleteReview(
+            @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID reviewId,
+            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    );
 }

@@ -13,4 +13,10 @@ public interface ReviewService {
     ReviewResponse updateReview(UUID reviewId, UUID userId, ReviewUpdateRequest request);
 
     Review findById(UUID reviewId);
+
+    Review findWithDeletedById(UUID reviewId);
+
+    void softDeleteReview(UUID reviewId, UUID userId);
+
+    void hardDeleteReview(UUID reviewId, UUID userId);
 }

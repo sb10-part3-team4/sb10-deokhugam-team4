@@ -61,6 +61,13 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public Review findWithDeletedById(UUID reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.REVIEW_NOT_FOUND, "reviewId=" + reviewId));
+    }
+
+    @Override
     @Transactional
     public ReviewResponse updateReview(UUID reviewId, UUID userId, ReviewUpdateRequest request) {
         User user = userService.findById(userId);
@@ -73,6 +80,28 @@ public class ReviewServiceImpl implements ReviewService {
 
         boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
         return reviewMapper.toResponse(review, likedByMe);
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteReview(UUID reviewId, UUID userId) {
+        User user = userService.findById(userId);
+        Review review = findById(reviewId);
+
+        validateReviewOwner(review, user);
+        review.softDelete();
+        log.info("리뷰 논리 삭제 완료: reviewId={}", review.getId());
+    }
+
+    @Override
+    @Transactional
+    public void hardDeleteReview(UUID reviewId, UUID userId) {
+        User user = userService.findById(userId);
+        Review review = findWithDeletedById(reviewId);
+
+        validateReviewOwner(review, user);
+        reviewRepository.delete(review);
+        log.info("리뷰 물리 삭제 완료: reviewId={}", review.getId());
     }
 
     private void validateDuplicateReview(UUID bookId, UUID userId) {

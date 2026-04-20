@@ -9,6 +9,7 @@ import com.codeit.team4.deokhugam.global.config.JpaAuditingConfig;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import com.codeit.team4.deokhugam.review.entity.ReviewLike;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,9 @@ class ReviewRepositoryTest {
 
     @Autowired
     private ReviewRepository reviewRepository;
+
+    @Autowired
+    private ReviewLikeRepository reviewLikeRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -120,6 +124,52 @@ class ReviewRepositoryTest {
             Optional<Review> result = reviewRepository.findByIdAndDeletedAtIsNull(review.getId());
 
             assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("소프트 삭제된 리뷰 findById 조회")
+    class FindWithDeletedById {
+
+        @Test
+        @DisplayName("소프트 삭제된 리뷰도 findById로 조회 성공")
+        void findById_softDeleted_success() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+
+            entityManager.getEntityManager()
+                    .createQuery("UPDATE Review r SET r.deletedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
+                    .setParameter("id", review.getId())
+                    .executeUpdate();
+            entityManager.flush();
+            entityManager.clear();
+
+            Optional<Review> result = reviewRepository.findById(review.getId());
+
+            assertThat(result).isPresent();
+            assertThat(result.get().getContent()).isEqualTo("좋은 책입니다");
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 물리 삭제 시 연관 객체 CASCADE 삭제")
+    class HardDeleteCascade {
+        //TODO: 댓글 삭제도 확인
+
+        @Test
+        @DisplayName("리뷰 삭제 시 좋아요도 함께 삭제 성공")
+        void hardDelete_cascadeDeletesReviewLikes() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+            ReviewLike like = new ReviewLike(review, user);
+            entityManager.persist(like);
+            entityManager.flush();
+            entityManager.clear();
+
+            reviewRepository.deleteById(review.getId());
+            entityManager.flush();
+            entityManager.clear();
+
+            assertThat(reviewRepository.findById(review.getId())).isEmpty();
+            assertThat(reviewLikeRepository.findById(like.getId())).isEmpty();
         }
     }
 }
