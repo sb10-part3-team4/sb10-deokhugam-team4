@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.global.resolver;
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.util.UUID;
 import org.springframework.core.MethodParameter;
@@ -15,6 +16,8 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @Component
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
 
+    private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
+
     private final UserService userService;
 
     public LoginUserArgumentResolver(UserService userService) {
@@ -23,7 +26,8 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(LoginUser.class);
+        return parameter.hasParameterAnnotation(LoginUser.class)
+                && User.class.isAssignableFrom(parameter.getParameterType());
     }
 
     @Override
@@ -33,9 +37,9 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
             NativeWebRequest webRequest,
             WebDataBinderFactory binderFactory
     ) {
-        String header = webRequest.getHeader("Deokhugam-Request-User-ID");
+        String header = webRequest.getHeader(USER_ID_HEADER);
 
-        if (header == null) {
+        if (header == null || header.isBlank())  {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -43,8 +47,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
         try {
             userId = UUID.fromString(header);
         } catch (IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT);
-        }
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "invalid userId header=" + header);        }
 
         return userService.findById(userId);
     }
