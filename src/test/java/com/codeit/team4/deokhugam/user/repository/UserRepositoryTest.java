@@ -177,7 +177,6 @@ class UserRepositoryTest {
      * 영속성 컨텍스트를 동기화하고,
      * 지정한 시간으로 deletedAt을 설정하여 소프트 딜리트 상태로 변경한다
      */
-
     private void markAsDeleted(User user, Instant deletedAt) {
         em.flush();
         em.getEntityManager()
