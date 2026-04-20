@@ -1,7 +1,7 @@
 package com.codeit.team4.deokhugam.comment.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Schema(description = "댓글 응답 정보")
@@ -23,10 +23,10 @@ public record CommentResponse(
         String userNickname,
 
         @Schema(description = "생성 일시")
-        LocalDateTime createdAt,
+        Instant createdAt,
 
         @Schema(description = "수정 일시")
-        LocalDateTime updatedAt
+        Instant updatedAt
 
 ) {
 
