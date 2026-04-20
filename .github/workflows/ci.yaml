@@ -28,6 +28,8 @@ jobs:
       - name: Gradle 실행 권한 부여
         run: chmod +x gradlew
 
-      - name: 테스트 및 커버리지 체크 실행
-        run: ./gradlew test jacocoTestCoverageVerification -PgenerateJooq
-        continue-on-error: true
+      - name: 테스트 실행
+        run: ./gradlew test -PgenerateJooq
+
+      - name: 커버리지 체크
+        run: ./gradlew jacocoTestCoverageVerification -PgenerateJooq
