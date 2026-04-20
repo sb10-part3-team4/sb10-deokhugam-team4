@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -320,9 +321,24 @@ class UserServiceImplTest {
         verify(userJooqRepository).deleteExpiredUsers(captor.capture());
 
         Instant threshold = captor.getValue();
+        Instant now = Instant.now();
 
         assertThat(threshold)
-                .isBeforeOrEqualTo(Instant.now())
-                .isAfter(Instant.now().minus(2, ChronoUnit.DAYS));
+                .isBeforeOrEqualTo(now)
+                .isAfter(now.minus(1, ChronoUnit.DAYS).minusSeconds(5));
+    }
+
+    @Test
+    @DisplayName("삭제 대상 사용자가 없어도 물리 삭제 성공")
+    void deleteExpiredUsers_no_target_success() {
+        // given
+        when(userJooqRepository.deleteExpiredUsers(any())).thenReturn(0);
+
+        // when
+        userService.deleteExpiredUsers();
+
+        // then
+        verify(userJooqRepository).deleteExpiredUsers(any(Instant.class));
+        verifyNoMoreInteractions(userJooqRepository);
     }
 }
