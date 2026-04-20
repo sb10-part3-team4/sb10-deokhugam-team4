@@ -16,7 +16,10 @@ import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
+import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +27,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +38,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserJooqRepository userJooqRepository;
 
     @Mock
     private UserMapper userMapper;
@@ -304,31 +311,18 @@ class UserServiceImplTest {
     @Test
     @DisplayName("삭제 대상 사용자 물리 삭제 성공")
     void deleteExpiredUsers_success() {
-        // given
-        User user1 = new User("old1@test.com", "user1", "pw");
-        User user2 = new User("old2@test.com", "user2", "pw");
-
-        when(userRepository.findAllByDeletedAtBefore(any()))
-                .thenReturn(List.of(user1, user2));
-
         // when
         userService.deleteExpiredUsers();
 
         // then
-        verify(userRepository).deleteAll(List.of(user1, user2));
-    }
+        ArgumentCaptor<Instant> captor = ArgumentCaptor.forClass(Instant.class);
 
-    @Test
-    @DisplayName("삭제 대상 사용자가 없어 빈 리스트 삭제")
-    void deleteExpiredUsers_no_target() {
-        // given
-        when(userRepository.findAllByDeletedAtBefore(any()))
-                .thenReturn(Collections.emptyList());
+        verify(userJooqRepository).deleteExpiredUsers(captor.capture());
 
-        // when
-        userService.deleteExpiredUsers();
+        Instant threshold = captor.getValue();
 
-        // then
-        verify(userRepository).deleteAll(Collections.emptyList());
+        assertThat(threshold)
+                .isBeforeOrEqualTo(Instant.now())
+                .isAfter(Instant.now().minus(2, ChronoUnit.DAYS));
     }
 }

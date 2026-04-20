@@ -90,31 +90,6 @@ class UserRepositoryTest {
                 );
     }
 
-    @Test
-    @DisplayName("삭제 기준 시간 이전 사용자 조회 성공")
-    void findAllByDeletedAtBefore_success() {
-        // given
-        Instant now = Instant.now();
-
-        User oldUser = saveUser("old@test.com", "old");
-        markAsDeleted(oldUser, now.minus(2, ChronoUnit.DAYS)); // 기준 이전
-
-        User recentUser = saveUser("recent@test.com", "recent");
-        markAsDeleted(recentUser, now.minus(1, ChronoUnit.HOURS)); // 기준 이후
-
-        // when
-        List<User> result = userRepository.findAllByDeletedAtBefore(
-                now.minus(1, ChronoUnit.DAYS)
-        );
-
-        // then
-        assertThat(result).hasSize(1);
-
-        assertThat(result)
-                .extracting(User::getEmail)
-                .containsExactly("old@test.com");
-    }
-
     // --- 실패 케이스 ---
 
     @Test
@@ -174,27 +149,6 @@ class UserRepositoryTest {
         // then
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isEqualTo(0);
-    }
-
-    @Test
-    @DisplayName("삭제 기준 시간 이전 사용자가 없어 조회 실패")
-    void findAllByDeletedAtBefore_fail() {
-        // given
-        Instant now = Instant.now();
-
-        User recentUser1 = saveUser("recent1@test.com", "recent1");
-        markAsDeleted(recentUser1, now.minus(1, ChronoUnit.HOURS));
-
-        User recentUser2 = saveUser("recent2@test.com", "recent2");
-        markAsDeleted(recentUser2, now.minus(30, ChronoUnit.MINUTES));
-
-        // when
-        List<User> result = userRepository.findAllByDeletedAtBefore(
-                now.minus(1, ChronoUnit.DAYS)
-        );
-
-        // then
-        assertThat(result).isEmpty();
     }
 
     // --- 헬퍼 메소드 ---
