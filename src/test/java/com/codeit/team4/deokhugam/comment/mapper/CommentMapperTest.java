@@ -131,5 +131,56 @@ class CommentMapperTest {
             // then
             assertThat(response.content()).hasSize(1000).isEqualTo(maxContent);
         }
+
+        @Test
+        @DisplayName("입력 엔티티가 null일 경우 null을 반환 성공 (MapStruct Null-Check 방어 로직)")
+        void toResponse_NullInput_Success() {
+            // given
+            Comment nullComment = null;
+
+            // when
+            CommentResponse response = commentMapper.toResponse(nullComment);
+
+            // then
+            assertThat(response).isNull();
+        }
+
+        @Test
+        @DisplayName("연관된 User가 null일 경우 매핑 시 NPE 없이 userId와 nickname이 null로 반환 성공")
+        void toResponse_NullUser_Success() {
+            // given
+            Review mockReview = mock(Review.class);
+            UUID reviewId = UUID.randomUUID();
+            given(mockReview.getId()).willReturn(reviewId);
+
+            Comment comment = new Comment(null, mockReview, "유저가 없는 댓글");
+
+            // when
+            CommentResponse response = commentMapper.toResponse(comment);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.userId()).isNull();
+            assertThat(response.reviewId()).isEqualTo(reviewId);
+        }
+
+        @Test
+        @DisplayName("연관된 Review가 null일 경우 매핑 시 NPE 없이 reviewId가 null로 반환 성공")
+        void toResponse_NullReview_Success() {
+            // given
+            User mockUser = mock(User.class);
+            UUID userId = UUID.randomUUID();
+            given(mockUser.getId()).willReturn(userId);
+
+            Comment comment = new Comment(mockUser, null, "리뷰가 없는 댓글");
+
+            // when
+            CommentResponse response = commentMapper.toResponse(comment);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.reviewId()).isNull();
+            assertThat(response.userId()).isEqualTo(userId);
+        }
     }
 }
