@@ -9,7 +9,6 @@ import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -122,8 +121,4 @@ public class BookServiceImpl implements BookService {
         return bookResponse;
     }
 
-    @Override
-    public List<BookResponse> getBookList() {
-        return List.of();
-    }
 }
