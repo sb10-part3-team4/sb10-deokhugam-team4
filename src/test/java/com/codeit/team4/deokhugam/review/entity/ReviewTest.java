@@ -68,4 +68,41 @@ class ReviewTest {
                             .isEqualTo(ErrorCode.INVALID_RATING));
         }
     }
+
+    @Nested
+    @DisplayName("리뷰 소프트 삭제")
+    class SoftDelete {
+
+        @Test
+        @DisplayName("소프트 삭제 성공")
+        void softDelete_success() {
+            Review review = new Review(book, user, "좋은 책입니다", 5);
+
+            review.softDelete();
+
+            assertThat(review.getDeletedAt()).isNotNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 작성자 확인")
+    class IsOwner {
+
+        @Test
+        @DisplayName("작성자 본인이면 true 반환 성공")
+        void isOwner_true() {
+            Review review = new Review(book, user, "좋은 책입니다", 5);
+
+            assertThat(review.isOwner(user)).isTrue();
+        }
+
+        @Test
+        @DisplayName("작성자가 아니면 false 반환 성공")
+        void isOwner_false() {
+            User otherUser = mock(User.class);
+            Review review = new Review(book, user, "좋은 책입니다", 5);
+
+            assertThat(review.isOwner(otherUser)).isFalse();
+        }
+    }
 }
