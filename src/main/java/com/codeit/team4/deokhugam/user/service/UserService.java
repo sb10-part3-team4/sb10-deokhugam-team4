@@ -18,4 +18,6 @@ public interface UserService {
     UserResponse updateUser(UUID userId, UserUpdateRequest request);
 
     void deleteUser(UUID userId);
+
+    void deleteExpiredUsers();
 }

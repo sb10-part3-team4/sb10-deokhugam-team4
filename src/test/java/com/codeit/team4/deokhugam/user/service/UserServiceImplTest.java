@@ -17,6 +17,8 @@ import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -297,5 +299,36 @@ class UserServiceImplTest {
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
 
         verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    }
+
+    @Test
+    @DisplayName("삭제 대상 사용자 물리 삭제 성공")
+    void deleteExpiredUsers_success() {
+        // given
+        User user1 = new User("old1@test.com", "user1", "pw");
+        User user2 = new User("old2@test.com", "user2", "pw");
+
+        when(userRepository.findAllByDeletedAtBefore(any()))
+                .thenReturn(List.of(user1, user2));
+
+        // when
+        userService.deleteExpiredUsers();
+
+        // then
+        verify(userRepository).deleteAll(List.of(user1, user2));
+    }
+
+    @Test
+    @DisplayName("삭제 대상 사용자가 없어 빈 리스트 삭제")
+    void deleteExpiredUsers_no_target() {
+        // given
+        when(userRepository.findAllByDeletedAtBefore(any()))
+                .thenReturn(Collections.emptyList());
+
+        // when
+        userService.deleteExpiredUsers();
+
+        // then
+        verify(userRepository).deleteAll(Collections.emptyList());
     }
 }
