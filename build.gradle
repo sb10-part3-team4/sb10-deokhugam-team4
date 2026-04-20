@@ -1,3 +1,16 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.testcontainers:postgresql:1.21.4'
+        classpath 'org.flywaydb:flyway-core:11.8.2'
+        classpath 'org.flywaydb:flyway-database-postgresql:11.8.2'
+        classpath 'org.postgresql:postgresql:42.7.10'
+        classpath 'org.jooq:jooq-codegen:3.19.31'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.13'
@@ -41,6 +54,14 @@ java {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir 'build/generated-src/jooq'
+        }
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -48,6 +69,7 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
@@ -68,6 +90,56 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.register('generateJooq') {
+    description = 'Testcontainers로 PostgreSQL을 띄우고 Flyway 마이그레이션 후 jOOQ 코드를 생성합니다.'
+    group = 'jooq'
+
+    inputs.files(fileTree('src/main/resources/db/migration'))
+    outputs.dir('build/generated-src/jooq')
+
+    doLast {
+        def container = new org.testcontainers.containers.PostgreSQLContainer<>('postgres:17')
+        container.start()
+
+        try {
+            org.flywaydb.core.Flyway.configure()
+                    .dataSource(container.getJdbcUrl(), container.getUsername(), container.getPassword())
+                    .locations('filesystem:src/main/resources/db/migration')
+                    .load()
+                    .migrate()
+
+            def config = new org.jooq.meta.jaxb.Configuration()
+                    .withJdbc(new org.jooq.meta.jaxb.Jdbc()
+                            .withDriver('org.postgresql.Driver')
+                            .withUrl(container.getJdbcUrl())
+                            .withUser(container.getUsername())
+                            .withPassword(container.getPassword()))
+                    .withGenerator(new org.jooq.meta.jaxb.Generator()
+                            .withDatabase(new org.jooq.meta.jaxb.Database()
+                                    .withName('org.jooq.meta.postgres.PostgresDatabase')
+                                    .withInputSchema('public')
+                                    .withExcludes('flyway_schema_history|pgp_.*|armor|dearmor|crypt|gen_salt|digest|hmac|encrypt.*|decrypt.*|gen_random_bytes|gen_random_uuid'))
+                            .withGenerate(new org.jooq.meta.jaxb.Generate()
+                                    .withDaos(false)
+                                    .withRecords(true)
+                                    .withFluentSetters(true))
+                            .withTarget(new org.jooq.meta.jaxb.Target()
+                                    .withPackageName('com.codeit.team4.deokhugam.jooq')
+                                    .withDirectory("${project.projectDir}/build/generated-src/jooq")))
+
+            org.jooq.codegen.GenerationTool.generate(config)
+        } finally {
+            container.stop()
+        }
+    }
+}
+
+if (project.hasProperty('generateJooq')) {
+    tasks.named('compileJava') {
+        dependsOn 'generateJooq'
+    }
 }
 
 tasks.named('test') {
