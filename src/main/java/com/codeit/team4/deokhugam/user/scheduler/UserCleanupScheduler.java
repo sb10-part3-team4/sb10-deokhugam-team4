@@ -15,6 +15,12 @@ public class UserCleanupScheduler {
 
     @Scheduled(cron = "${user.cleanup.cron}")
     public void runCleanup() {
-        userService.deleteExpiredUsers();
+        log.info("유저 물리 삭제 스케줄러 시작");
+        try {
+            userService.deleteExpiredUsers();
+            log.info("유저 물리 삭제 스케줄러 완료");
+        } catch (Exception e) {
+            log.error("유저 물리 삭제 스케줄러 실패", e);
+        }
     }
 }
