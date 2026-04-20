@@ -9,6 +9,8 @@ import com.codeit.team4.deokhugam.global.config.JpaAuditingConfig;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import com.codeit.team4.deokhugam.comment.entity.Comment;
+import com.codeit.team4.deokhugam.comment.repository.CommentRepository;
 import com.codeit.team4.deokhugam.review.entity.ReviewLike;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -32,6 +34,9 @@ class ReviewRepositoryTest {
 
     @Autowired
     private ReviewLikeRepository reviewLikeRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -153,8 +158,6 @@ class ReviewRepositoryTest {
     @Nested
     @DisplayName("리뷰 물리 삭제 시 연관 객체 CASCADE 삭제")
     class HardDeleteCascade {
-        //TODO: 댓글 삭제도 확인
-
         @Test
         @DisplayName("리뷰 삭제 시 좋아요도 함께 삭제 성공")
         void hardDelete_cascadeDeletesReviewLikes() {
@@ -170,6 +173,44 @@ class ReviewRepositoryTest {
 
             assertThat(reviewRepository.findById(review.getId())).isEmpty();
             assertThat(reviewLikeRepository.findById(like.getId())).isEmpty();
+        }
+
+        @Test
+        @DisplayName("리뷰 삭제 시 댓글도 함께 삭제 성공")
+        void hardDelete_cascadeDeletesComments() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+            Comment comment = new Comment(user, review, "좋은 리뷰입니다");
+            entityManager.persist(comment);
+            entityManager.flush();
+            entityManager.clear();
+
+            reviewRepository.deleteById(review.getId());
+            entityManager.flush();
+            entityManager.clear();
+
+            assertThat(reviewRepository.findById(review.getId())).isEmpty();
+            assertThat(commentRepository.findById(comment.getId())).isEmpty();
+        }
+
+        @Test
+        @DisplayName("리뷰 소프트 삭제 시 댓글은 유지 성공")
+        void softDelete_preservesComments() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+            Comment comment = new Comment(user, review, "좋은 리뷰입니다");
+            entityManager.persist(comment);
+            entityManager.flush();
+            entityManager.clear();
+
+            entityManager.getEntityManager()
+                    .createQuery("UPDATE Review r SET r.deletedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
+                    .setParameter("id", review.getId())
+                    .executeUpdate();
+            entityManager.flush();
+            entityManager.clear();
+
+            assertThat(reviewRepository.findById(review.getId())).isPresent();
+            assertThat(reviewRepository.findByIdAndDeletedAtIsNull(review.getId())).isEmpty();
+            assertThat(commentRepository.findById(comment.getId())).isPresent();
         }
     }
 }
