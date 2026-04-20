@@ -53,7 +53,7 @@ public class BookServiceImpl implements BookService {
         log.info("도서 등록 완료: bookId={}", book.getId());
 
         // dto 변환
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         return bookResponse;
     }
 
@@ -79,7 +79,7 @@ public class BookServiceImpl implements BookService {
         book.update(request.title(), request.author(), request.description(), request.publisher(),
                 request.publishedDate());
 
-        BookResponse bookResponse = bookMapper.toBookDto(book);
+        BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 수정 완료: bookId={}", bookId);
         return bookResponse;
 
@@ -91,7 +91,7 @@ public class BookServiceImpl implements BookService {
     public void deleteBook(UUID bookId) {
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         book.softDelete(Instant.now());
         log.info("도서 삭제 완료: bookId={}", bookId);
@@ -102,9 +102,23 @@ public class BookServiceImpl implements BookService {
     public void permanentDeleteBook(UUID bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         bookRepository.delete(book);
         log.info("도서 물리 삭제 완료: bookId={}", bookId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BookResponse getBook(UUID bookId) {
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId)
+                );
+
+        BookResponse bookResponse = bookMapper.toResponse(book);
+        log.info("도서 단건 조회 완료: bookId={}", bookId);
+        return bookResponse;
+    }
+
 }

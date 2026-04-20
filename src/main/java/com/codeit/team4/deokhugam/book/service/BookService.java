@@ -18,4 +18,7 @@ public interface BookService {
     void deleteBook(UUID bookId);
 
     void permanentDeleteBook(UUID bookId);
+
+    BookResponse getBook(UUID bookId);
+
 }
