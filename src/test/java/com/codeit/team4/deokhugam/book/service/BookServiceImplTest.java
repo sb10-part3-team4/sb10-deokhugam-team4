@@ -181,4 +181,42 @@ class BookServiceImplTest {
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
     }
+
+    @Test
+    @DisplayName("도서 정보 조회 성공")
+    void get_success(){
+        // given
+        BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+        BookResponse book = bookService.createBook(request, null);
+        UUID bookId = book.id();
+
+        // when
+        BookResponse result = bookService.getBook(bookId);
+
+        // then
+        assertThat(result.id()).isEqualTo(bookId);
+        assertThat(result.title()).isEqualTo(book.title());
+        assertThat(result.author()).isEqualTo(book.author());
+
+        // DB 확인
+        Book savedBook = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow();
+        assertThat(savedBook.getId()).isEqualTo(result.id());
+        assertThat(savedBook.getTitle()).isEqualTo(result.title());
+        assertThat(savedBook.getAuthor()).isEqualTo(result.author());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서로 인한 조회 실패")
+    void get_fail_not_found(){
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(() -> bookService.getBook(bookId))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
 }

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -246,6 +247,45 @@ class BookControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/books/{bookId}/permanent", bookId))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("도서 정보 조회 성공")
+    void get_success() throws Exception {
+        // given
+        BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1),
+                "978-89-91995-00-1");
+        UUID bookId = UUID.randomUUID();
+        BookResponse response = new BookResponse(
+                bookId, "달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
+                "달출판사", LocalDate.of(2026, 1, 1), null, null, 0, BigDecimal.ZERO,
+                Instant.now(), Instant.now());
+
+        // when
+        given(bookService.getBook(any(UUID.class)))
+                .willReturn(response);
+
+        // then
+        mockMvc.perform(get("/api/books/{bookId}", bookId))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 도서 정보 조회 실패")
+    void get_fail_not_found() throws Exception {
+        // given
+        UUID bookId = UUID.randomUUID();
+
+        // when & then
+        given(bookService.getBook(eq(bookId)))
+                .willThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND));
+
+        mockMvc.perform(get("/api/books/{bookId}", bookId))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));

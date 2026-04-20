@@ -92,4 +92,13 @@ public interface BookApi {
     })
     ResponseEntity<Void> permanentDeleteBook(@PathVariable UUID bookId);
 
+    @Operation(summary = "도서 정보 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "도서 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<BookResponse> getBook(@PathVariable UUID bookId);
 }

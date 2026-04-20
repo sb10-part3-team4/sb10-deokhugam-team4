@@ -91,7 +91,7 @@ public class BookServiceImpl implements BookService {
     public void deleteBook(UUID bookId) {
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         book.softDelete(Instant.now());
         log.info("도서 삭제 완료: bookId={}", bookId);
@@ -102,9 +102,21 @@ public class BookServiceImpl implements BookService {
     public void permanentDeleteBook(UUID bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookid=" + bookId));
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         bookRepository.delete(book);
         log.info("도서 물리 삭제 완료: bookId={}", bookId);
+    }
+
+    @Override
+    public BookResponse getBook(UUID bookId) {
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId)
+                );
+
+        BookResponse bookResponse = bookMapper.toBookDto(book);
+        log.info("도서 단건 조회 완료: bookId={}", bookId);
+        return bookResponse;
     }
 }
