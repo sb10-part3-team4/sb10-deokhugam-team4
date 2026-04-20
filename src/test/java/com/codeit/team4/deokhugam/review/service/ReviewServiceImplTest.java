@@ -12,16 +12,22 @@ import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
+import com.codeit.team4.deokhugam.global.response.SortDirection;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewOrderBy;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.review.repository.ReviewSearchRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -53,6 +59,33 @@ class ReviewServiceImplTest {
 
     @Mock
     private ReviewMapper reviewMapper;
+
+    @Mock
+    private ReviewSearchRepository reviewSearchRepository;
+
+    @Nested
+    @DisplayName("리뷰 목록 조회")
+    class SearchReviews {
+
+        @Test
+        @DisplayName("리뷰 목록 조회 성공")
+        void searchReviews_success() {
+            ReviewSearchRequestParam param = new ReviewSearchRequestParam(
+                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, 50, UUID.randomUUID()
+            );
+            PageResponse<ReviewResponse> expectedResponse = new PageResponse<>(
+                    List.of(), null, null, 50, 0L, false
+            );
+
+            given(reviewSearchRepository.searchReviews(param)).willReturn(expectedResponse);
+
+            PageResponse<ReviewResponse> response = reviewService.searchReviews(param);
+
+            assertThat(response.content()).isEmpty();
+            assertThat(response.hasNext()).isFalse();
+        }
+    }
 
     @Nested
     @DisplayName("리뷰 생성")

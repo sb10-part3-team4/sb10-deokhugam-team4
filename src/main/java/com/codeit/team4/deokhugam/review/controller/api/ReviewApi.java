@@ -1,8 +1,10 @@
 package com.codeit.team4.deokhugam.review.controller.api;
 
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +21,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "리뷰 관리", description = "리뷰 관련 API")
 public interface ReviewApi {
+
+    @Operation(summary = "리뷰 목록 조회", description = "검색 조건에 맞는 리뷰 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (정렬 기준 오류, 페이지네이션 파라미터 오류, 요청자 ID 누락)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
+            ReviewSearchRequestParam param,
+            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    );
 
     @Operation(summary = "리뷰 상세 정보 조회", description = "리뷰 ID로 상세 정보를 조회합니다.")
     @ApiResponses({

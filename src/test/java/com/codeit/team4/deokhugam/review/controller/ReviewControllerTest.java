@@ -16,12 +16,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.hamcrest.Matchers;
@@ -52,6 +55,92 @@ class ReviewControllerTest {
 
     @MockitoBean
     private ReviewService reviewService;
+
+    @Nested
+    @DisplayName("리뷰 목록 조회")
+    class SearchReviews {
+
+        private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
+
+        @Test
+        @DisplayName("리뷰 목록 조회 성공")
+        void searchReviews_success() throws Exception {
+            UUID requestUserId = UUID.randomUUID();
+            PageResponse<ReviewResponse> response = new PageResponse<>(
+                    List.of(), null, null, 50, 0L, false
+            );
+
+            given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))
+                    .willReturn(response);
+
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, requestUserId.toString())
+                            .param("orderBy", "createdAt")
+                            .param("direction", "DESC")
+                            .param("limit", "50")
+                            .param("requestUserId", requestUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.hasNext").value(false));
+        }
+
+        @Test
+        @DisplayName("잘못된 정렬 기준이면 목록 조회 실패")
+        void searchReviews_invalidOrderBy_fail() throws Exception {
+            UUID requestUserId = UUID.randomUUID();
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, requestUserId.toString())
+                            .param("orderBy", "invalid")
+                            .param("direction", "DESC")
+                            .param("limit", "50")
+                            .param("requestUserId", requestUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("잘못된 정렬 방향이면 목록 조회 실패")
+        void searchReviews_invalidDirection_fail() throws Exception {
+            UUID requestUserId = UUID.randomUUID();
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, requestUserId.toString())
+                            .param("orderBy", "createdAt")
+                            .param("direction", "INVALID")
+                            .param("limit", "50")
+                            .param("requestUserId", requestUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("헤더 요청자 ID 누락 시 목록 조회 실패")
+        void searchReviews_missingHeader_fail() throws Exception {
+            mockMvc.perform(get("/api/reviews")
+                            .param("orderBy", "createdAt")
+                            .param("direction", "DESC")
+                            .param("limit", "50")
+                            .param("requestUserId", UUID.randomUUID().toString()))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("헤더와 파라미터 요청자 ID 불일치 시 목록 조회 실패")
+        void searchReviews_mismatchUserId_fail() throws Exception {
+            UUID headerUserId = UUID.randomUUID();
+            UUID paramUserId = UUID.randomUUID();
+            mockMvc.perform(get("/api/reviews")
+                            .header(USER_ID_HEADER, headerUserId.toString())
+                            .param("orderBy", "createdAt")
+                            .param("direction", "DESC")
+                            .param("limit", "50")
+                            .param("requestUserId", paramUserId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+        }
+    }
 
     @Nested
     @DisplayName("리뷰 단건 조회")

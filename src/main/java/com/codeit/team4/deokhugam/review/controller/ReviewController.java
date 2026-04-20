@@ -1,8 +1,13 @@
 package com.codeit.team4.deokhugam.review.controller;
 
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
+import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import jakarta.validation.Valid;
@@ -28,6 +33,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReviewController implements ReviewApi {
 
     private final ReviewService reviewService;
+
+    @GetMapping
+    public ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
+            @Valid @ParameterObject ReviewSearchRequestParam param,
+            @io.swagger.v3.oas.annotations.Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    ) {
+        if (!userId.equals(param.requestUserId())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "헤더의 요청자 ID와 파라미터의 요청자 ID가 일치하지 않습니다");
+        }
+        log.info("리뷰 목록 조회 요청: orderBy={}, direction={}, limit={}", param.orderBy(), param.direction(), param.limit());
+        PageResponse<ReviewResponse> response = reviewService.searchReviews(param);
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewResponse> getReview(

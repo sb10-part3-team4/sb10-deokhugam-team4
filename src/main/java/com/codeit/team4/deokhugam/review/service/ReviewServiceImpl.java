@@ -2,15 +2,18 @@ package com.codeit.team4.deokhugam.review.service;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.service.BookService;
-import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
-import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
+import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.review.repository.ReviewSearchRepository;
 import java.util.UUID;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
@@ -27,10 +30,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewSearchRepository reviewSearchRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final UserService userService;
     private final BookService bookService;
     private final ReviewMapper reviewMapper;
+
+    @Override
+    public PageResponse<ReviewResponse> searchReviews(ReviewSearchRequestParam param) {
+        return reviewSearchRepository.searchReviews(param);
+    }
 
     @Override
     public ReviewResponse getReview(UUID reviewId, UUID userId) {
