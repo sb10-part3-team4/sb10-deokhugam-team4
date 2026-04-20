@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -340,5 +341,19 @@ class UserServiceImplTest {
         // then
         verify(userJooqRepository).deleteExpiredUsers(any(Instant.class));
         verifyNoMoreInteractions(userJooqRepository);
+    }
+
+    @Test
+    @DisplayName("JOOQ 저장소 예외 발생 시 물리 삭제 실패")
+    void deleteExpiredUsers_fail_repository_exception() {
+        // given
+        doThrow(new RuntimeException("DB error"))
+                .when(userJooqRepository).deleteExpiredUsers(any());
+
+        // when & then
+        assertThatThrownBy(() -> userService.deleteExpiredUsers())
+                .isInstanceOf(RuntimeException.class);
+
+        verify(userJooqRepository).deleteExpiredUsers(any());
     }
 }
