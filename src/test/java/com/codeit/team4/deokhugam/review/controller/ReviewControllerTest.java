@@ -20,6 +20,7 @@ import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
+import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.Map;
@@ -47,6 +48,9 @@ class ReviewControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private ReviewService reviewService;

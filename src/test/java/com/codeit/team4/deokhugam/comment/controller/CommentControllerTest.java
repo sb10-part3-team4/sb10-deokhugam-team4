@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -30,8 +31,12 @@ class CommentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private CommentService commentService;
