@@ -11,10 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,5 +48,27 @@ public class ReviewController implements ReviewApi {
         ReviewResponse response = reviewService.updateReview(reviewId, userId, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<Void> softDeleteReview(
+            @PathVariable UUID reviewId,
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    ) {
+        log.info("리뷰 논리 삭제 요청: reviewId={}, userId={}", reviewId, userId);
+        reviewService.softDeleteReview(reviewId, userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{reviewId}/hard")
+    public ResponseEntity<Void> hardDeleteReview(
+            @PathVariable UUID reviewId,
+            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+    ) {
+        log.info("리뷰 물리 삭제 요청: reviewId={}, userId={}", reviewId, userId);
+        reviewService.hardDeleteReview(reviewId, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

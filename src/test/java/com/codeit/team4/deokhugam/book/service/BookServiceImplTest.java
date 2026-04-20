@@ -12,6 +12,7 @@ import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -184,7 +185,7 @@ class BookServiceImplTest {
 
     @Test
     @DisplayName("도서 정보 조회 성공")
-    void get_success(){
+    void get_detail_success() {
         // given
         BookCreateRequest request = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
                 "달출판사", LocalDate.of(2026, 1, 1),
@@ -209,7 +210,7 @@ class BookServiceImplTest {
 
     @Test
     @DisplayName("존재하지 않는 도서로 인한 조회 실패")
-    void get_fail_not_found(){
+    void get_detail_fail_not_found() {
         // given
         UUID bookId = UUID.randomUUID();
 

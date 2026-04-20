@@ -220,8 +220,17 @@ class ReviewServiceImplTest {
             Review review = mock(Review.class);
             ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 내용", 3);
             ReviewResponse expectedResponse = new ReviewResponse(
-                    reviewId, UUID.randomUUID(), "클린 코드", null,
-                    userId, "테스터", "수정된 내용", 3, 0, 0, true,
+                    reviewId,
+                    UUID.randomUUID(),
+                    "클린 코드",
+                    null,
+                    userId,
+                    "테스터",
+                    "수정된 내용",
+                    3,
+                    0,
+                    0,
+                    true,
                     Instant.now(),
                     Instant.now()
             );
@@ -289,6 +298,152 @@ class ReviewServiceImplTest {
                     .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
 
             assertThatThrownBy(() -> reviewService.updateReview(reviewId, userId, request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.USER_NOT_FOUND));
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 삭제")
+    class SoftDeleteReview {
+
+        @Test
+        @DisplayName("리뷰 삭제 성공")
+        void softDeleteReview_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            Review review = mock(Review.class);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(user)).willReturn(true);
+
+            reviewService.softDeleteReview(reviewId, userId);
+
+            verify(review).softDelete();
+        }
+
+        @Test
+        @DisplayName("본인의 리뷰가 아니면 삭제 실패")
+        void softDeleteReview_notOwner_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            Review review = mock(Review.class);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(user)).willReturn(false);
+            given(review.getId()).willReturn(reviewId);
+            given(user.getId()).willReturn(userId);
+
+            assertThatThrownBy(() -> reviewService.softDeleteReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 삭제 실패")
+        void softDeleteReview_notFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> reviewService.softDeleteReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 사용자로 리뷰 삭제 실패")
+        void softDeleteReview_userNotFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            given(userService.findById(userId))
+                    .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> reviewService.softDeleteReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.USER_NOT_FOUND));
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 물리 삭제")
+    class HardDeleteReview {
+
+        @Test
+        @DisplayName("리뷰 물리 삭제 성공")
+        void hardDeleteReview_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            Review review = mock(Review.class);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(user)).willReturn(true);
+
+            reviewService.hardDeleteReview(reviewId, userId);
+
+            verify(reviewRepository).delete(review);
+        }
+
+        @Test
+        @DisplayName("본인의 리뷰가 아니면 물리 삭제 실패")
+        void hardDeleteReview_notOwner_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+            Review review = mock(Review.class);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(user)).willReturn(false);
+            given(review.getId()).willReturn(reviewId);
+            given(user.getId()).willReturn(userId);
+
+            assertThatThrownBy(() -> reviewService.hardDeleteReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 물리 삭제 실패")
+        void hardDeleteReview_notFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            User user = mock(User.class);
+
+            given(userService.findById(userId)).willReturn(user);
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> reviewService.hardDeleteReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 사용자로 리뷰 물리 삭제 실패")
+        void hardDeleteReview_userNotFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            given(userService.findById(userId))
+                    .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> reviewService.hardDeleteReview(reviewId, userId))
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.USER_NOT_FOUND));
