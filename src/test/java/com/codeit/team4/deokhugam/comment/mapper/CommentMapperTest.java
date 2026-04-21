@@ -95,7 +95,7 @@ class CommentMapperTest {
             assertThat(commentMapper.toResponse(comment1).userId()).isEqualTo(userId1);
             assertThat(commentMapper.toResponse(comment1).userNickname()).isEqualTo("유저1");
             assertThat(commentMapper.toResponse(comment2).userId()).isEqualTo(userId2);
-            assertThat(commentMapper.toResponse(comment1).userNickname()).isEqualTo("유저2");
+            assertThat(commentMapper.toResponse(comment2).userNickname()).isEqualTo("유저2");
         }
 
         @Test
