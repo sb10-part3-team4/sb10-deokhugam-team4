@@ -61,7 +61,6 @@ class BookControllerTest {
     @MockitoBean
     private BookQueryService bookQueryService;
 
-
     @Test
     @DisplayName("도서 등록 성공")
     void create_success() throws Exception {
@@ -332,6 +331,17 @@ class BookControllerTest {
         mockMvc.perform(get("/api/books")
                         .param("limit", "0"))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+    }
+
+    @Test
+    @DisplayName("limit 상한 초과로 도서 목록 조회 실패")
+    void get_book_list_fail_limit_exceeds_max() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/books").param("limit", "101"))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
     }
 }

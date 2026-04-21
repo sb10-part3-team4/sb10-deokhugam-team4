@@ -36,6 +36,8 @@ public class BookController implements BookApi {
     private final BookService bookService;
     private final BookQueryService bookQueryService;
 
+    private static final int MAX_BOOK_LIST_LIMIT = 100;
+
     // 도서 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BookResponse> createBook(
@@ -87,7 +89,6 @@ public class BookController implements BookApi {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    private static final int MAX_BOOK_LIST_LIMIT = 100;
     // 도서 목록 조회
     @GetMapping
     public ResponseEntity<PageResponse<BookResponse>> getBookList(
@@ -106,7 +107,8 @@ public class BookController implements BookApi {
                     "limit must be at most " + MAX_BOOK_LIST_LIMIT);
         }
 
-        log.info("도서 목록 조회 요청");
+        log.info("도서 목록 조회 요청: keyword={}, orderBy={}, direction={}, limit={}",
+                keyword, orderBy, direction, limit);
         PageResponse<BookResponse> books = bookQueryService.getBooks(keyword, orderBy, direction,
                 cursor, after, limit);
         return ResponseEntity.status(HttpStatus.OK).body(books);

@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -84,15 +85,15 @@ public class BookQueryService {
 
         log.info("도서 목록 조회 완료: size={}", books.size());
 
-        long totalElements = dsl.selectCount()
-                .from(BOOKS)
-                .where(buildKeywordCondition(keyword)
-                        .and(BOOKS.DELETED_AT.isNull()))
-                .fetchOptionalInto(long.class)
+        long totalElements = Optional.ofNullable(
+                        dsl.selectCount()
+                                .from(BOOKS)
+                                .where(buildKeywordCondition(keyword).and(BOOKS.DELETED_AT.isNull()))
+                                .fetchOne(0, Long.class))
                 .orElse(0L);
 
-        return new PageResponse<BookResponse>(books, nextCursor, nextAfter, books.size(),
-                totalElements, hasNext);
+        return new PageResponse<>(books, nextCursor, nextAfter, limit, totalElements, hasNext);
+
     }
 
     private List<BookResponse> findBooks(
@@ -103,17 +104,8 @@ public class BookQueryService {
             Instant after,
             int limit
     ) {
-        // 기본 조건 : 삭제되지 않은 데이터만 조회
-        Condition condition = BOOKS.DELETED_AT.isNull();
-
-        // 키워드 검색 조건 추가(제목, 저자 이름, ISBN)
-        if (keyword != null && !keyword.isBlank()) {
-            condition = condition.and(
-                    BOOKS.TITLE.containsIgnoreCase(keyword)
-                            .or(BOOKS.AUTHOR.containsIgnoreCase(keyword))
-                            .or(BOOKS.ISBN.containsIgnoreCase(keyword))
-            );
-        }
+        // 기본 조건 : 삭제되지 않은 데이터만 + 키워드 검색
+        Condition condition = BOOKS.DELETED_AT.isNull().and(buildKeywordCondition(keyword));
 
         // 정렬 방향 설정
         Field<? extends Comparable<?>> sortField = getSortField(orderBy);
@@ -126,33 +118,17 @@ public class BookQueryService {
 
         // 커서 기반 페이징 조건 적용
         if (cursorValue != null && after != null) {
-            OffsetDateTime afterOffset = after.atOffset(ZoneOffset.UTC);    // Instant를 DB용 시간대로 변환
-            // (메인정렬컬럼, 생성시간) 한꺼번에 비교
-            // orderBy 기준에 따라 타입을 강제 캐스팅
-            condition = condition.and(
-                    switch (orderBy) {
-                        case "publishedDate" -> isAsc
-                                ? DSL.row(BOOKS.PUBLISHED_DATE, BOOKS.CREATED_AT)
-                                .gt((LocalDate) cursorValue, afterOffset)
-                                : DSL.row(BOOKS.PUBLISHED_DATE, BOOKS.CREATED_AT)
-                                        .lt((LocalDate) cursorValue, afterOffset);
-                        case "rating" -> isAsc
-                                ? DSL.row(BOOKS.RATING, BOOKS.CREATED_AT)
-                                .gt((BigDecimal) cursorValue, afterOffset)
-                                : DSL.row(BOOKS.RATING, BOOKS.CREATED_AT)
-                                        .lt((BigDecimal) cursorValue, afterOffset);
-                        case "reviewCount" -> isAsc
-                                ? DSL.row(BOOKS.REVIEW_COUNT, BOOKS.CREATED_AT)
-                                .gt((Integer) cursorValue, afterOffset)
-                                : DSL.row(BOOKS.REVIEW_COUNT, BOOKS.CREATED_AT)
-                                        .lt((Integer) cursorValue, afterOffset);
-                        default -> isAsc
-                                ? DSL.row(BOOKS.TITLE, BOOKS.CREATED_AT)
-                                .gt((String) cursorValue, afterOffset)
-                                : DSL.row(BOOKS.TITLE, BOOKS.CREATED_AT)
-                                        .lt((String) cursorValue, afterOffset);
-                    }
-            );
+            OffsetDateTime afterOffset = after.atOffset(ZoneOffset.UTC);
+
+            // jOOQ의 Row 표현식을 사용하기 위해 정렬 기준 필드를 Comparable 타입으로 캐스팅
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            Field<Comparable> primary = (Field<Comparable>) (Field) sortField;
+
+            condition = condition.and(isAsc
+                    ? DSL.row(primary, BOOKS.CREATED_AT)
+                    .gt((Comparable<?>) cursorValue, afterOffset)
+                    : DSL.row(primary, BOOKS.CREATED_AT)
+                            .lt((Comparable<?>) cursorValue, afterOffset));
         }
 
         // 최종 쿼리 조립 및 실행
@@ -198,11 +174,11 @@ public class BookQueryService {
     // 입력받은 값의 실제 DB 컬럼 필드를 매핑하는 헬퍼 메서드
     private Field<? extends Comparable<?>> getSortField(String orderBy) {
         return switch (orderBy) {
-            case "publishedDate" -> Books.BOOKS.PUBLISHED_DATE;
-            case "rating" -> Books.BOOKS.RATING;
-            case "reviewCount" -> Books.BOOKS.REVIEW_COUNT;
-            case "title" -> Books.BOOKS.TITLE;
-            default -> Books.BOOKS.TITLE;
+            case "publishedDate" -> BOOKS.PUBLISHED_DATE;
+            case "rating" -> BOOKS.RATING;
+            case "reviewCount" -> BOOKS.REVIEW_COUNT;
+            case "title" -> BOOKS.TITLE;
+            default -> throw new IllegalStateException("지원하지 않는 정렬 기준: " + orderBy);
         };
     }
 
@@ -215,7 +191,7 @@ public class BookQueryService {
                 .or(BOOKS.ISBN.containsIgnoreCase(keyword));
     }
 
-    private void validateSort (String orderBy, String direction){
+    private void validateSort(String orderBy, String direction) {
         if (!List.of("title", "publishedDate", "rating", "reviewCount").contains(orderBy)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "orderBy=" + orderBy);
         }
