@@ -52,7 +52,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "invalid userId header=" + header);
         }
-        User user = userService.findById(userId);
-        return new DeokhugamUser(user.getId());
+        userService.findById(userId);
+        return new DeokhugamUser(userId);
     }
 }
