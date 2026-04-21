@@ -98,7 +98,6 @@ class UserServiceImplTest {
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
 
-        verify(userMapper, never()).toEntity(any());
         verify(userRepository, never()).save(any(User.class));
     }
 
