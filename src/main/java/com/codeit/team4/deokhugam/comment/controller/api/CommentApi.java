@@ -33,7 +33,7 @@ public interface CommentApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<CommentResponse> createComment(@Valid @RequestBody CommentCreateRequest request);
+    ResponseEntity<CommentResponse> createComment(@RequestBody CommentCreateRequest request);
 
     @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글을 수정합니다.")
     @ApiResponses(value = {
@@ -53,7 +53,11 @@ public interface CommentApi {
             @PathVariable UUID commentId,
             @Parameter(description = "요청자 ID", required = true)
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
-            @Valid @RequestBody CommentUpdateRequest request
+            @Parameter(
+                    description = "댓글 수정 요청 정보",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = CommentUpdateRequest.class)))
+            @RequestBody CommentUpdateRequest request
     );
 
 }

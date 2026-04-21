@@ -5,6 +5,7 @@ import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,8 @@ public class CommentController implements CommentApi {
     private final CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<CommentResponse> createComment(CommentCreateRequest request) {
+    public ResponseEntity<CommentResponse> createComment(
+            @Valid @RequestBody CommentCreateRequest request) {
 
         log.info("댓글 등록 요청: reviewId={}, userId={}, content={}", request.reviewId(),
                 request.userId(), request.content());
@@ -42,9 +44,9 @@ public class CommentController implements CommentApi {
     public ResponseEntity<CommentResponse> updateComment(
             @PathVariable UUID commentId,
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
-            @RequestBody CommentUpdateRequest request) {
+            @Valid @RequestBody CommentUpdateRequest request) {
 
-        log.info("댓글 수정 요청: commentId={}  userId: {}", commentId, userId);
+        log.info("댓글 수정 요청: commentId={}  userId={}", commentId, userId);
 
         return ResponseEntity.ok(commentService.updateComment(commentId, userId, request));
     }
