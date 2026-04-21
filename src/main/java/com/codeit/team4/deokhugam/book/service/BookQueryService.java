@@ -45,7 +45,7 @@ public class BookQueryService {
         if ((cursor == null) != (after == null)) {
             throw new BusinessException(
                     ErrorCode.INVALID_INPUT,
-                    "cursor와 after는 반드시 함께 제공되어야 합니다."
+                    "cursor=" + cursor + ", after=" + after
             );
         }
 
@@ -195,7 +195,7 @@ public class BookQueryService {
         if (!List.of("title", "publishedDate", "rating", "reviewCount").contains(orderBy)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "orderBy=" + orderBy);
         }
-        if (!"ASC".equalsIgnoreCase(direction) && !"DESC".equalsIgnoreCase(direction)) {
+        if (!List.of("ASC", "DESC").contains(direction)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "direction=" + direction);
         }
     }

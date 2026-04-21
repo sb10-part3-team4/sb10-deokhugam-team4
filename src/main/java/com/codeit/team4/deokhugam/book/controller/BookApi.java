@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.MediaType;
@@ -116,11 +118,12 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<PageResponse<BookResponse>> getBookList(@RequestParam(required = false) String keyword,
+    ResponseEntity<PageResponse<BookResponse>> getBookList(
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "title") String orderBy,
             @RequestParam(defaultValue = "DESC") String direction,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Instant after,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit
     );
 }
