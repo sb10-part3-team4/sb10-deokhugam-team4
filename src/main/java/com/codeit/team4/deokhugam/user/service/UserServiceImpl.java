@@ -31,13 +31,21 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    public UserResponse getUser(UUID userId) {
+
+        User user = findById(userId);
+
+        return userMapper.toResponse(user);
+    }
+
+    @Override
     @Transactional
     public UserResponse registerUser(UserRegisterRequest request) {
 
         validateEmailNotExists(request.email());
 
         try {
-            User user = userMapper.toEntity(request);
+            User user = new User(request.email(), request.nickname(), request.password());
             User savedUser = userRepository.save(user);
 
             log.info("회원가입 성공: userId={}", savedUser.getId());

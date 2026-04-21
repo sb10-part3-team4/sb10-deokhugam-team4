@@ -4,6 +4,7 @@ import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.entity.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

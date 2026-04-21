@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface UserService {
 
+    UserResponse getUser(UUID userId);
+
     UserResponse registerUser(UserRegisterRequest request);
 
     UserResponse loginUser(UserLoginRequest request);
