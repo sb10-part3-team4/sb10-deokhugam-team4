@@ -71,10 +71,9 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse updateReview(UUID reviewId, UUID userId, ReviewUpdateRequest request) {
-        User user = userService.findById(userId);
         Review review = findById(reviewId);
 
-        validateReviewOwner(review, user);
+        validateReviewOwner(review, userId);
 
         review.update(request.content(), request.rating());
         log.info("리뷰 수정 완료: reviewId={}", review.getId());
@@ -84,20 +83,18 @@ public class ReviewService {
 
     @Transactional
     public void softDeleteReview(UUID reviewId, UUID userId) {
-        User user = userService.findById(userId);
         Review review = findById(reviewId);
 
-        validateReviewOwner(review, user);
+        validateReviewOwner(review, userId);
         review.softDelete();
         log.info("리뷰 논리 삭제 완료: reviewId={}", review.getId());
     }
 
     @Transactional
     public void hardDeleteReview(UUID reviewId, UUID userId) {
-        User user = userService.findById(userId);
         Review review = findWithDeletedById(reviewId);
 
-        validateReviewOwner(review, user);
+        validateReviewOwner(review, userId);
         reviewRepository.delete(review);
         log.info("리뷰 물리 삭제 완료: reviewId={}", review.getId());
     }
@@ -113,10 +110,10 @@ public class ReviewService {
         return reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
     }
 
-    private static void validateReviewOwner(Review review, User user) {
-        if (!review.isOwner(user)) {
+    private static void validateReviewOwner(Review review, UUID userId) {
+        if (!review.isOwner(userId)) {
             throw new BusinessException(
-                    ErrorCode.REVIEW_NOT_OWNER, "reviewId=" + review.getId() + ", userId=" + user.getId());
+                    ErrorCode.REVIEW_NOT_OWNER, "reviewId=" + review.getId() + ", userId=" + userId);
         }
     }
 }

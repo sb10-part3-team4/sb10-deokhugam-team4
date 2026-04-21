@@ -41,7 +41,7 @@ public class ReviewController implements ReviewApi {
             @LoginUser DeokhugamUser user
     ) {
         log.info("리뷰 목록 조회 요청: orderBy={}, direction={}, limit={}", param.orderBy(), param.direction(), param.limit());
-        return ResponseEntity.ok(reviewQueryService.searchReviews(param));
+        return ResponseEntity.ok(reviewQueryService.searchReviews(param.withRequestUserId(user.userId())));
     }
 
     @GetMapping("/{reviewId}")

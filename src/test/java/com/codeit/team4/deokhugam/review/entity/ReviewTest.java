@@ -2,12 +2,14 @@ package com.codeit.team4.deokhugam.review.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -91,18 +93,20 @@ class ReviewTest {
         @Test
         @DisplayName("작성자 본인이면 true 반환 성공")
         void isOwner_true() {
+            UUID userId = UUID.randomUUID();
+            given(user.getId()).willReturn(userId);
             Review review = new Review(book, user, "좋은 책입니다", 5);
 
-            assertThat(review.isOwner(user)).isTrue();
+            assertThat(review.isOwner(userId)).isTrue();
         }
 
         @Test
         @DisplayName("작성자가 아니면 false 반환 성공")
         void isOwner_false() {
-            User otherUser = mock(User.class);
+            given(user.getId()).willReturn(UUID.randomUUID());
             Review review = new Review(book, user, "좋은 책입니다", 5);
 
-            assertThat(review.isOwner(otherUser)).isFalse();
+            assertThat(review.isOwner(UUID.randomUUID())).isFalse();
         }
     }
 }
