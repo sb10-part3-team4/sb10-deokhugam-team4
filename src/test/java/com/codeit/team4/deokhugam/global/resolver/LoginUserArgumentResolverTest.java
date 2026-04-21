@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.util.UUID;
@@ -33,10 +34,13 @@ class LoginUserArgumentResolverTest {
         NativeWebRequest request = mock(NativeWebRequest.class);
         when(request.getHeader(HEADER_NAME)).thenReturn(null);
 
-        // when & then
-        assertThrows(BusinessException.class, () ->
+        // when
+        BusinessException ex = assertThrows(BusinessException.class, () ->
                 resolver.resolveArgument(parameter, mavContainer, request, binderFactory)
         );
+
+        // then
+        assertEquals(ErrorCode.UNAUTHORIZED, ex.getErrorCode());
     }
 
     @Test
@@ -46,10 +50,13 @@ class LoginUserArgumentResolverTest {
         NativeWebRequest request = mock(NativeWebRequest.class);
         when(request.getHeader(HEADER_NAME)).thenReturn("invalid-uuid");
 
-        // when & then
-        assertThrows(BusinessException.class, () ->
+        // when
+        BusinessException ex = assertThrows(BusinessException.class, () ->
                 resolver.resolveArgument(parameter, mavContainer, request, binderFactory)
         );
+
+        // then
+        assertEquals(ErrorCode.INVALID_INPUT, ex.getErrorCode());
     }
 
     @Test
