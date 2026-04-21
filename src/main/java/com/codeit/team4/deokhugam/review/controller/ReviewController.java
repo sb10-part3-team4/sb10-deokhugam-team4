@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.review.controller;
 
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.service.ReviewQueryService;
+import com.codeit.team4.deokhugam.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;
@@ -9,7 +10,6 @@ import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
-import com.codeit.team4.deokhugam.review.service.ReviewService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
