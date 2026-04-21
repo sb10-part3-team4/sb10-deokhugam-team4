@@ -44,7 +44,7 @@ public class CommentController implements CommentApi {
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
             @RequestBody CommentUpdateRequest request) {
 
-        log.info("Request API: PATCH /api/comments/{} | user: {}", commentId, userId);
+        log.info("댓글 수정 요청: commentId={}  userId: {}", commentId, userId);
 
         return ResponseEntity.ok(commentService.updateComment(commentId, userId, request));
     }
