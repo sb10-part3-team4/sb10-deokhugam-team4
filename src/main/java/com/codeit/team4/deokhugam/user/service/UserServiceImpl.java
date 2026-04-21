@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(UUID userId, UUID loginUserId) {
+    public void softDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
         validateOwner(userId, loginUserId);
@@ -103,7 +103,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteExpiredUsers() {
+    public void hardDeleteUser(UUID userId, UUID loginUserId) {
+
+        User user = findById(userId);
+        validateOwner(userId, loginUserId);
+
+        userRepository.delete(user);
+
+        log.info("유저 물리 삭제 완료: userId={}", userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteExpiredSoftDeletedUsers() {
 
         Instant threshold = Instant.now().minus(1, ChronoUnit.DAYS);
 

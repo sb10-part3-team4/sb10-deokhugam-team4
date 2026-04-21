@@ -5,8 +5,6 @@ import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.user.controller.api.UserApi;
 import com.codeit.team4.deokhugam.user.dto.*;
 import com.codeit.team4.deokhugam.user.service.UserService;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +74,7 @@ public class UserController implements UserApi {
     ) {
         log.info("유저 논리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
-        userService.deleteUser(userId, loginUser.userId());
+        userService.softDeleteUser(userId, loginUser.userId());
 
         return ResponseEntity.noContent().build();
     }
@@ -88,7 +86,7 @@ public class UserController implements UserApi {
     ) {
         log.info("유저 물리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
-        userService.deleteExpiredUsers();
+        userService.hardDeleteUser(userId, loginUser.userId());
 
         return ResponseEntity.noContent().build();
     }

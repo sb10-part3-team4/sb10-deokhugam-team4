@@ -19,7 +19,9 @@ public interface UserService {
 
     UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request);
 
-    void deleteUser(UUID userId, UUID loginUserId);
+    void softDeleteUser(UUID userId, UUID loginUserId);
 
-    void deleteExpiredUsers();
+    void hardDeleteUser(UUID userId, UUID loginUserId);
+
+    void deleteExpiredSoftDeletedUsers();
 }

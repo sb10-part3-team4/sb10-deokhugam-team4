@@ -56,7 +56,6 @@ class UserServiceImplTest {
                 "user1",
                 "password1!"
         );
-        User user = new User("test@test.com", "user1", "password1!");
         User savedUser = new User("test@test.com", "user1", "password1!");
 
         when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
@@ -271,8 +270,8 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("유저 삭제 성공")
-    void deleteUser_success() {
+    @DisplayName("유저 논리 삭제 성공")
+    void softDeleteUser_success() {
         // given
         UUID userId = UUID.randomUUID();
         UUID loginUserId = userId;
@@ -283,7 +282,7 @@ class UserServiceImplTest {
                 .thenReturn(Optional.of(user));
 
         // when
-        userService.deleteUser(userId, loginUserId);
+        userService.softDeleteUser(userId, loginUserId);
 
         // then
         assertThat(user.isDeleted()).isTrue();
@@ -292,8 +291,8 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("유저가 존재하지 않아 삭제 실패")
-    void deleteUser_fail_user_not_found() {
+    @DisplayName("유저가 존재하지 않아 논리 삭제 실패")
+    void softDeleteUser_fail_user_not_found() {
         // given
         UUID userId = UUID.randomUUID();
         UUID loginUserId = UUID.randomUUID();
@@ -302,7 +301,7 @@ class UserServiceImplTest {
                 .thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> userService.deleteUser(userId, loginUserId))
+        assertThatThrownBy(() -> userService.softDeleteUser(userId, loginUserId))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
@@ -311,10 +310,64 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("삭제 대상 사용자 물리 삭제 성공")
-    void deleteExpiredUsers_success() {
+    @DisplayName("단건 물리 삭제 성공")
+    void hardDeleteUser_success() {
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID loginUserId = userId;
+
+        User user = new User("test@test.com", "user", "pw");
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.of(user));
+
         // when
-        userService.deleteExpiredUsers();
+        userService.hardDeleteUser(userId, loginUserId);
+
+        // then
+        verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    @DisplayName("유저가 존재하지 않아 물리 삭제 실패")
+    void hardDeleteUser_fail_user_not_found() {
+        UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                userService.hardDeleteUser(userId, loginUserId)
+        ).isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("권한이 없어서 물리 삭제 실패")
+    void hardDeleteUser_fail_forbidden() {
+        UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
+
+        User user = new User("test@test.com", "user", "pw");
+
+        when(userRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() ->
+                userService.hardDeleteUser(userId, loginUserId)
+        ).isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("삭제 대상 사용자 배치 물리 삭제 성공")
+    void deleteExpiredSoftDeletedUsers_success() {
+        // when
+        userService.deleteExpiredSoftDeletedUsers();
 
         // then
         ArgumentCaptor<Instant> captor = ArgumentCaptor.forClass(Instant.class);
@@ -330,13 +383,13 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("삭제 대상 사용자가 없어도 물리 삭제 성공")
-    void deleteExpiredUsers_no_target_success() {
+    @DisplayName("삭제 대상 사용자가 없어도 배치 물리 삭제 성공")
+    void deleteExpiredSoftDeletedUsers_no_target_success() {
         // given
         when(userJooqRepository.deleteExpiredUsers(any())).thenReturn(0);
 
         // when
-        userService.deleteExpiredUsers();
+        userService.deleteExpiredSoftDeletedUsers();
 
         // then
         verify(userJooqRepository).deleteExpiredUsers(any(Instant.class));
@@ -344,14 +397,14 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("JOOQ 저장소 예외 발생 시 물리 삭제 실패")
-    void deleteExpiredUsers_fail_repository_exception() {
+    @DisplayName("JOOQ 저장소 예외 발생 시 배치 물리 삭제 실패")
+    void deleteExpiredSoftDeletedUsers_fail_repository_exception() {
         // given
         doThrow(new RuntimeException("DB error"))
                 .when(userJooqRepository).deleteExpiredUsers(any());
 
         // when & then
-        assertThatThrownBy(() -> userService.deleteExpiredUsers())
+        assertThatThrownBy(() -> userService.deleteExpiredSoftDeletedUsers())
                 .isInstanceOf(RuntimeException.class);
 
         verify(userJooqRepository).deleteExpiredUsers(any());

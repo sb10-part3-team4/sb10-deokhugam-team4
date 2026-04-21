@@ -300,13 +300,13 @@ class UserControllerTest {
 
     @Test
     @DisplayName("사용자 논리 삭제 성공")
-    void deleteUser_success() throws Exception {
+    void softDeleteUser_success() throws Exception {
 
         // given
         UUID userId = UUID.randomUUID();
         UUID loginUserId = UUID.randomUUID();
 
-        doNothing().when(userService).deleteUser(eq(userId), eq(loginUserId));
+        doNothing().when(userService).softDeleteUser(eq(userId), eq(loginUserId));
 
         // when
         var result = mockMvc.perform(delete("/api/users/{userId}", userId)
@@ -318,7 +318,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("헤더 누락 시 사용자 삭제 실패")
-    void deleteUser_missingHeader_fail() throws Exception {
+    void softDeleteUser_missingHeader_fail() throws Exception {
 
         // given
         UUID userId = UUID.randomUUID();
@@ -333,14 +333,14 @@ class UserControllerTest {
 
     @Test
     @DisplayName("존재하지 않는 사용자 삭제 실패")
-    void deleteUser_notFound_fail() throws Exception {
+    void softDeleteUser_notFound_fail() throws Exception {
 
         // given
         UUID userId = UUID.randomUUID();
         UUID loginUserId = UUID.randomUUID();
 
         doThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
-                .when(userService).deleteUser(eq(userId), eq(loginUserId));
+                .when(userService).softDeleteUser(eq(userId), eq(loginUserId));
 
         // when
         var result = mockMvc.perform(delete("/api/users/{userId}", userId)
@@ -352,14 +352,14 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("사용자 물리 삭제 성공")
+    @DisplayName("단건 물리 삭제 성공")
     void hardDeleteUser_success() throws Exception {
 
         // given
         UUID userId = UUID.randomUUID();
         UUID loginUserId = UUID.randomUUID();
 
-        doNothing().when(userService).deleteExpiredUsers();
+        doNothing().when(userService).hardDeleteUser(eq(userId), eq(loginUserId));
 
         // when
         var result = mockMvc.perform(delete("/api/users/{userId}/hard", userId)
@@ -393,7 +393,7 @@ class UserControllerTest {
         UUID loginUserId = UUID.randomUUID();
 
         doThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
-                .when(userService).deleteExpiredUsers();
+                .when(userService).hardDeleteUser(eq(userId), eq(loginUserId));
 
         // when
         var result = mockMvc.perform(delete("/api/users/{userId}/hard", userId)
