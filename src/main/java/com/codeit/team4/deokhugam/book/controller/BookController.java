@@ -5,6 +5,7 @@ import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,5 +79,14 @@ public class BookController implements BookApi {
         log.info("도서 정보 조회 요청: bookId={}", bookId);
         BookResponse result = bookService.getBook(bookId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    // 도서 목록 조회
+    @GetMapping
+    public ResponseEntity<List<BookResponse>> getBookList(
+    ){
+        log.info("도서 목록 조회 요청");
+        List<BookResponse> bookList = bookService.getBookList();
+        return ResponseEntity.status(HttpStatus.OK).body(bookList);
     }
 }
