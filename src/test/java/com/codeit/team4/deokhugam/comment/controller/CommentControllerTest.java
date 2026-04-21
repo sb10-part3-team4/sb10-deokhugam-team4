@@ -183,4 +183,50 @@ class CommentControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
     }
+
+    @Test
+    @DisplayName("작성자가 동일하지 않으면 댓글 수정 실패")
+    void updateComment_Fail_403_Unauthorized() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
+        CommentUpdateRequest request = new CommentUpdateRequest("수정하려는 내용");
+
+        given(commentService.updateComment(any(UUID.class), any(UUID.class),
+                any(CommentUpdateRequest.class)))
+                .willThrow(new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS));
+
+        // when & then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                                "/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", requesterId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED_COMMENT_ACCESS"));
+    }
+
+    @Test
+    @DisplayName("댓글이 없으면 댓글 수정 실패")
+    void updateComment_Fail_404_CommentNotFound() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        CommentUpdateRequest request = new CommentUpdateRequest("수정하려는 내용");
+
+        given(commentService.updateComment(any(UUID.class), any(UUID.class),
+                any(CommentUpdateRequest.class)))
+                .willThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                                "/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_FOUND"));
+    }
 }

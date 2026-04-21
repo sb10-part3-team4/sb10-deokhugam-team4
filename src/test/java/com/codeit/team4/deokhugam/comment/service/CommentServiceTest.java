@@ -23,6 +23,7 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -187,14 +188,14 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않은 댓글 수정은 실패")
+    @DisplayName("존재하지 않는 댓글 수정은 실패")
     void updateComment_Fail_CommentNotFound() {
         // given
         UUID commentId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         CommentUpdateRequest request = new CommentUpdateRequest("수정 내용");
 
-        given(commentRepository.findById(commentId)).willReturn(java.util.Optional.empty());
+        given(commentRepository.findById(commentId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> commentService.updateComment(commentId, userId, request))
