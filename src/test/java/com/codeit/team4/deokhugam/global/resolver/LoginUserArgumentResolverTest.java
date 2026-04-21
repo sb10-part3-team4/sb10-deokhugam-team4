@@ -60,6 +60,22 @@ class LoginUserArgumentResolverTest {
     }
 
     @Test
+    @DisplayName("헤더가 공백이면 UNAUTHORIZED 예외 발생")
+    void resolveArgument_blankHeader_throwUnauthorized() {
+        // given
+        NativeWebRequest request = mock(NativeWebRequest.class);
+        when(request.getHeader(HEADER_NAME)).thenReturn("   ");
+
+        // when
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                resolver.resolveArgument(parameter, mavContainer, request, binderFactory)
+        );
+
+        // then
+        assertEquals(ErrorCode.UNAUTHORIZED, ex.getErrorCode());
+    }
+
+    @Test
     @DisplayName("정상적인 userId면 DeokhugamUser 반환")
     void resolveArgument_success() {
         // given
@@ -81,5 +97,29 @@ class LoginUserArgumentResolverTest {
         assertEquals(userId, dto.userId());
 
         verify(userService).findById(userId);
+    }
+
+    @Test
+    @DisplayName("@LoginUser + DeokhugamUser 타입이면 true 반환")
+    void supportsParameter_loginUserAnnotationAndDeokhugamUserType_returnsTrue() {
+        // given
+        when(parameter.hasParameterAnnotation(com.codeit.team4.deokhugam.global.annotation.LoginUser.class))
+                .thenReturn(true);
+        when(parameter.getParameterType()).thenReturn((Class) DeokhugamUser.class);
+
+        // when & then
+        assertTrue(resolver.supportsParameter(parameter));
+    }
+
+    @Test
+    @DisplayName("@LoginUser 없으면 false 반환")
+    void supportsParameter_noAnnotation_returnsFalse() {
+        // given
+        when(parameter.hasParameterAnnotation(com.codeit.team4.deokhugam.global.annotation.LoginUser.class))
+                .thenReturn(false);
+        when(parameter.getParameterType()).thenReturn((Class) DeokhugamUser.class);
+
+        // when & then
+        assertFalse(resolver.supportsParameter(parameter));
     }
 }
