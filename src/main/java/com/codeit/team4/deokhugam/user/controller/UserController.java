@@ -25,7 +25,7 @@ public class UserController implements UserApi {
     public ResponseEntity<UserResponse> register(
             @Valid @RequestBody UserRegisterRequest request
     ) {
-        log.info("회원가입 요청: email={}", request.email());
+        log.info("회원가입 요청");
 
         UserResponse response = userService.registerUser(request);
 
@@ -36,7 +36,7 @@ public class UserController implements UserApi {
     public ResponseEntity<UserResponse> login(
             @Valid @RequestBody UserLoginRequest request
     ) {
-        log.info("로그인 요청: email={}", request.email());
+        log.info("로그인 요청");
 
         UserResponse response = userService.loginUser(request);
 
