@@ -72,7 +72,7 @@ class CommentMapperTest {
         }
 
         @Test
-        @DisplayName("다른 작성자의 ID가 정확하게 매핑 성공")
+        @DisplayName("서로 다른 작성자의 댓글을 매핑해도 유저 정보가 섞이지 않고 독립적으로 매핑 성공")
         void toResponse_DifferentUser_Success() {
             // given
             UUID userId1 = UUID.randomUUID();
@@ -99,7 +99,7 @@ class CommentMapperTest {
         }
 
         @Test
-        @DisplayName("다른 리뷰의 ID가 정확하게 매핑 성공")
+        @DisplayName("서로 다른 리뷰에 달린 댓글을 매핑해도 리뷰 정보가 섞이지 않고 독립적으로 매핑 성공")
         void toResponse_DifferentReview_Success() {
             // given
             UUID reviewId1 = UUID.randomUUID();
