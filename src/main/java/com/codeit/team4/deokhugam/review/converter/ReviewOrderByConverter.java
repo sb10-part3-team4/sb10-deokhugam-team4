@@ -1,5 +1,6 @@
-package com.codeit.team4.deokhugam.review.dto;
+package com.codeit.team4.deokhugam.review.converter;
 
+import com.codeit.team4.deokhugam.review.dto.ReviewOrderBy;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 

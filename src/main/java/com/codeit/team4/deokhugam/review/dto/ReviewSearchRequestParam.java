@@ -55,6 +55,15 @@ public record ReviewSearchRequestParam(
         UUID requestUserId
 ) {
 
+    public ReviewSearchRequestParam {
+        if (orderBy == null) {
+            orderBy = ReviewOrderBy.CREATED_AT;
+        }
+        if (direction == null) {
+            direction = SortDirection.DESC;
+        }
+    }
+
     public Condition toCondition() {
         Condition condition = REVIEWS.DELETED_AT.isNull();
 
