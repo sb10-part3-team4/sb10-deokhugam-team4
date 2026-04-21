@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.global.resolver;
 
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
+import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -29,7 +30,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(LoginUser.class)
-                && User.class.equals(parameter.getParameterType());
+                && DeokhugamUser.class.equals(parameter.getParameterType());
     }
 
     @Override
@@ -51,6 +52,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "invalid userId header=" + header);
         }
-        return userService.findById(userId);
+        User user = userService.findById(userId);
+        return new DeokhugamUser(user.getId());
     }
 }
