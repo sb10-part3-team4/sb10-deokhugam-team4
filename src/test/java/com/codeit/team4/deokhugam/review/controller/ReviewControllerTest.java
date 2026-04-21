@@ -23,6 +23,7 @@ import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.service.ReviewQueryService;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
+import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -59,6 +60,9 @@ class ReviewControllerTest {
 
     @MockitoBean
     private ReviewQueryService reviewQueryService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Nested
     @DisplayName("리뷰 목록 조회")
