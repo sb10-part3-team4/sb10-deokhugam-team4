@@ -28,8 +28,8 @@ class LoginUserArgumentResolverTest {
     private static final String HEADER_NAME = "Deokhugam-Request-User-ID";
 
     @Test
-    @DisplayName("헤더가 없으면 UNAUTHORIZED 예외 발생")
-    void resolveArgument_noHeader_throwUnauthorized() {
+    @DisplayName("헤더가 없으면 MISSING_HEADER 예외 발생")
+    void resolveArgument_noHeader_throwMissingHeader() {
         // given
         NativeWebRequest request = mock(NativeWebRequest.class);
         when(request.getHeader(HEADER_NAME)).thenReturn(null);
@@ -40,7 +40,7 @@ class LoginUserArgumentResolverTest {
         );
 
         // then
-        assertEquals(ErrorCode.UNAUTHORIZED, ex.getErrorCode());
+        assertEquals(ErrorCode.MISSING_HEADER, ex.getErrorCode());
     }
 
     @Test
@@ -60,8 +60,8 @@ class LoginUserArgumentResolverTest {
     }
 
     @Test
-    @DisplayName("헤더가 공백이면 UNAUTHORIZED 예외 발생")
-    void resolveArgument_blankHeader_throwUnauthorized() {
+    @DisplayName("헤더가 공백이면 MISSING_HEADER 예외 발생")
+    void resolveArgument_blankHeader_throwMissingHeader() {
         // given
         NativeWebRequest request = mock(NativeWebRequest.class);
         when(request.getHeader(HEADER_NAME)).thenReturn("   ");
@@ -72,7 +72,7 @@ class LoginUserArgumentResolverTest {
         );
 
         // then
-        assertEquals(ErrorCode.UNAUTHORIZED, ex.getErrorCode());
+        assertEquals(ErrorCode.MISSING_HEADER, ex.getErrorCode());
     }
 
     @Test
