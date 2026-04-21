@@ -192,10 +192,10 @@ public class BookQueryService {
     }
 
     private void validateSort(String orderBy, String direction) {
-        if (!List.of("title", "publishedDate", "rating", "reviewCount").contains(orderBy)) {
+        if (orderBy == null || !List.of("title", "publishedDate", "rating", "reviewCount").contains(orderBy)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "orderBy=" + orderBy);
         }
-        if (!List.of("ASC", "DESC").contains(direction)) {
+        if (direction == null || !List.of("ASC", "DESC").contains(direction)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "direction=" + direction);
         }
     }
