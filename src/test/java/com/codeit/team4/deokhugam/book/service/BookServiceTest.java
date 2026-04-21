@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class BookServiceImplTest {
+class BookServiceTest {
 
     @Autowired
     BookRepository bookRepository;
@@ -219,32 +219,5 @@ class BookServiceImplTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
-    }
-
-    @Test
-    @DisplayName("도서 목록 조회 성공")
-    void get_list_success() {
-        // given
-        BookCreateRequest request1 = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
-                "달출판사", LocalDate.of(2026, 1, 1),
-                "978-89-91995-00-1");
-        BookResponse result1 = bookService.createBook(request1, null);
-
-        BookCreateRequest request2 = new BookCreateRequest("달룡이의 하루", "달룡", "달룡이의 하루를 담은 책입니다.",
-                "달출판사", LocalDate.of(2025, 1, 1),
-                "978-89-91555-00-1");
-        BookResponse result2 = bookService.createBook(request2, null);
-
-        BookCreateRequest request3 = new BookCreateRequest("달례의 하루", "달례", "달례의 하루를 담은 책입니다.",
-                "달출판사", LocalDate.of(2024, 1, 1),
-                "978-89-91333-00-1");
-        BookResponse result3 = bookService.createBook(request3, null);
-
-
-        // when
-        List<BookResponse> bookList = bookService.getBooks();
-
-        // then
-        assertThat(bookList.size()).isEqualTo(3);
     }
 }

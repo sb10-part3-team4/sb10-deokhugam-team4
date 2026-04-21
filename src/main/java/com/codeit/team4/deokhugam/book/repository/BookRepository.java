@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.jooq.DSLContext;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositoryCustom{
+public interface BookRepository extends JpaRepository<Book, UUID>{
 
     Optional<Book> findByIdAndDeletedAtIsNull(UUID uuid);
     boolean existsByIsbnAndDeletedAtIsNull(String isbn);

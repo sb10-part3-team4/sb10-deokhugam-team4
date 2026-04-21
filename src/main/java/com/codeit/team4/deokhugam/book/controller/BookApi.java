@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.book.controller;
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.dto.CursorPageResponseBookDto;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,10 +14,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -102,4 +105,21 @@ public interface BookApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<BookResponse> getBook(@PathVariable UUID bookId);
+
+    @Operation(summary = "도서 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CursorPageResponseBookDto.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<CursorPageResponseBookDto> getBookList(@RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "title") String orderBy,
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Instant after,
+            @RequestParam(defaultValue = "50") int limit
+    );
 }

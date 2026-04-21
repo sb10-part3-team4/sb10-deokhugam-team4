@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.book.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
@@ -15,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.dto.CursorPageResponseBookDto;
+import com.codeit.team4.deokhugam.book.service.BookQueryService;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -45,6 +48,9 @@ class BookControllerTest {
 
     @MockitoBean
     private BookService bookService;
+
+    @MockitoBean
+    private BookQueryService bookQueryService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -293,44 +299,29 @@ class BookControllerTest {
 
     @Test
     @DisplayName("도서 목록 조회 성공")
-    void get_list_success() throws Exception {
+    void get_book_list_success() throws Exception {
         // given
-        BookCreateRequest request1 = new BookCreateRequest("달선이의 하루", "달선", "달선이의 하루를 담은 책입니다.",
-                "달출판사", LocalDate.of(2026, 1, 1),
-                "978-89-91995-00-1");
-        BookResponse result1 = bookService.createBook(request1, null);
+        CursorPageResponseBookDto response = new CursorPageResponseBookDto(
+                List.of(), null, null, 0, 0L, false);
 
-        BookCreateRequest request2 = new BookCreateRequest("달룡이의 하루", "달룡", "달룡이의 하루를 담은 책입니다.",
-                "달출판사", LocalDate.of(2025, 1, 1),
-                "978-89-91555-00-1");
-        BookResponse result2 = bookService.createBook(request2, null);
+        given(bookQueryService.getBooks(any(), any(), any(), any(), any(), anyInt()))
+                .willReturn(response);
 
-        BookCreateRequest request3 = new BookCreateRequest("달례의 하루", "달례", "달례의 하루를 담은 책입니다.",
-                "달출판사", LocalDate.of(2024, 1, 1),
-                "978-89-91333-00-1");
-        BookResponse result3 = bookService.createBook(request3, null);
-
-        List<BookResponse> bookResponseList = List.of(result1, result2, result3);
-
-        // when
-        given(bookService.getBookList())
-                .willReturn(bookResponseList);
-
-        // then
+        // when & then
         mockMvc.perform(get("/api/books"))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasNext").value(false))
+                .andExpect(jsonPath("$.size").value(0));
     }
 
     @Test
-    @DisplayName("잘못된 정렬 기준 요청 시 도서 목록 조회 실패")
-    void get_list_fail_invalid_sort() throws Exception {
-        // given
-        String invalidSort = "invalidColumn";
-
+    @DisplayName("잘못된 limit으로 도서 목록 조회 실패")
+    void get_book_list_fail_invalid_limit() throws Exception {
         // when & then
-        mockMvc.perform(get("/api/books").param("sort", invalidSort))
+        mockMvc.perform(get("/api/books")
+                        .param("limit", "0"))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 }
