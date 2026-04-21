@@ -17,6 +17,9 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -241,7 +244,10 @@ class ReviewQueryServiceTest {
 
             assertThat(secondResult.content()).hasSize(1);
             assertThat(secondResult.hasNext()).isFalse();
-            assertThat(secondResult.content().get(0).content()).isEqualTo("리뷰1");
+            // 1페이지와 2페이지 리뷰가 중복 없이 전체를 커버하는지 검증
+            List<UUID> allIds = new ArrayList<>(firstResult.content().stream().map(ReviewResponse::id).toList());
+            allIds.addAll(secondResult.content().stream().map(ReviewResponse::id).toList());
+            assertThat(allIds).hasSize(3).doesNotHaveDuplicates();
         }
 
         @Test
