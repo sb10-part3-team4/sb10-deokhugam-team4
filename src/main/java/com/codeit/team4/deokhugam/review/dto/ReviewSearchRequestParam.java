@@ -50,4 +50,18 @@ public record ReviewSearchRequestParam(
             direction = SortDirection.DESC;
         }
     }
+
+    public ReviewSearchRequestParam withRequestUserId(UUID requestUserId) {
+        return new ReviewSearchRequestParam(
+                userId,
+                bookId,
+                keyword,
+                orderBy,
+                direction,
+                cursor,
+                after,
+                limit,
+                requestUserId
+        );
+    }
 }

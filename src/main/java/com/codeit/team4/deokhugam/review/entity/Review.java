@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -78,8 +79,8 @@ public class Review extends BaseUpdatableEntity {
         this.deletedAt = Instant.now();
     }
 
-    public boolean isOwner(User user) {
-        return this.user.equals(user);
+    public boolean isOwner(UUID userId) {
+        return this.user.getId().equals(userId);
     }
 
     private void validateRating(int rating) {
