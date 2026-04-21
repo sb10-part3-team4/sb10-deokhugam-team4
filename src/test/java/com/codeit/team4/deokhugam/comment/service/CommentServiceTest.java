@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
@@ -49,6 +50,7 @@ class CommentServiceTest {
     @InjectMocks
     private CommentServiceImpl commentService;
 
+    // ===== createComment() =====
     @Test
     @DisplayName("댓글 등록 성공")
     void createComment_Success() {
@@ -128,5 +130,75 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.createComment(request))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.REVIEW_NOT_FOUND);
+    }
+
+    // ===== updateComment() =====
+    @Test
+    @DisplayName("댓글 수정 성공")
+    void updateComment_Success() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        CommentUpdateRequest request = new CommentUpdateRequest("수정된 내용입니다.");
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+
+        CommentResponse mockResponse = new CommentResponse(
+                commentId, request.content(), userId, UUID.randomUUID(),
+                "독후감러버", Instant.now(), Instant.now()
+        );
+
+        given(commentRepository.findById(commentId)).willReturn(java.util.Optional.of(mockComment));
+        given(commentMapper.toResponse(mockComment)).willReturn(mockResponse);
+
+        // when
+        CommentResponse response = commentService.updateComment(commentId, userId, request);
+
+        // then
+        assertThat(response.content()).isEqualTo("수정된 내용입니다.");
+        verify(mockComment).updateContent("수정된 내용입니다.");
+    }
+
+    @Test
+    @DisplayName("작성자 불일치로 인한 댓글 수정 실패")
+    void updateComment_Fail_Unauthorized() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID authorId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID(); // 작성자와 다른 요청자 ID
+        CommentUpdateRequest request = new CommentUpdateRequest("수정 내용");
+
+        User mockAuthor = mock(User.class);
+        given(mockAuthor.getId()).willReturn(authorId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockAuthor);
+
+        given(commentRepository.findById(commentId)).willReturn(java.util.Optional.of(mockComment));
+
+        // when & then
+        assertThatThrownBy(() -> commentService.updateComment(commentId, requesterId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_COMMENT_ACCESS);
+    }
+
+    @Test
+    @DisplayName("존재하지 않은 댓글 수정은 실패")
+    void updateComment_Fail_CommentNotFound() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        CommentUpdateRequest request = new CommentUpdateRequest("수정 내용");
+
+        given(commentRepository.findById(commentId)).willReturn(java.util.Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> commentService.updateComment(commentId, userId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
     }
 }

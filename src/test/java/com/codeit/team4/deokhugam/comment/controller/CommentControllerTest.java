@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
+import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -131,5 +132,55 @@ class CommentControllerTest {
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"));
+    }
+
+    @Test
+    @DisplayName("댓글 수정 API 성공")
+    void updateComment_Success() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        String updatedContent = "수정된 내용입니다";
+        CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
+
+        CommentResponse response = new CommentResponse(
+                commentId, updatedContent, userId, reviewId,
+                "테스트닉네임", Instant.now(), Instant.now()
+        );
+
+        given(commentService.updateComment(any(UUID.class), any(UUID.class),
+                any(CommentUpdateRequest.class)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                                "/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(commentId.toString()))
+                .andExpect(jsonPath("$.content").value(updatedContent));
+    }
+
+    @Test
+    @DisplayName("빈 content로 인한 댓글 수정 API 실패")
+    void updateComment_Fail_400_InvalidInput() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        CommentUpdateRequest invalidRequest = new CommentUpdateRequest(""); // 빈 문자열
+
+        // when & then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                                "/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
     }
 }
