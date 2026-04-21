@@ -1,5 +1,7 @@
 package com.codeit.team4.deokhugam.user.controller.api;
 
+import com.codeit.team4.deokhugam.global.annotation.LoginUser;
+import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import com.codeit.team4.deokhugam.user.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,7 +79,7 @@ public interface UserApi {
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID userId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId,
+            @LoginUser DeokhugamUser loginUser,
             @Valid @RequestBody UserUpdateRequest request
     );
 
@@ -94,7 +96,7 @@ public interface UserApi {
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     ResponseEntity<Void> deleteUser(
             @PathVariable UUID userId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId
+            @LoginUser DeokhugamUser loginUser
     );
 
     @Operation(summary = "사용자 물리 삭제", description = "사용자를 완전히 삭제합니다.")
@@ -110,6 +112,6 @@ public interface UserApi {
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     ResponseEntity<Void> hardDeleteUser(
             @PathVariable UUID userId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId
+            @LoginUser DeokhugamUser loginUser
     );
 }

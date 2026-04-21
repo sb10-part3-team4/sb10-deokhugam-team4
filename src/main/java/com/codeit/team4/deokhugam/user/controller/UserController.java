@@ -1,8 +1,12 @@
 package com.codeit.team4.deokhugam.user.controller;
 
+import com.codeit.team4.deokhugam.global.annotation.LoginUser;
+import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.user.controller.api.UserApi;
 import com.codeit.team4.deokhugam.user.dto.*;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -55,10 +59,10 @@ public class UserController implements UserApi {
     @PatchMapping("/{userId}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID userId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId,
+            @LoginUser DeokhugamUser loginUser,
             @Valid @RequestBody UserUpdateRequest request
     ) {
-        log.info("유저 수정 요청: targetUserId={}, loginUserId={}", userId, loginUserId);
+        log.info("유저 수정 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
         UserResponse response = userService.updateUser(userId, request);
 
@@ -68,9 +72,9 @@ public class UserController implements UserApi {
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable UUID userId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId
+            @LoginUser DeokhugamUser loginUser
     ) {
-        log.info("유저 논리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUserId);
+        log.info("유저 논리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
         userService.deleteUser(userId);
 
@@ -80,9 +84,9 @@ public class UserController implements UserApi {
     @DeleteMapping("/{userId}/hard")
     public ResponseEntity<Void> hardDeleteUser(
             @PathVariable UUID userId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId
+            @LoginUser DeokhugamUser loginUser
     ) {
-        log.info("유저 물리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUserId);
+        log.info("유저 물리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
         userService.deleteExpiredUsers();
 
