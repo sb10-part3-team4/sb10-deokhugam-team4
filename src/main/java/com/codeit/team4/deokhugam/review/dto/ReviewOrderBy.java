@@ -1,6 +1,10 @@
 package com.codeit.team4.deokhugam.review.dto;
 
 public enum ReviewOrderBy {
-    createdAt,
-    rating
+    CREATED_AT,
+    RATING;
+
+    public boolean isRating() {
+        return this == RATING;
+    }
 }

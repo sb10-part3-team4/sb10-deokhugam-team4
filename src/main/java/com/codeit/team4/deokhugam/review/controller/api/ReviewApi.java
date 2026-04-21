@@ -7,6 +7,7 @@ import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +32,7 @@ public interface ReviewApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
-            @org.springdoc.core.annotations.ParameterObject ReviewSearchRequestParam param,
+            @ParameterObject ReviewSearchRequestParam param,
             @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId
     );

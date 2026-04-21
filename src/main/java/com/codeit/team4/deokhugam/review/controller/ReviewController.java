@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.review.controller;
 
 import com.codeit.team4.deokhugam.global.response.PageResponse;
+import com.codeit.team4.deokhugam.review.service.ReviewQueryService;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReviewController implements ReviewApi {
 
     private final ReviewService reviewService;
+    private final ReviewQueryService reviewQueryService;
 
     @GetMapping
     public ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
@@ -40,9 +42,7 @@ public class ReviewController implements ReviewApi {
             @RequestHeader("Deokhugam-Request-User-ID") UUID userId
     ) {
         log.info("리뷰 목록 조회 요청: orderBy={}, direction={}, limit={}", param.orderBy(), param.direction(), param.limit());
-        PageResponse<ReviewResponse> response = reviewService.searchReviews(param);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(reviewQueryService.searchReviews(param));
     }
 
     @GetMapping("/{reviewId}")

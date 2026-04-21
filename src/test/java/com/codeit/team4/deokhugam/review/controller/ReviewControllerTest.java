@@ -21,6 +21,7 @@ import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
+import com.codeit.team4.deokhugam.review.service.ReviewQueryService;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -56,6 +57,9 @@ class ReviewControllerTest {
     @MockitoBean
     private ReviewService reviewService;
 
+    @MockitoBean
+    private ReviewQueryService reviewQueryService;
+
     @Nested
     @DisplayName("리뷰 목록 조회")
     class SearchReviews {
@@ -70,7 +74,7 @@ class ReviewControllerTest {
                     List.of(), null, null, 50, null, false
             );
 
-            given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))
+            given(reviewQueryService.searchReviews(any(ReviewSearchRequestParam.class)))
                     .willReturn(response);
 
             mockMvc.perform(get("/api/reviews")
@@ -139,7 +143,7 @@ class ReviewControllerTest {
                     List.of(review), "2025-04-05T10:00:00Z", nextAfter, 1, null, true
             );
 
-            given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))
+            given(reviewQueryService.searchReviews(any(ReviewSearchRequestParam.class)))
                     .willReturn(response);
 
             mockMvc.perform(get("/api/reviews")
@@ -181,7 +185,7 @@ class ReviewControllerTest {
                     List.of(), null, null, 50, null, false
             );
 
-            given(reviewService.searchReviews(any(ReviewSearchRequestParam.class)))
+            given(reviewQueryService.searchReviews(any(ReviewSearchRequestParam.class)))
                     .willReturn(response);
 
             mockMvc.perform(get("/api/reviews")

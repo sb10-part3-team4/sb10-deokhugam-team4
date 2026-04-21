@@ -1,16 +1,12 @@
 package com.codeit.team4.deokhugam.review.service;
 
-import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
-import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import java.util.UUID;
 
 public interface ReviewService {
-
-    PageResponse<ReviewResponse> searchReviews(ReviewSearchRequestParam param);
 
     ReviewResponse getReview(UUID reviewId, UUID userId);
 

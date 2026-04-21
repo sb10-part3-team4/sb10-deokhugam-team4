@@ -82,7 +82,7 @@ public record ReviewSearchRequestParam(
         boolean isAsc = SortDirection.ASC == direction;
         List<SortField<?>> orderBy = new ArrayList<>();
 
-        if (ReviewOrderBy.rating == this.orderBy) {
+        if (this.orderBy.isRating()) {
             orderBy.add(isAsc ? REVIEWS.RATING.asc() : REVIEWS.RATING.desc());
         }
         orderBy.add(isAsc ? REVIEWS.CREATED_AT.asc() : REVIEWS.CREATED_AT.desc());
@@ -95,7 +95,7 @@ public record ReviewSearchRequestParam(
         boolean isAsc = SortDirection.ASC == direction;
         OffsetDateTime afterTime = after.atOffset(ZoneOffset.UTC);
 
-        if (ReviewOrderBy.rating == orderBy) {
+        if (orderBy.isRating()) {
             int cursorValue;
             try {
                 cursorValue = Integer.parseInt(cursor);

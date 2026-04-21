@@ -12,22 +12,16 @@ import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
-import com.codeit.team4.deokhugam.global.response.PageResponse;
-import com.codeit.team4.deokhugam.global.response.SortDirection;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
-import com.codeit.team4.deokhugam.review.dto.ReviewOrderBy;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
-import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
-import com.codeit.team4.deokhugam.review.repository.ReviewSearchRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -59,49 +53,6 @@ class ReviewServiceImplTest {
 
     @Mock
     private ReviewMapper reviewMapper;
-
-    @Mock
-    private ReviewSearchRepository reviewSearchRepository;
-
-    @Nested
-    @DisplayName("리뷰 목록 조회")
-    class SearchReviews {
-
-        @Test
-        @DisplayName("리뷰 목록 조회 위임 성공")
-        void searchReviews_success() {
-            ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
-                    null, null, 50, UUID.randomUUID()
-            );
-            PageResponse<ReviewResponse> expectedResponse = new PageResponse<>(
-                    List.of(), null, null, 50, null, false
-            );
-
-            given(reviewSearchRepository.searchReviews(param)).willReturn(expectedResponse);
-
-            PageResponse<ReviewResponse> response = reviewService.searchReviews(param);
-
-            assertThat(response).isSameAs(expectedResponse);
-            verify(reviewSearchRepository).searchReviews(param);
-        }
-
-        @Test
-        @DisplayName("리뷰 목록 조회 시 예외 전파 성공")
-        void searchReviews_exceptionPropagation_success() {
-            ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
-                    null, null, 50, UUID.randomUUID()
-            );
-
-            given(reviewSearchRepository.searchReviews(param))
-                    .willThrow(new RuntimeException("DB 오류"));
-
-            assertThatThrownBy(() -> reviewService.searchReviews(param))
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessage("DB 오류");
-        }
-    }
 
     @Nested
     @DisplayName("리뷰 생성")

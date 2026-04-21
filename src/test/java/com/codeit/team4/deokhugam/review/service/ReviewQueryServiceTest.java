@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.review.repository;
+package com.codeit.team4.deokhugam.review.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,6 +12,8 @@ import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.entity.ReviewLike;
+import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
+import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
@@ -29,10 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class ReviewSearchRepositoryTest {
+class ReviewQueryServiceTest {
 
     @Autowired
-    private ReviewSearchRepository reviewSearchRepository;
+    private ReviewQueryService reviewQueryService;
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -70,11 +72,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(otherBook, user, "괜찮은 책입니다", 3));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(2);
             assertThat(result.hasNext()).isFalse();
@@ -88,11 +90,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(review);
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).isEmpty();
         }
@@ -109,11 +111,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "괜찮습니다", 3));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    user.getId(), null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    user.getId(), null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).userId()).isEqualTo(user.getId());
@@ -126,11 +128,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "괜찮습니다", 3));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, book.getId(), null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, book.getId(), null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).bookId()).isEqualTo(book.getId());
@@ -143,11 +145,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "별로입니다", 2));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, "좋은", ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, "좋은", ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).content()).contains("좋은");
@@ -160,11 +162,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "별로입니다", 2));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, "클린", ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, "클린", ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).bookTitle()).isEqualTo("클린 코드");
@@ -177,11 +179,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "별로입니다", 2));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, "테스터", ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, "테스터", ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).userNickname()).isEqualTo("테스터");
@@ -202,11 +204,11 @@ class ReviewSearchRepositoryTest {
                     user, "리뷰3", 3));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 2, user.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(2);
             assertThat(result.hasNext()).isTrue();
@@ -225,17 +227,17 @@ class ReviewSearchRepositoryTest {
 
             // 1페이지
             ReviewSearchRequestParam firstPage = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 2, user.getId()
             );
-            PageResponse<ReviewResponse> firstResult = reviewSearchRepository.searchReviews(firstPage);
+            PageResponse<ReviewResponse> firstResult = reviewQueryService.searchReviews(firstPage);
 
             // 2페이지 (커서 사용)
             ReviewSearchRequestParam secondPage = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     firstResult.nextCursor(), firstResult.nextAfter(), 2, user.getId()
             );
-            PageResponse<ReviewResponse> secondResult = reviewSearchRepository.searchReviews(secondPage);
+            PageResponse<ReviewResponse> secondResult = reviewQueryService.searchReviews(secondPage);
 
             assertThat(secondResult.content()).hasSize(1);
             assertThat(secondResult.hasNext()).isFalse();
@@ -253,10 +255,10 @@ class ReviewSearchRepositoryTest {
 
             // 1페이지 (rating DESC)
             ReviewSearchRequestParam firstPage = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.rating, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.RATING, SortDirection.DESC,
                     null, null, 2, user.getId()
             );
-            PageResponse<ReviewResponse> firstResult = reviewSearchRepository.searchReviews(firstPage);
+            PageResponse<ReviewResponse> firstResult = reviewQueryService.searchReviews(firstPage);
 
             assertThat(firstResult.content()).hasSize(2);
             assertThat(firstResult.content().get(0).rating()).isEqualTo(5);
@@ -264,10 +266,10 @@ class ReviewSearchRepositoryTest {
 
             // 2페이지 (커서 사용)
             ReviewSearchRequestParam secondPage = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.rating, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.RATING, SortDirection.DESC,
                     firstResult.nextCursor(), firstResult.nextAfter(), 2, user.getId()
             );
-            PageResponse<ReviewResponse> secondResult = reviewSearchRepository.searchReviews(secondPage);
+            PageResponse<ReviewResponse> secondResult = reviewQueryService.searchReviews(secondPage);
 
             assertThat(secondResult.content()).hasSize(1);
             assertThat(secondResult.content().get(0).rating()).isEqualTo(1);
@@ -286,11 +288,11 @@ class ReviewSearchRepositoryTest {
             reviewLikeRepository.saveAndFlush(new ReviewLike(review, otherUser));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, otherUser.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).likedByMe()).isTrue();
@@ -302,11 +304,11 @@ class ReviewSearchRepositoryTest {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
-                    null, null, null, ReviewOrderBy.createdAt, SortDirection.DESC,
+                    null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, otherUser.getId()
             );
 
-            PageResponse<ReviewResponse> result = reviewSearchRepository.searchReviews(param);
+            PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).likedByMe()).isFalse();
