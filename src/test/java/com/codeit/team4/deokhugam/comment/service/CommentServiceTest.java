@@ -49,7 +49,7 @@ class CommentServiceTest {
     private CommentMapper commentMapper;
 
     @InjectMocks
-    private CommentServiceImpl commentService;
+    private CommentService commentService;
 
     // ===== createComment() =====
     @Test
