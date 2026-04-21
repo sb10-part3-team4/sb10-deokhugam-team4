@@ -21,6 +21,7 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,8 +60,15 @@ class CommentServiceTest {
         User mockUser = mock(User.class);
         Review mockReview = mock(Review.class);
         given(mockReview.getId()).willReturn(reviewId);
-        CommentResponse mockResponse = new CommentResponse(UUID.randomUUID(), request.content(),
-                userId, reviewId);
+        CommentResponse mockResponse = new CommentResponse(
+                UUID.randomUUID(),
+                request.content(),
+                userId,
+                reviewId,
+                "독후감러버",
+                Instant.now(),
+                Instant.now()
+        );
 
         given(userService.findById(userId)).willReturn(mockUser);
         given(reviewService.findById(reviewId)).willReturn(mockReview);

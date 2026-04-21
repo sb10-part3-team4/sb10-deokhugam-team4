@@ -14,6 +14,7 @@ import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,15 @@ class CommentControllerTest {
         CommentCreateRequest request = new CommentCreateRequest(reviewId, userId, content);
 
         UUID newCommentId = UUID.randomUUID();
-        CommentResponse response = new CommentResponse(newCommentId, content, userId, reviewId);
+        CommentResponse response = new CommentResponse(
+                newCommentId,
+                content,
+                userId,
+                reviewId,
+                "테스트닉네임",
+                Instant.now(),
+                Instant.now()
+        );
 
         given(commentService.createComment(any(CommentCreateRequest.class))).willReturn(response);
 
