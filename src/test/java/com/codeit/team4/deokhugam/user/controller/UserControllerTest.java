@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -122,8 +123,27 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("필수값 누락으로 회원가입 실패")
-    void register_fail_missingField() throws Exception {
+    @DisplayName("이메일 필드 누락으로 회원가입 실패")
+    void register_fail_missing_email_field() throws Exception {
+
+        // given
+        var request = java.util.Map.of(
+                "nickname", "user1",
+                "password", "password1!"
+        );
+
+        // when
+        var result = mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
+
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("이메일 빈 값으로 회원가입 실패")
+    void register_fail_blank_email() throws Exception {
 
         // given
         var request = java.util.Map.of(
@@ -218,6 +238,54 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("사용자 단건 조회 성공")
+    void getUser_success() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        UserResponse response = new UserResponse(
+                userId,
+                "test@test.com",
+                "user1",
+                Instant.now()
+        );
+
+        given(userService.getUser(userId))
+                .willReturn(response);
+
+        // when
+        var result = mockMvc.perform(get("/api/users/{userId}", userId)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.email").value("test@test.com"))
+                .andExpect(jsonPath("$.nickname").value("user1"))
+                .andExpect(jsonPath("$.createdAt").exists());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자 조회 실패")
+    void getUser_notFound_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        given(userService.getUser(userId))
+                .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // when
+        var result = mockMvc.perform(get("/api/users/{userId}", userId)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
+    }
+
+    @Test
     @DisplayName("사용자 정보 수정 성공")
     void updateUser_success() throws Exception {
 
@@ -299,6 +367,32 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("본인 확인 실패로 사용자 수정 실패")
+    void updateUser_forbidden_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
+
+        given(userService.updateUser(eq(userId), eq(loginUserId), any()))
+                .willThrow(new BusinessException(ErrorCode.USER_FORBIDDEN));
+
+        var request = java.util.Map.of(
+                "nickname", "newNickname"
+        );
+
+        // when
+        var result = mockMvc.perform(patch("/api/users/{userId}", userId)
+                .header(USER_ID_HEADER, loginUserId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
+
+        // then
+        result.andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("USER_FORBIDDEN"));
+    }
+
+    @Test
     @DisplayName("사용자 논리 삭제 성공")
     void softDeleteUser_success() throws Exception {
 
@@ -317,7 +411,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("헤더 누락 시 사용자 삭제 실패")
+    @DisplayName("헤더 누락 시 사용자 논리 삭제 실패")
     void softDeleteUser_missingHeader_fail() throws Exception {
 
         // given
@@ -332,7 +426,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 사용자 삭제 실패")
+    @DisplayName("존재하지 않는 사용자 논리 삭제 실패")
     void softDeleteUser_notFound_fail() throws Exception {
 
         // given
@@ -349,6 +443,26 @@ class UserControllerTest {
         // then
         result.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("본인 확인 실패로 사용자 논리 삭제 실패 (403)")
+    void softDeleteUser_forbidden_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
+
+        doThrow(new BusinessException(ErrorCode.USER_FORBIDDEN))
+                .when(userService).softDeleteUser(eq(userId), eq(loginUserId));
+
+        // when
+        var result = mockMvc.perform(delete("/api/users/{userId}", userId)
+                .header(USER_ID_HEADER, loginUserId.toString()));
+
+        // then
+        result.andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("USER_FORBIDDEN"));
     }
 
     @Test
@@ -402,5 +516,25 @@ class UserControllerTest {
         // then
         result.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("본인 확인 실패로 사용자 물리 삭제 실패")
+    void hardDeleteUser_forbidden_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
+
+        doThrow(new BusinessException(ErrorCode.USER_FORBIDDEN))
+                .when(userService).hardDeleteUser(eq(userId), eq(loginUserId));
+
+        // when
+        var result = mockMvc.perform(delete("/api/users/{userId}/hard", userId)
+                .header(USER_ID_HEADER, loginUserId.toString()));
+
+        // then
+        result.andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("USER_FORBIDDEN"));
     }
 }
