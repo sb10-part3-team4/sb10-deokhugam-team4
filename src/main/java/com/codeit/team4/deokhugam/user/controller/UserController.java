@@ -64,7 +64,7 @@ public class UserController implements UserApi {
     ) {
         log.info("유저 수정 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
-        UserResponse response = userService.updateUser(userId, request);
+        UserResponse response = userService.updateUser(userId, loginUser.userId(), request);
 
         return ResponseEntity.ok(response);
     }
@@ -76,7 +76,7 @@ public class UserController implements UserApi {
     ) {
         log.info("유저 논리 삭제 요청: targetUserId={}, loginUserId={}", userId, loginUser.userId());
 
-        userService.deleteUser(userId);
+        userService.deleteUser(userId, loginUser.userId());
 
         return ResponseEntity.noContent().build();
     }

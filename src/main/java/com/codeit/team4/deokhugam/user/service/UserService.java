@@ -17,9 +17,9 @@ public interface UserService {
 
     User findById(UUID userId);
 
-    UserResponse updateUser(UUID userId, UserUpdateRequest request);
+    UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request);
 
-    void deleteUser(UUID userId);
+    void deleteUser(UUID userId, UUID loginUserId);
 
     void deleteExpiredUsers();
 }

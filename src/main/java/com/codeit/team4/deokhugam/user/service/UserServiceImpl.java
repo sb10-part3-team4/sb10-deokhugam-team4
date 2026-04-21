@@ -78,9 +78,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse updateUser(UUID userId, UserUpdateRequest request) {
+    public UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request) {
 
         User user = findById(userId);
+        validateOwner(userId, loginUserId);
 
         user.updateNickname(request.nickname());
 
@@ -90,14 +91,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public void deleteUser(UUID userId) {
+    public void deleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
+        validateOwner(userId, loginUserId);
 
         user.softDelete();
 
-        log.info("유저 삭제 완료: userId={}", userId);
+        log.info("유저 삭제 완료: userId={}, loginUserId={}", userId, loginUserId);
     }
 
     @Override
@@ -121,6 +122,12 @@ public class UserServiceImpl implements UserService {
     private void validatePassword(User user, String password) {
         if (!Objects.equals(user.getPassword(), password)) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
+
+    private void validateOwner(UUID targetUserId, UUID loginUserId) {
+        if (!Objects.equals(targetUserId, loginUserId)) {
+            throw new BusinessException(ErrorCode.USER_FORBIDDEN);
         }
     }
 

@@ -232,7 +232,7 @@ class UserControllerTest {
                 Instant.now()
         );
 
-        given(userService.updateUser(eq(userId), any()))
+        given(userService.updateUser(eq(userId), eq(loginUserId), any()))
                 .willReturn(response);
 
         var request = java.util.Map.of(
@@ -280,7 +280,7 @@ class UserControllerTest {
         UUID userId = UUID.randomUUID();
         UUID loginUserId = UUID.randomUUID();
 
-        given(userService.updateUser(eq(userId), any()))
+        given(userService.updateUser(eq(userId), eq(loginUserId), any()))
                 .willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         var request = java.util.Map.of(
@@ -306,7 +306,7 @@ class UserControllerTest {
         UUID userId = UUID.randomUUID();
         UUID loginUserId = UUID.randomUUID();
 
-        doNothing().when(userService).deleteUser(userId);
+        doNothing().when(userService).deleteUser(eq(userId), eq(loginUserId));
 
         // when
         var result = mockMvc.perform(delete("/api/users/{userId}", userId)
@@ -340,7 +340,7 @@ class UserControllerTest {
         UUID loginUserId = UUID.randomUUID();
 
         doThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
-                .when(userService).deleteUser(userId);
+                .when(userService).deleteUser(eq(userId), eq(loginUserId));
 
         // when
         var result = mockMvc.perform(delete("/api/users/{userId}", userId)

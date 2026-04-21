@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -22,8 +21,6 @@ import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -64,8 +61,10 @@ class UserServiceImplTest {
 
         when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(false);
-        when(userMapper.toEntity(request)).thenReturn(user);
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        when(userRepository.save(any(User.class)))
+                .thenReturn(savedUser);
+
         when(userMapper.toResponse(any(User.class)))
                 .thenReturn(new UserResponse(null, "test@test.com", "user1", null));
 
@@ -77,8 +76,7 @@ class UserServiceImplTest {
                 .extracting(UserResponse::email, UserResponse::nickname)
                 .contains(request.email(), request.nickname());
 
-        verify(userMapper).toEntity(request);
-        verify(userRepository).save(user);
+        verify(userRepository).save(any(User.class));
         verify(userMapper).toResponse(savedUser);
     }
 
@@ -115,12 +113,8 @@ class UserServiceImplTest {
                 "password1!"
         );
 
-        User user = mock(User.class);
-
         when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(false);
-
-        when(userMapper.toEntity(request)).thenReturn(user);
 
         when(userRepository.save(any(User.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate"));
@@ -131,8 +125,7 @@ class UserServiceImplTest {
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
 
-        verify(userMapper).toEntity(request);
-        verify(userRepository).save(user);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -232,6 +225,8 @@ class UserServiceImplTest {
     void updateUser_success() {
         // given
         UUID userId = UUID.randomUUID();
+        UUID loginUserId = userId;
+
         UserUpdateRequest request = new UserUpdateRequest("newNick");
 
         User user = new User("test@test.com", "oldNick", "password1!");
@@ -243,7 +238,7 @@ class UserServiceImplTest {
                 .thenReturn(new UserResponse(userId, user.getEmail(), "newNick", null));
 
         // when
-        UserResponse result = userService.updateUser(userId, request);
+        UserResponse result = userService.updateUser(userId, loginUserId, request);
 
         // then
         assertThat(user.getNickname()).isEqualTo("newNick");
@@ -258,13 +253,15 @@ class UserServiceImplTest {
     void updateUser_fail_user_not_found() {
         // given
         UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
+
         UserUpdateRequest request = new UserUpdateRequest("newNick");
 
         when(userRepository.findByIdAndDeletedAtIsNull(userId))
                 .thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> userService.updateUser(userId, request))
+        assertThatThrownBy(() -> userService.updateUser(userId, loginUserId, request))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
@@ -278,13 +275,15 @@ class UserServiceImplTest {
     void deleteUser_success() {
         // given
         UUID userId = UUID.randomUUID();
+        UUID loginUserId = userId;
+
         User user = new User("test@test.com", "user1", "password1!");
 
         when(userRepository.findByIdAndDeletedAtIsNull(userId))
                 .thenReturn(Optional.of(user));
 
         // when
-        userService.deleteUser(userId);
+        userService.deleteUser(userId, loginUserId);
 
         // then
         assertThat(user.isDeleted()).isTrue();
@@ -297,12 +296,13 @@ class UserServiceImplTest {
     void deleteUser_fail_user_not_found() {
         // given
         UUID userId = UUID.randomUUID();
+        UUID loginUserId = UUID.randomUUID();
 
         when(userRepository.findByIdAndDeletedAtIsNull(userId))
                 .thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> userService.deleteUser(userId))
+        assertThatThrownBy(() -> userService.deleteUser(userId, loginUserId))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
