@@ -91,6 +91,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void softDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
@@ -139,7 +140,10 @@ public class UserServiceImpl implements UserService {
 
     private void validateOwner(UUID targetUserId, UUID loginUserId) {
         if (!Objects.equals(targetUserId, loginUserId)) {
-            throw new BusinessException(ErrorCode.USER_FORBIDDEN);
+            throw new BusinessException(
+                    ErrorCode.USER_FORBIDDEN,
+                    "targetUserId=" + targetUserId + ", loginUserId=" + loginUserId
+            );
         }
     }
 
