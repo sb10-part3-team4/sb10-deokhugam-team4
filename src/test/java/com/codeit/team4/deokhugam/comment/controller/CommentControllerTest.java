@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.comment.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -154,8 +155,8 @@ class CommentControllerTest {
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
-                                "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch(
+                        "/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -174,8 +175,8 @@ class CommentControllerTest {
         CommentUpdateRequest invalidRequest = new CommentUpdateRequest(""); // 빈 문자열
 
         // when & then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
-                                "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch(
+                        "/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -197,8 +198,8 @@ class CommentControllerTest {
                 .willThrow(new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS));
 
         // when & then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
-                                "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch(
+                        "/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", requesterId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -220,8 +221,8 @@ class CommentControllerTest {
                 .willThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
         // when & then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
-                                "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch(
+                        "/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
