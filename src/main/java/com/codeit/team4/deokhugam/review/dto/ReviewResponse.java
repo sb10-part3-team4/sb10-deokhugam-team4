@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.review.dto;
 
+import com.codeit.team4.deokhugam.review.model.ReviewSearchModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
@@ -47,4 +48,21 @@ public record ReviewResponse(
         Instant updatedAt
 ) {
 
+    public static ReviewResponse from(ReviewSearchModel model) {
+        return new ReviewResponse(
+                model.id(),
+                model.bookId(),
+                model.bookTitle(),
+                model.bookThumbnailUrl(),
+                model.userId(),
+                model.userNickname(),
+                model.content(),
+                model.rating(),
+                model.likeCount(),
+                model.commentCount(),
+                model.likedByMe(),
+                model.createdAt(),
+                model.updatedAt()
+        );
+    }
 }
