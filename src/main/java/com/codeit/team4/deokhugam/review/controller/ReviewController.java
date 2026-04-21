@@ -1,9 +1,10 @@
 package com.codeit.team4.deokhugam.review.controller;
 
+import com.codeit.team4.deokhugam.global.annotation.LoginUser;
+import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.service.ReviewQueryService;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,8 +38,7 @@ public class ReviewController implements ReviewApi {
     @GetMapping
     public ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
             @Valid @ParameterObject ReviewSearchRequestParam param,
-            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     ) {
         log.info("리뷰 목록 조회 요청: orderBy={}, direction={}, limit={}", param.orderBy(), param.direction(), param.limit());
         return ResponseEntity.ok(reviewQueryService.searchReviews(param));
@@ -48,10 +47,10 @@ public class ReviewController implements ReviewApi {
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewResponse> getReview(
             @PathVariable UUID reviewId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     ) {
-        log.info("리뷰 단건 조회 요청: reviewId={}, userId={}", reviewId, userId);
-        ReviewResponse response = reviewService.getReview(reviewId, userId);
+        log.info("리뷰 단건 조회 요청: reviewId={}, userId={}", reviewId, user.userId());
+        ReviewResponse response = reviewService.getReview(reviewId, user.userId());
 
         return ResponseEntity.ok(response);
     }
@@ -69,11 +68,11 @@ public class ReviewController implements ReviewApi {
     @PatchMapping("/{reviewId}")
     public ResponseEntity<ReviewResponse> updateReview(
             @PathVariable UUID reviewId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
+            @LoginUser DeokhugamUser user,
             @Valid @RequestBody ReviewUpdateRequest request
     ) {
-        log.info("리뷰 수정 요청: reviewId={}, userId={}", reviewId, userId);
-        ReviewResponse response = reviewService.updateReview(reviewId, userId, request);
+        log.info("리뷰 수정 요청: reviewId={}, userId={}", reviewId, user.userId());
+        ReviewResponse response = reviewService.updateReview(reviewId, user.userId(), request);
 
         return ResponseEntity.ok(response);
     }
@@ -81,10 +80,10 @@ public class ReviewController implements ReviewApi {
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> softDeleteReview(
             @PathVariable UUID reviewId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     ) {
-        log.info("리뷰 논리 삭제 요청: reviewId={}, userId={}", reviewId, userId);
-        reviewService.softDeleteReview(reviewId, userId);
+        log.info("리뷰 논리 삭제 요청: reviewId={}, userId={}", reviewId, user.userId());
+        reviewService.softDeleteReview(reviewId, user.userId());
 
         return ResponseEntity.noContent().build();
     }
@@ -92,10 +91,10 @@ public class ReviewController implements ReviewApi {
     @DeleteMapping("/{reviewId}/hard")
     public ResponseEntity<Void> hardDeleteReview(
             @PathVariable UUID reviewId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     ) {
-        log.info("리뷰 물리 삭제 요청: reviewId={}, userId={}", reviewId, userId);
-        reviewService.hardDeleteReview(reviewId, userId);
+        log.info("리뷰 물리 삭제 요청: reviewId={}, userId={}", reviewId, user.userId());
+        reviewService.hardDeleteReview(reviewId, user.userId());
 
         return ResponseEntity.noContent().build();
     }
