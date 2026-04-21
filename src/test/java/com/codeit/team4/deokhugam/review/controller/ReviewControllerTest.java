@@ -140,7 +140,7 @@ class ReviewControllerTest {
                     Instant.now(), Instant.now()
             );
             PageResponse<ReviewResponse> response = new PageResponse<>(
-                    List.of(review), "2025-04-05T10:00:00Z", nextAfter, 1, null, true
+                    List.of(review), nextAfter.toString(), nextAfter, 1, null, true
             );
 
             given(reviewQueryService.searchReviews(any(ReviewSearchRequestParam.class)))
