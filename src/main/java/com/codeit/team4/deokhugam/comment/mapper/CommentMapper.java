@@ -10,6 +10,7 @@ public interface CommentMapper {
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "review.id", target = "reviewId")
+    @Mapping(source = "user.nickname", target = "userNickname")
     CommentResponse toResponse(Comment comment);
 
 }

@@ -123,14 +123,34 @@ class CommentTest {
         }
 
         @Test
-        @DisplayName("모든 Comment 엔티티는 상태와 무관하게 동일한 고정 해시코드 반환 성공")
-        void hashCode_Constant_Success() {
-            Comment transientComment = new Comment(mock(User.class), mock(Review.class), "영속화 전");
+        @DisplayName("동일한 식별자를 가진 엔티티는 동일한 해시코드 반환에 성공")
+        void hashCode_SameId_Success() {
+            // given
+            UUID commentId = UUID.randomUUID();
 
-            Comment persistedComment = new Comment(mock(User.class), mock(Review.class), "영속화 후");
-            ReflectionTestUtils.setField(persistedComment, "id", UUID.randomUUID());
+            Comment comment1 = new Comment(mock(User.class), mock(Review.class), "내용 A");
+            ReflectionTestUtils.setField(comment1, "id", commentId);
 
-            assertThat(transientComment.hashCode()).isEqualTo(persistedComment.hashCode());
+            Comment comment2 = new Comment(mock(User.class), mock(Review.class), "내용 B");
+            ReflectionTestUtils.setField(comment2, "id", commentId);
+
+            // when & then
+            assertThat(comment1.hashCode()).isEqualTo(comment2.hashCode());
+        }
+
+        @Test
+        @DisplayName("다른 식별자를 가진 엔티티는 다른 해시코드 반환에 성공")
+        void hashCode_DifferentId_Success() {
+            // given
+            Comment comment1 = new Comment(mock(User.class), mock(Review.class), "내용");
+            ReflectionTestUtils.setField(comment1, "id", UUID.randomUUID());
+
+            Comment comment2 = new Comment(mock(User.class), mock(Review.class), "내용");
+            ReflectionTestUtils.setField(comment2, "id", UUID.randomUUID());
+
+            // when & then
+            // 내용이 같아도 ID가 다르면 해시코드가 달라야 함
+            assertThat(comment1.hashCode()).isNotEqualTo(comment2.hashCode());
         }
     }
 
