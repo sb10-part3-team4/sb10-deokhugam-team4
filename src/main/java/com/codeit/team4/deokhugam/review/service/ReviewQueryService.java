@@ -13,12 +13,15 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ReviewQueryService {
 
     private final DSLContext dsl;
+    private final ReviewSearchConditionBuilder conditionBuilder;
 
     public PageResponse<ReviewResponse> searchReviews(ReviewSearchRequestParam param) {
 
@@ -26,8 +29,8 @@ public class ReviewQueryService {
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
-                .where(param.toCondition())
-                .orderBy(param.toOrderBy())
+                .where(conditionBuilder.toCondition(param))
+                .orderBy(conditionBuilder.toOrderBy(param))
                 .limit(param.limit() + 1)
                 .fetch(ReviewSearchModel::fromRecord);
 
