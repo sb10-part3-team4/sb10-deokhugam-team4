@@ -156,6 +156,67 @@ class ReviewRepositoryTest {
     }
 
     @Nested
+    @DisplayName("좋아요 수 증가")
+    class IncreaseLikeCount {
+
+        @Test
+        @DisplayName("좋아요 수 증가 성공")
+        void increaseLikeCount_success() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+
+            reviewRepository.increaseLikeCount(review.getId());
+            entityManager.clear();
+
+            Review found = reviewRepository.findById(review.getId()).get();
+            assertThat(found.getLikeCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("좋아요 수 연속 증가 성공")
+        void increaseLikeCount_multiple_success() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+
+            reviewRepository.increaseLikeCount(review.getId());
+            reviewRepository.increaseLikeCount(review.getId());
+            entityManager.clear();
+
+            Review found = reviewRepository.findById(review.getId()).get();
+            assertThat(found.getLikeCount()).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("좋아요 수 감소")
+    class DecreaseLikeCount {
+
+        @Test
+        @DisplayName("좋아요 수 감소 성공")
+        void decreaseLikeCount_success() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+            reviewRepository.increaseLikeCount(review.getId());
+            entityManager.clear();
+
+            reviewRepository.decreaseLikeCount(review.getId());
+            entityManager.clear();
+
+            Review found = reviewRepository.findById(review.getId()).get();
+            assertThat(found.getLikeCount()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("좋아요 수 0 이하로 감소하지 않음 성공")
+        void decreaseLikeCount_notBelowZero_success() {
+            Review review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
+
+            reviewRepository.decreaseLikeCount(review.getId());
+            entityManager.clear();
+
+            Review found = reviewRepository.findById(review.getId()).get();
+            assertThat(found.getLikeCount()).isEqualTo(0);
+        }
+    }
+
+    @Nested
     @DisplayName("리뷰 물리 삭제 시 연관 객체 CASCADE 삭제")
     class HardDeleteCascade {
         @Test

@@ -5,6 +5,7 @@ import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
@@ -130,6 +131,24 @@ public interface ReviewApi {
     })
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     ResponseEntity<Void> hardDeleteReview(
+            @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID reviewId,
+            @LoginUser DeokhugamUser user
+    );
+
+    @Operation(summary = "리뷰 좋아요", description = "리뷰에 좋아요를 추가하거나 취소합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "리뷰 좋아요 성공",
+                    content = @Content(schema = @Schema(implementation = ReviewLikeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (요청자 ID 누락)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "리뷰 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    ResponseEntity<ReviewLikeResponse> toggleLike(
             @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID reviewId,
             @LoginUser DeokhugamUser user
