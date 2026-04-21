@@ -291,7 +291,7 @@ class UserControllerTest {
 
         // given
         UUID userId = UUID.randomUUID();
-        UUID loginUserId = UUID.randomUUID();
+        UUID loginUserId = userId;
 
         UserResponse response = new UserResponse(
                 userId,
@@ -398,7 +398,7 @@ class UserControllerTest {
 
         // given
         UUID userId = UUID.randomUUID();
-        UUID loginUserId = UUID.randomUUID();
+        UUID loginUserId = userId;
 
         doNothing().when(userService).softDeleteUser(eq(userId), eq(loginUserId));
 
@@ -471,7 +471,7 @@ class UserControllerTest {
 
         // given
         UUID userId = UUID.randomUUID();
-        UUID loginUserId = UUID.randomUUID();
+        UUID loginUserId = userId;
 
         doNothing().when(userService).hardDeleteUser(eq(userId), eq(loginUserId));
 
