@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.book.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
@@ -15,15 +16,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.service.BookQueryService;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,6 +57,10 @@ class BookControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private BookQueryService bookQueryService;
+
 
     @Test
     @DisplayName("도서 등록 성공")
@@ -297,5 +305,33 @@ class BookControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("도서 목록 조회 성공")
+    void get_book_list_success() throws Exception {
+        // given
+        PageResponse<BookResponse> response = new PageResponse<>(
+                List.of(), null, null, 0, 0L, false);
+
+        given(bookQueryService.getBooks(any(), any(), any(), any(), any(), anyInt()))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/books"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasNext").value(false))
+                .andExpect(jsonPath("$.size").value(0));
+    }
+
+    @Test
+    @DisplayName("잘못된 limit으로 도서 목록 조회 실패")
+    void get_book_list_fail_invalid_limit() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/books")
+                        .param("limit", "0"))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 }

@@ -47,8 +47,7 @@ public class BookServiceImpl implements BookService {
         try {
             bookRepository.save(book);
         } catch (DataIntegrityViolationException e) {
-            throw new BusinessException(ErrorCode.DUPLICATE_ISBN);
-        }
+            throw new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + isbn); }
 
         log.info("도서 등록 완료: bookId={}", book.getId());
 

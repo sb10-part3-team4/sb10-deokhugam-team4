@@ -4,7 +4,12 @@ import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.service.BookService;
+import com.codeit.team4.deokhugam.book.service.BookQueryService;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BookController implements BookApi {
 
     private final BookService bookService;
+    private final BookQueryService bookQueryService;
 
     // 도서 등록
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -78,5 +85,30 @@ public class BookController implements BookApi {
         log.info("도서 정보 조회 요청: bookId={}", bookId);
         BookResponse result = bookService.getBook(bookId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    private static final int MAX_BOOK_LIST_LIMIT = 100;
+    // 도서 목록 조회
+    @GetMapping
+    public ResponseEntity<PageResponse<BookResponse>> getBookList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "title") String orderBy,
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Instant after,
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        if (limit < 1) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "limit must be at least 1");
+        }
+        if (limit > MAX_BOOK_LIST_LIMIT) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT,
+                    "limit must be at most " + MAX_BOOK_LIST_LIMIT);
+        }
+
+        log.info("도서 목록 조회 요청");
+        PageResponse<BookResponse> books = bookQueryService.getBooks(keyword, orderBy, direction,
+                cursor, after, limit);
+        return ResponseEntity.status(HttpStatus.OK).body(books);
     }
 }
