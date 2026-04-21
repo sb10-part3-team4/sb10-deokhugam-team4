@@ -1,5 +1,7 @@
 package com.codeit.team4.deokhugam.review.controller.api;
 
+import com.codeit.team4.deokhugam.global.annotation.LoginUser;
+import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
@@ -9,9 +11,9 @@ import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import java.util.UUID;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,10 +33,10 @@ public interface ReviewApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     ResponseEntity<PageResponse<ReviewResponse>> searchReviews(
             @ParameterObject ReviewSearchRequestParam param,
-            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     );
 
     @Operation(summary = "리뷰 상세 정보 조회", description = "리뷰 ID로 상세 정보를 조회합니다.")
@@ -48,11 +50,11 @@ public interface ReviewApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     ResponseEntity<ReviewResponse> getReview(
             @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID reviewId,
-            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     );
 
     @Operation(summary = "리뷰 등록", description = "새로운 리뷰를 등록합니다.")
@@ -86,11 +88,11 @@ public interface ReviewApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     ResponseEntity<ReviewResponse> updateReview(
             @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID reviewId,
-            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
+            @LoginUser DeokhugamUser user,
             @Parameter(description = "리뷰 수정 요청 정보", required = true)
             @RequestBody ReviewUpdateRequest request
     );
@@ -107,11 +109,11 @@ public interface ReviewApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     ResponseEntity<Void> softDeleteReview(
             @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID reviewId,
-            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     );
 
     @Operation(summary = "리뷰 물리 삭제", description = "본인이 작성한 리뷰를 물리적으로 삭제합니다.")
@@ -126,10 +128,10 @@ public interface ReviewApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true, description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     ResponseEntity<Void> hardDeleteReview(
             @Parameter(description = "리뷰 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID reviewId,
-            @Parameter(description = "요청자 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId
+            @LoginUser DeokhugamUser user
     );
 }
