@@ -92,13 +92,4 @@ public class UserController implements UserApi {
 
         return ResponseEntity.noContent().build();
     }
-
-//    @GetMapping("/power")
-//    public ResponseEntity<PageResponse<UserResponse>> getPowerUsers(
-//            @RequestHeader("Deokhugam-Request-User-ID") UUID loginUserId
-//    ) {
-//        log.info("파워 유저 조회 요청: loginUserId={}", loginUserId);
-//
-//        return ResponseEntity.ok(userService.getPowerUsers());
-//    }
 }
