@@ -72,6 +72,25 @@ public class CommentService {
         log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
     }
 
+    @Transactional
+    public void hardDeleteComment(UUID commentId, UUID userId) {
+        // 이미 논리 삭제된 것도 물리 삭제 가능해야 하므로 findById 사용
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+
+        validateCommentOwner(comment, userId, "물리 삭제");
+
+        // 논리 삭제되지 않은 데이터를 물리 삭제할 때만 카운트 감소
+        if (comment.getDeletedAt() == null) {
+            reviewRepository.decreaseCommentCount(comment.getReview().getId());
+        }
+
+        commentRepository.delete(comment);
+
+        log.info("Comment hard-deleted successfully. commentId: {}", commentId);
+    }
+
     // ========== Private Methods ==========
 
     private Comment findCommentById(UUID commentId) {
@@ -95,5 +114,4 @@ public class CommentService {
             );
         }
     }
-
 }
