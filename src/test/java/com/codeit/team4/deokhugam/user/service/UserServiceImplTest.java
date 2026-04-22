@@ -45,7 +45,7 @@ class UserServiceImplTest {
     private UserMapper userMapper;
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @Test
     @DisplayName("회원가입 성공")
