@@ -15,6 +15,7 @@ import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_comments_deleted_at", columnList = "deleted_at"),
                 @Index(name = "idx_comments_created_at", columnList = "created_at")
         })
+@SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseUpdatableEntity {
 

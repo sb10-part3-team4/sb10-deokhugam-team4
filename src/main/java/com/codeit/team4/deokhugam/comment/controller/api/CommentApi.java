@@ -72,7 +72,7 @@ public interface CommentApi {
                     name = "Deokhugam-Request-User-ID",
                     in = ParameterIn.HEADER,
                     required = true,
-                    description = "요청을 보내는 현재 로그인된 유저의 식별자"
+                    description = "요청자 ID"
             )
     })
     ResponseEntity<Void> softDeleteComment(

@@ -72,9 +72,12 @@ public class CommentService {
         }
 
         comment.softDelete();
+        reviewRepository.decreaseCommentCount(comment.getReview().getId());
 
         log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
     }
+
+    // ========== Private Methods ==========
 
     private Comment findCommentById(UUID commentId) {
         return commentRepository.findById(commentId)
