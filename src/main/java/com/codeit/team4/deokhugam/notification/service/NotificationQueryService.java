@@ -9,10 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Notifications.NOTIFICATIONS;
 
-@Repository
+@Service
 @RequiredArgsConstructor
 public class NotificationQueryService {
 
@@ -34,7 +35,7 @@ public class NotificationQueryService {
         return dsl.selectFrom(NOTIFICATIONS)
                 .where(condition)
                 .orderBy(NOTIFICATIONS.CREATED_AT.desc())
-                .limit(size)
+                .limit(size + 1)
                 .fetch(record -> new NotificationModel(
                         record.get(NOTIFICATIONS.ID),
                         record.get(NOTIFICATIONS.USER_ID),
