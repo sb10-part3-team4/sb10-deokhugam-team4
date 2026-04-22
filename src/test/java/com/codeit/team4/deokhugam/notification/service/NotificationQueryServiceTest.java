@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.notification.service;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
+import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.notification.entity.Notification;
 import com.codeit.team4.deokhugam.notification.model.NotificationModel;
 import com.codeit.team4.deokhugam.notification.repository.NotificationRepository;
@@ -18,10 +19,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Import(TestContainerConfig.class)
 @Transactional
 class NotificationQueryServiceTest {
 
