@@ -5,17 +5,19 @@ import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
+import com.codeit.team4.deokhugam.global.annotation.LoginUser;
+import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,11 +44,25 @@ public class CommentController implements CommentApi {
     @PatchMapping("/{commentId}")
     public ResponseEntity<CommentResponse> updateComment(
             @PathVariable UUID commentId,
-            @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
+            @LoginUser DeokhugamUser loginUser,
             @Valid @RequestBody CommentUpdateRequest request) {
 
-        log.info("댓글 수정 요청: commentId={}  userId={}", commentId, userId);
+        log.info("댓글 수정 요청: commentId={}, userId={}", commentId, loginUser.userId());
 
-        return ResponseEntity.ok(commentService.updateComment(commentId, userId, request));
+        return ResponseEntity.ok(
+                commentService.updateComment(commentId, loginUser.userId(), request));
+    }
+
+    @Override
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> softDeleteComment(
+            @PathVariable UUID commentId,
+            @LoginUser DeokhugamUser loginUser) {
+
+        log.info("댓글 논리 삭제 요청: commentId={}, userId={}", commentId, loginUser.userId());
+
+        commentService.softDeleteComment(commentId, loginUser.userId());
+
+        return ResponseEntity.noContent().build();
     }
 }

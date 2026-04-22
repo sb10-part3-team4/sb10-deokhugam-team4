@@ -50,13 +50,9 @@ public class CommentService {
 
     @Transactional
     public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+        Comment comment = findCommentById(commentId);
 
-        if (!comment.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS, "userId: " + userId);
-        }
+        validateCommentOwner(comment, userId, "수정");
 
         comment.updateContent(request.content());
 
@@ -64,5 +60,40 @@ public class CommentService {
         return commentMapper.toResponse(comment);
     }
 
+    @Transactional
+    public void softDeleteComment(UUID commentId, UUID userId) {
+        Comment comment = findCommentById(commentId);
+
+        validateCommentOwner(comment, userId, "논리 삭제");
+
+        comment.softDelete();
+        reviewRepository.decreaseCommentCount(comment.getReview().getId());
+
+        log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
+    }
+
+    // ========== Private Methods ==========
+
+    private Comment findCommentById(UUID commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+
+        if (comment.getDeletedAt() != null) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 삭제된 댓글입니다. commentId: " + commentId);
+        }
+
+        return comment;
+    }
+
+    private void validateCommentOwner(Comment comment, UUID userId, String action) {
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new BusinessException(
+                    ErrorCode.COMMENT_NOT_OWNER,
+                    String.format("댓글 %s 권한 없음 - commentId: %s, 요청자: %s", action, comment.getId(),
+                            userId)
+            );
+        }
+    }
 
 }
