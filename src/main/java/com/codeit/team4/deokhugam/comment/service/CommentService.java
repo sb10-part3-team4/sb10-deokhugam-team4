@@ -64,5 +64,22 @@ public class CommentService {
         return commentMapper.toResponse(comment);
     }
 
+    @Transactional
+    public void softDeleteComment(UUID commentId, UUID userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS,
+                    String.format("댓글 삭제 권한 없음 - commentId: %s, 요청자: %s", commentId, userId));
+        }
+
+        comment.softDelete();
+
+        log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
+    }
+
+
 
 }

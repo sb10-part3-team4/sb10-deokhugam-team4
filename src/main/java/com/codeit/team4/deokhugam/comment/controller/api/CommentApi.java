@@ -8,6 +8,8 @@ import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -65,9 +67,17 @@ public interface CommentApi {
             @ApiResponse(responseCode = "403", description = "댓글 삭제 권한 없음 (작성자 불일치)"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 댓글")
     })
-    ResponseEntity<Void> deleteComment(
+    @Parameters({
+            @Parameter(
+                    name = "Deokhugam-Request-User-ID",
+                    in = ParameterIn.HEADER,
+                    required = true,
+                    description = "요청을 보내는 현재 로그인된 유저의 식별자"
+            )
+    })
+    ResponseEntity<Void> softDeleteComment(
             @Parameter(description = "삭제할 댓글 ID", required = true) @PathVariable UUID commentId,
-            @Parameter(hidden = true) @LoginUser DeokhugamUser loginUser
+            @LoginUser DeokhugamUser loginUser
     );
 
 }
