@@ -9,7 +9,4 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
 
     Optional<Book> findByIdAndDeletedAtIsNull(UUID uuid);
     boolean existsByIsbnAndDeletedAtIsNull(String isbn);
-
-    // 도서 목록 조회는 JOOQ로 구현
-
 }

@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.global.error;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +52,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             MissingServletRequestParameterException.class,
             HttpMessageNotReadableException.class,
-            MethodArgumentTypeMismatchException.class
+            MethodArgumentTypeMismatchException.class,
+            ConstraintViolationException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequestException(Exception e) {
         log.warn("[INVALID_INPUT] {}", e.getMessage());
