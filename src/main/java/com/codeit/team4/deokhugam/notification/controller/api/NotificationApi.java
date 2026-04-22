@@ -7,6 +7,7 @@ import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +30,7 @@ public interface NotificationApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     PageResponse<NotificationResponse> getNotifications(
 
             @LoginUser DeokhugamUser loginUser,
