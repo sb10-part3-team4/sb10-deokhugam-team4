@@ -26,7 +26,7 @@ public class NotificationController implements NotificationApi {
             @LoginUser DeokhugamUser loginUser,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Instant after,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "20") int size
     ) {
         return notificationService.getNotifications(
                 loginUser.userId(),
