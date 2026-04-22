@@ -6,6 +6,7 @@ import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -29,7 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface BookApi {
 
     @Operation(summary = "도서 등록")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    @RequestBody(
             content = @Content(
                     mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
                     encoding = {
@@ -49,7 +50,9 @@ public interface BookApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<BookResponse> createBook(
+            @Parameter(description = "도서 등록 정보", required = true)
             @RequestPart("bookData") @Valid BookCreateRequest request,
+            @Parameter(description = "썸네일 이미지 파일")
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
     @Operation(summary = "도서 수정")
@@ -73,8 +76,11 @@ public interface BookApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<BookResponse> updateBook(
+            @Parameter(description = "수정할 도서 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID bookId,
+            @Parameter(description = "도서 수정 정보", required = true)
             @RequestPart("bookData") @Valid BookUpdateRequest request,
+            @Parameter(description = "썸네일 이미지 파일")
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage);
 
     @Operation(summary = "도서 논리 삭제")
@@ -85,7 +91,8 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<Void> deleteBook(@PathVariable UUID bookId);
+    ResponseEntity<Void> deleteBook(
+            @Parameter(description = "삭제할 도서 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000") @PathVariable UUID bookId);
 
     @Operation(summary = "도서 물리 삭제")
     @ApiResponses(value = {
@@ -95,7 +102,8 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<Void> permanentDeleteBook(@PathVariable UUID bookId);
+    ResponseEntity<Void> permanentDeleteBook(
+            @Parameter(description = "영구 삭제할 도서 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000") @PathVariable UUID bookId);
 
     @Operation(summary = "도서 정보 조회")
     @ApiResponses(value = {
@@ -119,11 +127,17 @@ public interface BookApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<PageResponse<BookResponse>> getBookList(
+            @Parameter(description = "검색 키워드", example = "달선이의 하루")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "정렬 기준 컬럼", example = "title", required = true)
             @RequestParam(defaultValue = "title") String orderBy,
+            @Parameter(description = "정렬 방향", example = "DESC", required = true)
             @RequestParam(defaultValue = "DESC") String direction,
+            @Parameter(description = "커서 값 (이전 페이지 마지막 항목의 정렬값)", example = "달선이의 하루")
             @RequestParam(required = false) String cursor,
+            @Parameter(description = "기준 시간", example = "2026-04-22T00:00:00Z")
             @RequestParam(required = false) Instant after,
+            @Parameter(description = "조회 개수 (1~100)", example = "50", required = true)
             @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit
     );
 }
