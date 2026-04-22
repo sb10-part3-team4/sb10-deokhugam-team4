@@ -88,7 +88,7 @@ class BookRepositoryTest {
         }
 
         @Test
-        @DisplayName("리뷰 수 0 이하로 감소하지 않음")
+        @DisplayName("리뷰 수 0 이하로 감소하지 않음 성공")
         void decreaseReviewCount_notBelowZero_success() {
             bookRepository.decreaseReviewCount(book.getId());
             entityManager.flush();
