@@ -68,7 +68,7 @@ public interface BookApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "도서 수정 성공",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookResponse.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패, ISBN 형식 오류 등)",
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "도서 정보 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
