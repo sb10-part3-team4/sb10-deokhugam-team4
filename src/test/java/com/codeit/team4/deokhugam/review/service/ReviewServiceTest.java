@@ -419,6 +419,7 @@ class ReviewServiceTest {
 
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
             given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
+            given(reviewLikeRepository.deleteByReviewIdAndUserId(reviewId, userId)).willReturn(1L);
 
             ReviewLikeResponse response = reviewService.toggleLike(reviewId, userId);
 

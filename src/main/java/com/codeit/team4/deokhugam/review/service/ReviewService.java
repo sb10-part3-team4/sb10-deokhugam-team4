@@ -133,7 +133,11 @@ public class ReviewService {
     }
 
     private void unlikeReview(UUID reviewId, UUID userId) {
-        reviewLikeRepository.deleteByReviewIdAndUserId(reviewId, userId);
+        long deleted = reviewLikeRepository.deleteByReviewIdAndUserId(reviewId, userId);
+        if (deleted == 0) {
+            log.debug("이미 좋아요 취소 상태: reviewId={}, userId={}", reviewId, userId);
+            return;
+        }
         reviewRepository.decreaseLikeCount(reviewId);
         log.info("리뷰 좋아요 취소: reviewId={}, userId={}", reviewId, userId);
     }
