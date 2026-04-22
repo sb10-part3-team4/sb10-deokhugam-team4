@@ -43,6 +43,8 @@ public interface UserApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "로그인 실패 (이메일 또는 비밀번호 불일치)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -60,6 +62,7 @@ public interface UserApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<UserResponse> getUser(
+            @Parameter(description = "조회 대상 사용자 ID", required = true)
             @PathVariable UUID userId
     );
 
@@ -78,6 +81,7 @@ public interface UserApi {
     })
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     ResponseEntity<UserResponse> updateUser(
+            @Parameter(description = "수정 대상 사용자 ID", required = true)
             @PathVariable UUID userId,
             @LoginUser DeokhugamUser loginUser,
             @Valid @RequestBody UserUpdateRequest request
@@ -95,6 +99,7 @@ public interface UserApi {
     })
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     ResponseEntity<Void> deleteUser(
+            @Parameter(description = "논리 삭제 대상 사용자 ID", required = true)
             @PathVariable UUID userId,
             @LoginUser DeokhugamUser loginUser
     );
@@ -111,6 +116,7 @@ public interface UserApi {
     })
     @Parameter(name = "Deokhugam-Request-User-ID", in = ParameterIn.HEADER, required = true)
     ResponseEntity<Void> hardDeleteUser(
+            @Parameter(description = "물리 삭제 대상 사용자 ID", required = true)
             @PathVariable UUID userId,
             @LoginUser DeokhugamUser loginUser
     );
