@@ -9,15 +9,19 @@ import java.util.UUID;
 
 public interface UserService {
 
+    UserResponse getUser(UUID userId);
+
     UserResponse registerUser(UserRegisterRequest request);
 
     UserResponse loginUser(UserLoginRequest request);
 
     User findById(UUID userId);
 
-    UserResponse updateUser(UUID userId, UserUpdateRequest request);
+    UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request);
 
-    void deleteUser(UUID userId);
+    void softDeleteUser(UUID userId, UUID loginUserId);
 
-    void deleteExpiredUsers();
+    void hardDeleteUser(UUID userId, UUID loginUserId);
+
+    void deleteExpiredSoftDeletedUsers();
 }

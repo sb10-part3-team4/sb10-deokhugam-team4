@@ -31,13 +31,21 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    public UserResponse getUser(UUID userId) {
+
+        User user = findById(userId);
+
+        return userMapper.toResponse(user);
+    }
+
+    @Override
     @Transactional
     public UserResponse registerUser(UserRegisterRequest request) {
 
         validateEmailNotExists(request.email());
 
         try {
-            User user = userMapper.toEntity(request);
+            User user = new User(request.email(), request.nickname(), request.password());
             User savedUser = userRepository.save(user);
 
             log.info("회원가입 성공: userId={}", savedUser.getId());
@@ -70,9 +78,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse updateUser(UUID userId, UserUpdateRequest request) {
+    public UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request) {
 
         User user = findById(userId);
+        validateOwner(userId, loginUserId);
 
         user.updateNickname(request.nickname());
 
@@ -83,18 +92,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(UUID userId) {
+    public void softDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
+        validateOwner(userId, loginUserId);
 
         user.softDelete();
 
-        log.info("유저 삭제 완료: userId={}", userId);
+        log.info("유저 삭제 완료: userId={}, loginUserId={}", userId, loginUserId);
     }
 
     @Override
     @Transactional
-    public void deleteExpiredUsers() {
+    public void hardDeleteUser(UUID userId, UUID loginUserId) {
+
+        User user = findById(userId);
+        validateOwner(userId, loginUserId);
+
+        userRepository.delete(user);
+
+        log.info("유저 단건 물리 삭제 완료: userId={}, loginUserId={}", userId, loginUserId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteExpiredSoftDeletedUsers() {
 
         Instant threshold = Instant.now().minus(1, ChronoUnit.DAYS);
 
@@ -113,6 +135,15 @@ public class UserServiceImpl implements UserService {
     private void validatePassword(User user, String password) {
         if (!Objects.equals(user.getPassword(), password)) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
+
+    private void validateOwner(UUID targetUserId, UUID loginUserId) {
+        if (!Objects.equals(targetUserId, loginUserId)) {
+            throw new BusinessException(
+                    ErrorCode.USER_FORBIDDEN,
+                    "targetUserId=" + targetUserId + ", loginUserId=" + loginUserId
+            );
         }
     }
 

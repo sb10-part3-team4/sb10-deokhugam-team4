@@ -17,7 +17,7 @@ public class UserCleanupScheduler {
     public void runCleanup() {
         log.info("유저 물리 삭제 스케줄러 시작");
         try {
-            userService.deleteExpiredUsers();
+            userService.deleteExpiredSoftDeletedUsers();
             log.info("유저 물리 삭제 스케줄러 완료");
         } catch (Exception e) {
             log.error("유저 물리 삭제 스케줄러 실패", e);
