@@ -89,7 +89,7 @@ public class CommentService {
     private void validateCommentOwnership(Comment comment, UUID userId, String action) {
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(
-                    ErrorCode.UNAUTHORIZED_COMMENT_ACCESS,
+                    ErrorCode.COMMENT_NOT_OWNER,
                     String.format("댓글 %s 권한 없음 - commentId: %s, 요청자: %s", action, comment.getId(),
                             userId)
             );

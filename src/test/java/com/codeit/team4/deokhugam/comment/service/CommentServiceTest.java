@@ -184,7 +184,7 @@ class CommentServiceTest {
         // when & then
         assertThatThrownBy(() -> commentService.updateComment(commentId, requesterId, request))
                 .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_COMMENT_ACCESS);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
     }
 
     @Test
@@ -250,7 +250,7 @@ class CommentServiceTest {
         // when & then
         assertThatThrownBy(() -> commentService.softDeleteComment(commentId, requesterId))
                 .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_COMMENT_ACCESS);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
     }
 
     @Test

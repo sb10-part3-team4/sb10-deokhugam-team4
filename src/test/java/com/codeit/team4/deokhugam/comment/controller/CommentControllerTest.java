@@ -207,7 +207,7 @@ class CommentControllerTest {
         given(userService.findById(userId)).willReturn(mock(User.class));
         given(commentService.updateComment(any(UUID.class), any(UUID.class),
                 any(CommentUpdateRequest.class)))
-                .willThrow(new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS));
+                .willThrow(new BusinessException(ErrorCode.COMMENT_NOT_OWNER));
 
         // when & then
         mockMvc.perform(patch("/api/comments/{commentId}", commentId)
@@ -216,7 +216,7 @@ class CommentControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED_COMMENT_ACCESS"));
+                .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_OWNER"));
     }
 
     @Test
@@ -264,14 +264,14 @@ class CommentControllerTest {
         UUID userId = UUID.randomUUID();
 
         given(userService.findById(userId)).willReturn(mock(User.class));
-        willThrow(new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS))
+        willThrow(new BusinessException(ErrorCode.COMMENT_NOT_OWNER))
                 .given(commentService).softDeleteComment(any(UUID.class), any(UUID.class));
 
         mockMvc.perform(delete("/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString()))
                 .andDo(print())
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED_COMMENT_ACCESS"));
+                .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_OWNER"));
     }
 
     @Test
