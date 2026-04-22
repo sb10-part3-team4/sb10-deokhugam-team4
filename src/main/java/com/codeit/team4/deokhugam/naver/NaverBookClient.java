@@ -22,7 +22,11 @@ public class NaverBookClient {
     private final RestTemplate restTemplate;
 
     public NaverBookResponse searchByIsbn(String isbn) {
-        if (isbn == null || !isbn.matches("^[0-9-]+$")) {
+        // ISBN 정규화 (하이픈 제거)
+        String normalizedIsbn = isbn.replaceAll("-", "").trim();
+
+        // ISBN 형식 검증 (10자리 또는 13자리 숫자)
+        if (!normalizedIsbn.matches("^[0-9]{10}$|^[0-9]{13}$")) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "isbn=" + isbn);
         }
 

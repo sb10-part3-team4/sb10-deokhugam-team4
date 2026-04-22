@@ -11,9 +11,6 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -134,17 +131,5 @@ public class BookService {
         log.info("ISBN으로 도서 검색 완료: isbn={}", isbn);
 
         return bookMapper.toBookResponse(item);
-    }
-
-    private LocalDate parsePublishedDate(String pubdate) {
-        if (pubdate == null || pubdate.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(pubdate, DateTimeFormatter.ofPattern("yyyyMMdd"));
-        } catch (DateTimeParseException e) {
-            log.warn("pubdate 파싱 실패: pubdate={}", pubdate);
-            return null;
-        }
     }
 }

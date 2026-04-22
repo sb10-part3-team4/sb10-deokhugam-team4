@@ -115,7 +115,7 @@ public class BookController implements BookApi {
     public ResponseEntity<BookResponse> searchByIsbn(
             @RequestParam
             @NotBlank
-            @Pattern(regexp = "^(?:\\d{10}\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
+            @Pattern(regexp = "^(?:\\d{10}|\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
             String isbn) {
         log.info("ISBN으로 도서 검색 요청: isbn={}", isbn);
         BookResponse result = bookService.searchByIsbn(isbn);

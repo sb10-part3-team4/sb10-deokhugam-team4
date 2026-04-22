@@ -249,10 +249,39 @@ class BookServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 ISBN으로 도서 검색 실패")
-    void search_by_isbn_fail_not_found() {
+    @DisplayName("네이버 API 응답이 null인 경우 도서 검색 실패")
+    void search_by_isbn_fail_response_null() {
         // given
-        String isbn = "0000000000000";
+        String isbn = "9788955823509";
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> bookService.searchByIsbn(isbn))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("네이버 API 응답 items가 null인 경우 도서 검색 실패")
+    void search_by_isbn_fail_items_null() {
+        // given
+        String isbn = "9788955823509";
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(new NaverBookResponse(null));
+
+        // when & then
+        assertThatThrownBy(() -> bookService.searchByIsbn(isbn))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("네이버 API 응답 items가 비어있는 경우 도서 검색 실패")
+    void search_by_isbn_fail_items_empty() {
+        // given
+        String isbn = "9788955823509";
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(new NaverBookResponse(List.of()));
 
         // when & then
         assertThatThrownBy(() -> bookService.searchByIsbn(isbn))
