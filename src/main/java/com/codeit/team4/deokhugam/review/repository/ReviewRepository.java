@@ -21,6 +21,10 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     void increaseCommentCount(@Param("reviewId") UUID reviewId);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE Review r SET r.commentCount = r.commentCount - 1 WHERE r.id = :reviewId AND r.commentCount > 0")
+    void decreaseCommentCount(@Param("reviewId") UUID reviewId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Review r SET r.likeCount = r.likeCount + 1 WHERE r.id = :reviewId")
     void increaseLikeCount(@Param("reviewId") UUID reviewId);
 
