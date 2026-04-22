@@ -6,9 +6,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
+import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
@@ -51,6 +53,9 @@ class ReviewServiceTest {
 
     @Mock
     private BookService bookService;
+
+    @Mock
+    private BookRepository bookRepository;
 
     @Mock
     private ReviewMapper reviewMapper;
@@ -96,6 +101,7 @@ class ReviewServiceTest {
             assertThat(response.content()).isEqualTo("좋은 책입니다");
             assertThat(response.rating()).isEqualTo(5);
             verify(reviewRepository).save(any(Review.class));
+            verify(bookRepository).increaseReviewCount(bookId);
         }
 
         @Test
@@ -117,6 +123,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
+            verify(bookRepository, never()).increaseReviewCount(any());
         }
 
         @Test
@@ -133,6 +140,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.USER_NOT_FOUND));
+            verify(bookRepository, never()).increaseReviewCount(any());
         }
 
         @Test
@@ -151,6 +159,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.BOOK_NOT_FOUND));
+            verify(bookRepository, never()).increaseReviewCount(any());
         }
 
         @Test
@@ -174,6 +183,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
+            verify(bookRepository, never()).increaseReviewCount(any());
         }
     }
 
@@ -342,14 +352,19 @@ class ReviewServiceTest {
         void softDeleteReview_success() {
             UUID reviewId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
             Review review = mock(Review.class);
+            Book book = mock(Book.class);
 
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
             given(review.isOwner(userId)).willReturn(true);
+            given(review.getBook()).willReturn(book);
+            given(book.getId()).willReturn(bookId);
 
             reviewService.softDeleteReview(reviewId, userId);
 
             verify(review).softDelete();
+            verify(bookRepository).decreaseReviewCount(bookId);
         }
 
         @Test
@@ -367,6 +382,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
+            verify(bookRepository, never()).decreaseReviewCount(any());
         }
 
         @Test
@@ -381,6 +397,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+            verify(bookRepository, never()).decreaseReviewCount(any());
         }
     }
 
@@ -450,17 +467,40 @@ class ReviewServiceTest {
     class HardDeleteReview {
 
         @Test
-        @DisplayName("리뷰 물리 삭제 성공")
-        void hardDeleteReview_success() {
+        @DisplayName("논리 삭제되지 않은 리뷰 물리 삭제 성공")
+        void hardDeleteReview_notSoftDeleted_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            Review review = mock(Review.class);
+            Book book = mock(Book.class);
+
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+            given(review.isOwner(userId)).willReturn(true);
+            given(review.getDeletedAt()).willReturn(null);
+            given(review.getBook()).willReturn(book);
+            given(book.getId()).willReturn(bookId);
+
+            reviewService.hardDeleteReview(reviewId, userId);
+
+            verify(bookRepository).decreaseReviewCount(bookId);
+            verify(reviewRepository).delete(review);
+        }
+
+        @Test
+        @DisplayName("이미 논리 삭제된 리뷰 물리 삭제 성공")
+        void hardDeleteReview_alreadySoftDeleted_success() {
             UUID reviewId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
             Review review = mock(Review.class);
 
             given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
             given(review.isOwner(userId)).willReturn(true);
+            given(review.getDeletedAt()).willReturn(Instant.now());
 
             reviewService.hardDeleteReview(reviewId, userId);
 
+            verify(bookRepository, never()).decreaseReviewCount(any());
             verify(reviewRepository).delete(review);
         }
 
@@ -479,6 +519,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
+            verify(bookRepository, never()).decreaseReviewCount(any());
         }
 
         @Test
@@ -493,6 +534,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+            verify(bookRepository, never()).decreaseReviewCount(any());
         }
     }
 }
