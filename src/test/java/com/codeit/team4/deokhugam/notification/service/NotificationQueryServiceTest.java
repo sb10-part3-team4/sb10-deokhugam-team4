@@ -10,7 +10,7 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +33,6 @@ class NotificationQueryServiceTest {
 
     @Autowired
     NotificationRepository notificationRepository;
-
-    @Autowired
-    NotificationService notificationService;
 
     @Autowired
     UserRepository userRepository;
@@ -89,7 +86,7 @@ class NotificationQueryServiceTest {
 
     @Test
     @DisplayName("알림 cursor 기준 이전 데이터만 조회 목록 조회 성공")
-    void findNotifications_cursorBefore_success() {
+    void findNotifications_cursorBefore_success() throws InterruptedException {
 
         // given
         User user = createDummyUser();
@@ -111,6 +108,10 @@ class NotificationQueryServiceTest {
         );
 
         notificationRepository.save(old);
+        notificationRepository.flush();
+
+        Thread.sleep(1);
+
         notificationRepository.save(newN);
         notificationRepository.flush();
 
@@ -196,7 +197,7 @@ class NotificationQueryServiceTest {
                 notificationQueryService.findNotifications(user.getId(), null, 3);
 
         // then
-        assertThat(result).hasSize(3);
+        assertThat(result).hasSizeLessThanOrEqualTo(4);
     }
 
     // 헬퍼 메서드

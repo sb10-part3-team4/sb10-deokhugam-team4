@@ -17,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class NotificationService {
 
-    private final NotificationRepository notificationRepository;
-
     private final NotificationQueryService notificationQueryService;
 
     // TODO: 구현 예정
@@ -51,16 +49,20 @@ public class NotificationService {
                         size
                 );
 
-        List<NotificationResponse> content = notifications.stream()
+        boolean hasNext = notifications.size() > size;
+
+        List<NotificationModel> pageItems =
+                hasNext ? notifications.subList(0, size) : notifications;
+
+        List<NotificationResponse> content = pageItems.stream()
                 .map(this::toResponse)
                 .toList();
-        boolean hasNext = notifications.size() == size;
 
         String nextCursor = null;
         Instant nextAfter = null;
 
-        if (!notifications.isEmpty() && hasNext) {
-            NotificationModel last = notifications.get(notifications.size() - 1);
+        if (hasNext) {
+            NotificationModel last = pageItems.get(pageItems.size() - 1);
             nextCursor = last.id().toString();
             nextAfter = last.createdAt();
         }

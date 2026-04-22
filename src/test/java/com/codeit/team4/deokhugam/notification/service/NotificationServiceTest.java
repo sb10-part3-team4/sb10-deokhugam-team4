@@ -90,7 +90,7 @@ class NotificationServiceTest {
         );
 
         given(notificationQueryService.findNotifications(userId, now, 2))
-                .willReturn(List.of(model1, model2));
+                .willReturn(List.of(model1, model2, model2));
 
         // when
         PageResponse<NotificationResponse> result =
