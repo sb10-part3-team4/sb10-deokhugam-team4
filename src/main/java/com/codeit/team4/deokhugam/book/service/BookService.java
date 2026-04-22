@@ -8,6 +8,8 @@ import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.naver.NaverBookClient;
+import com.codeit.team4.deokhugam.naver.NaverBookResponse;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
+    private final NaverBookClient naverBookClient;
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
@@ -94,7 +97,7 @@ public class BookService {
     }
 
     @Transactional
-    public void permanentDeleteBook(UUID bookId) {
+    public void hardDeleteBook(UUID bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
@@ -113,5 +116,20 @@ public class BookService {
         BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 단건 조회 완료: bookId={}", bookId);
         return bookResponse;
+    }
+
+    @Transactional(readOnly = true)
+    public BookResponse searchByIsbn(String isbn) {
+        NaverBookResponse response = naverBookClient.searchByIsbn(isbn);
+
+        if (response == null || response.items() == null || response.items().isEmpty()) {
+            throw new BusinessException(ErrorCode.BOOK_NOT_FOUND, "isbn=" + isbn);
+        }
+
+        NaverBookResponse.NaverBookItem item = response.items().get(0);
+
+        log.info("ISBN으로 도서 검색 완료: isbn={}", isbn);
+
+        return bookMapper.toBookResponse(item);
     }
 }

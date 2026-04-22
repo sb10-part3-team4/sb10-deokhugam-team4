@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.book.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
@@ -11,7 +12,10 @@ import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.naver.NaverBookClient;
+import com.codeit.team4.deokhugam.naver.NaverBookResponse;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -32,6 +37,9 @@ class BookServiceTest {
 
     @Autowired
     BookService bookService;
+
+    @MockitoBean
+    NaverBookClient naverBookClient;
 
     @Test
     @DisplayName("도서 등록 성공")
@@ -162,7 +170,7 @@ class BookServiceTest {
         BookResponse result = bookService.createBook(request, null);
 
         // when
-        bookService.permanentDeleteBook(result.id());
+        bookService.hardDeleteBook(result.id());
 
         // then
         // DB 확인
@@ -176,7 +184,7 @@ class BookServiceTest {
         UUID bookId = UUID.randomUUID();
 
         // when & then
-        assertThatThrownBy(() -> bookService.permanentDeleteBook(bookId))
+        assertThatThrownBy(() -> bookService.hardDeleteBook(bookId))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
@@ -215,6 +223,68 @@ class BookServiceTest {
 
         // when & then
         assertThatThrownBy(() -> bookService.getBook(bookId))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("ISBN으로 도서 검색 성공")
+    void search_by_isbn_success() {
+        // given
+        String isbn = "9788955823509";
+        NaverBookResponse.NaverBookItem item = new NaverBookResponse.NaverBookItem(
+                "달선이의 하루", "달선", "달출판사", "20260101",
+                isbn, "달선이의 하루를 담은 책입니다.", "https://example.com/image.jpg");
+        NaverBookResponse response = new NaverBookResponse(List.of(item));
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(response);
+
+        // when
+        BookResponse result = bookService.searchByIsbn(isbn);
+
+        // then
+        assertThat(result.title()).isEqualTo("달선이의 하루");
+        assertThat(result.author()).isEqualTo("달선");
+        assertThat(result.isbn()).isEqualTo(isbn);
+    }
+
+    @Test
+    @DisplayName("네이버 API 응답이 null인 경우 도서 검색 실패")
+    void search_by_isbn_fail_response_null() {
+        // given
+        String isbn = "9788955823509";
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> bookService.searchByIsbn(isbn))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("네이버 API 응답 items가 null인 경우 도서 검색 실패")
+    void search_by_isbn_fail_items_null() {
+        // given
+        String isbn = "9788955823509";
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(new NaverBookResponse(null));
+
+        // when & then
+        assertThatThrownBy(() -> bookService.searchByIsbn(isbn))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("네이버 API 응답 items가 비어있는 경우 도서 검색 실패")
+    void search_by_isbn_fail_items_empty() {
+        // given
+        String isbn = "9788955823509";
+        given(naverBookClient.searchByIsbn(isbn)).willReturn(new NaverBookResponse(List.of()));
+
+        // when & then
+        assertThatThrownBy(() -> bookService.searchByIsbn(isbn))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);

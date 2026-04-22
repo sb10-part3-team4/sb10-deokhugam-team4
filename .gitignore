@@ -70,3 +70,7 @@ $RECYCLE.BIN/
 
 ### Environment ###
 .env
+
+
+### Naver API ###
+application-secret.yaml

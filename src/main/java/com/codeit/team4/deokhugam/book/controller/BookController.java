@@ -5,12 +5,12 @@ import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.book.service.BookQueryService;
-import com.codeit.team4.deokhugam.global.error.BusinessException;
-import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -74,12 +74,12 @@ public class BookController implements BookApi {
     }
 
     // 도서 물리 삭제
-    @DeleteMapping("/{bookId}/permanent")
-    public ResponseEntity<Void> permanentDeleteBook(
+    @DeleteMapping("/{bookId}/hard")
+    public ResponseEntity<Void> hardDeleteBook(
             @PathVariable UUID bookId
     ) {
         log.info("도서 물리 삭제 요청: bookId={}", bookId);
-        bookService.permanentDeleteBook(bookId);
+        bookService.hardDeleteBook(bookId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
@@ -108,5 +108,17 @@ public class BookController implements BookApi {
         PageResponse<BookResponse> books = bookQueryService.getBooks(keyword, orderBy, direction,
                 cursor, after, limit);
         return ResponseEntity.status(HttpStatus.OK).body(books);
+    }
+
+    // ISBN으로 도서 정보 조회
+    @GetMapping("/search")
+    public ResponseEntity<BookResponse> searchByIsbn(
+            @RequestParam
+            @NotBlank
+            @Pattern(regexp = "^(?:\\d{10}|\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
+            String isbn) {
+        log.info("ISBN으로 도서 검색 요청: isbn={}", isbn);
+        BookResponse result = bookService.searchByIsbn(isbn);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }
