@@ -8,7 +8,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Notifications.NOTIFICATIONS;

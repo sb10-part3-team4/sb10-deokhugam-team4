@@ -5,7 +5,6 @@ import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import com.codeit.team4.deokhugam.notification.service.NotificationService;
 import com.codeit.team4.deokhugam.user.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
