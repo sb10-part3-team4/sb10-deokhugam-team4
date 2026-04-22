@@ -49,10 +49,17 @@ public interface CommentApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @Parameters({
+            @Parameter(
+                    name = "Deokhugam-Request-User-ID",
+                    in = ParameterIn.HEADER,
+                    required = true,
+                    description = "요청자 ID"
+            )
+    })
     ResponseEntity<CommentResponse> updateComment(
             @Parameter(description = "댓글 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID commentId,
-            @Parameter(description = "요청자 ID", required = true)
             @LoginUser DeokhugamUser loginUser,
             @Parameter(
                     description = "댓글 수정 요청 정보",
