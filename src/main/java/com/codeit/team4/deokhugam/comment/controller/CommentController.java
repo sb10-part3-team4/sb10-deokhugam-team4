@@ -58,6 +58,8 @@ public class CommentController implements CommentApi {
             @PathVariable UUID commentId,
             @LoginUser DeokhugamUser loginUser) {
 
+        log.info("댓글 논리 삭제 요청: commentId={}, userId={}", commentId, loginUser.userId());
+
         commentService.softDeleteComment(commentId, loginUser.userId());
 
         return ResponseEntity.noContent().build();
