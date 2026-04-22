@@ -56,7 +56,9 @@ public class Comment extends BaseUpdatableEntity {
     }
 
     public void softDelete() {
-        this.deletedAt = Instant.now();
+        if (this.deletedAt == null) {
+            this.deletedAt = Instant.now();
+        }
     }
 
     @Override
