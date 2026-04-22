@@ -66,7 +66,7 @@ public class PopularReview extends BaseEntity {
     private PeriodType period;
 
     @Column(name = "rank", nullable = false)
-    private int rank;
+    private int ranking;
 
     @Column(nullable = false, precision = 10, scale = 4)
     private BigDecimal score;
@@ -90,7 +90,7 @@ public class PopularReview extends BaseEntity {
             String reviewContent,
             int reviewRating,
             PeriodType period,
-            int rank,
+            int ranking,
             BigDecimal score,
             int likeCount,
             int commentCount,
@@ -105,7 +105,7 @@ public class PopularReview extends BaseEntity {
         this.reviewContent = reviewContent;
         this.reviewRating = reviewRating;
         this.period = period;
-        this.rank = rank;
+        this.ranking = ranking;
         this.score = score;
         this.likeCount = likeCount;
         this.commentCount = commentCount;

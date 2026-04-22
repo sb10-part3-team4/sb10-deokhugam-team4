@@ -44,7 +44,7 @@ public class PowerUser extends BaseEntity {
     private PeriodType period;
 
     @Column(name = "rank", nullable = false)
-    private int rank;
+    private int ranking;
 
     @Column(nullable = false, precision = 10, scale = 4)
     private BigDecimal score;
@@ -65,7 +65,7 @@ public class PowerUser extends BaseEntity {
             User user,
             String nickname,
             PeriodType period,
-            int rank,
+            int ranking,
             BigDecimal score,
             BigDecimal reviewScoreSum,
             int likeCount,
@@ -75,7 +75,7 @@ public class PowerUser extends BaseEntity {
         this.user = user;
         this.nickname = nickname;
         this.period = period;
-        this.rank = rank;
+        this.ranking = ranking;
         this.score = score;
         this.reviewScoreSum = reviewScoreSum;
         this.likeCount = likeCount;
