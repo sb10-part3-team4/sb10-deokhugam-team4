@@ -12,7 +12,6 @@ import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class BookServiceImplTest {
+class BookServiceTest {
 
     @Autowired
     BookRepository bookRepository;
