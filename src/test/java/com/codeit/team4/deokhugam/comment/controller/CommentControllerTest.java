@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.comment.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -15,6 +16,7 @@ import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -149,6 +151,8 @@ class CommentControllerTest {
         String updatedContent = "수정된 내용입니다";
         CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
 
+        given(userService.findById(userId)).willReturn(mock(User.class));
+
         CommentResponse response = new CommentResponse(
                 commentId, updatedContent, userId, reviewId,
                 "테스트닉네임", Instant.now(), Instant.now()
@@ -159,8 +163,7 @@ class CommentControllerTest {
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(patch(
-                        "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch("/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -178,9 +181,10 @@ class CommentControllerTest {
         UUID userId = UUID.randomUUID();
         CommentUpdateRequest invalidRequest = new CommentUpdateRequest(""); // 빈 문자열
 
+        given(userService.findById(userId)).willReturn(mock(User.class));
+
         // when & then
-        mockMvc.perform(patch(
-                        "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch("/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -194,17 +198,17 @@ class CommentControllerTest {
     void updateComment_Fail_403_Unauthorized() throws Exception {
         // given
         UUID commentId = UUID.randomUUID();
-        UUID requesterId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
         CommentUpdateRequest request = new CommentUpdateRequest("수정하려는 내용");
 
+        given(userService.findById(userId)).willReturn(mock(User.class));
         given(commentService.updateComment(any(UUID.class), any(UUID.class),
                 any(CommentUpdateRequest.class)))
                 .willThrow(new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS));
 
         // when & then
-        mockMvc.perform(patch(
-                        "/api/comments/{commentId}", commentId)
-                        .header("Deokhugam-Request-User-ID", requesterId.toString())
+        mockMvc.perform(patch("/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -220,13 +224,13 @@ class CommentControllerTest {
         UUID userId = UUID.randomUUID();
         CommentUpdateRequest request = new CommentUpdateRequest("수정하려는 내용");
 
+        given(userService.findById(userId)).willReturn(mock(User.class));
         given(commentService.updateComment(any(UUID.class), any(UUID.class),
                 any(CommentUpdateRequest.class)))
                 .willThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
         // when & then
-        mockMvc.perform(patch(
-                        "/api/comments/{commentId}", commentId)
+        mockMvc.perform(patch("/api/comments/{commentId}", commentId)
                         .header("Deokhugam-Request-User-ID", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
