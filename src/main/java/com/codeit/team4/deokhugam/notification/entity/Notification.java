@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.notification.entity;
 import com.codeit.team4.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -54,6 +55,6 @@ public class Notification extends BaseUpdatableEntity {
     }
 
     public boolean isOwner(UUID userId) {
-        return this.userId.equals(userId);
+        return Objects.equals(this.userId, userId);
     }
 }
