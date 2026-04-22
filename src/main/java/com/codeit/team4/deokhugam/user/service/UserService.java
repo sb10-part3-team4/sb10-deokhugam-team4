@@ -120,13 +120,13 @@ public class UserService {
     // 헬퍼 메서드
     private void validateEmailNotExists(String email) {
         if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL, "email=" + email);
         }
     }
 
     private void validatePassword(User user, String password) {
         if (!Objects.equals(user.getPassword(), password)) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD, "userId=" + user.getId());
         }
     }
 
