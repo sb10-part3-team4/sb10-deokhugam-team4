@@ -66,9 +66,9 @@ public class ReviewQueryService {
     private long getTotalElements(ReviewSearchRequestParam param) {
         return Optional.ofNullable(
                 dsl.selectCount()
-                        .from(Reviews.REVIEWS)
-                        .join(Books.BOOKS).on(Reviews.REVIEWS.BOOK_ID.eq(Books.BOOKS.ID))
-                        .join(Users.USERS).on(Reviews.REVIEWS.USER_ID.eq(Users.USERS.ID))
+                        .from(REVIEWS)
+                        .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                        .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                         .where(conditionBuilder.toFilterCondition(param))
                         .fetchOne(0, Long.class))
                 .orElse(0L);
