@@ -337,7 +337,8 @@ class UserControllerTest {
                 .content(objectMapper.writeValueAsString(request)));
 
         // then
-        result.andExpect(status().isBadRequest());
+        result.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("MISSING_HEADER"));
     }
 
     @Test
