@@ -47,9 +47,10 @@ public class CommentController implements CommentApi {
             @LoginUser DeokhugamUser loginUser,
             @Valid @RequestBody CommentUpdateRequest request) {
 
-        log.info("댓글 수정 요청: commentId={}  userId={}", commentId, loginUser.userId());
+        log.info("댓글 수정 요청: commentId={}, userId={}", commentId, loginUser.userId());
 
-        return ResponseEntity.ok(commentService.updateComment(commentId, loginUser.userId(), request));
+        return ResponseEntity.ok(
+                commentService.updateComment(commentId, loginUser.userId(), request));
     }
 
     @Override
