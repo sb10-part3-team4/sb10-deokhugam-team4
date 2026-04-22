@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.delete(user);
 
-        log.info("유저 물리 삭제 완료: userId={}", userId);
+        log.info("유저 단건 물리 삭제 완료: userId={}, loginUserId={}", userId, loginUserId);
     }
 
     @Override
