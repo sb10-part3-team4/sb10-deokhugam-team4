@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -19,7 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Slf4j
 public class NaverBookClient {
     private final NaverBookProperties naverBookProperties;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     public NaverBookResponse searchByIsbn(String isbn) {
         // ISBN 정규화 (하이픈 제거)
@@ -30,28 +31,17 @@ public class NaverBookClient {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "isbn=" + isbn);
         }
 
-        // 네이버 API가 요구하는 인증용 헤더
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Naver-Client-Id", naverBookProperties.getClientId());
-        headers.set("X-Naver-Client-Secret", naverBookProperties.getClientSecret());
-
-        // 헤더를 담은 HTTP 요청 본체(본문 없음)
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        // 네이버 API 주소에 쿼리 파라미터 붙이기
-        String url = UriComponentsBuilder.fromUriString(naverBookProperties.getBookSearchUrl())
-                .queryParam("d_isbn", isbn)
-                .toUriString();
         try {
             // 외부 서버로 HTTP 요청 보내기
-            ResponseEntity<NaverBookResponse> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    NaverBookResponse.class
-            );
+            NaverBookResponse response = restClient.get()
+                    .uri(naverBookProperties.getBookSearchUrl() + "?d_isbn=" + isbn)
+                    .header("X-Naver-Client-Id", naverBookProperties.getClientId())
+                    .header("X-Naver-Client-Secret", naverBookProperties.getClientSecret())
+                    .retrieve()
+                    .body(NaverBookResponse.class);
+
             log.info("네이버 API 도서 검색 완료: isbn={}", isbn);
-            return response.getBody();
+            return response;
         } catch (RestClientException e) {
             log.error("네이버 API 도서 검색 실패: isbn={}", isbn, e);
             throw new BusinessException(ErrorCode.NAVER_API_ERROR, "isbn=" + isbn);
