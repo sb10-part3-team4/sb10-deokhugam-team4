@@ -8,11 +8,13 @@ import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/notifications")
@@ -28,6 +30,9 @@ public class NotificationController implements NotificationApi {
             @RequestParam(required = false) Instant after,
             @RequestParam(defaultValue = "20") int size
     ) {
+        log.info("Request API: GET /api/notifications userId={}, cursor={}, after={}, size={}",
+                loginUser.userId(), cursor, after, size);
+
         return notificationService.getNotifications(
                 loginUser.userId(),
                 cursor,
