@@ -50,9 +50,7 @@ public class CommentService {
 
     @Transactional
     public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+        Comment comment = findCommentById(commentId);
 
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS, "userId: " + userId);
@@ -66,9 +64,7 @@ public class CommentService {
 
     @Transactional
     public void softDeleteComment(UUID commentId, UUID userId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+        Comment comment = findCommentById(commentId);
 
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS,
@@ -80,6 +76,11 @@ public class CommentService {
         log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
     }
 
+    private Comment findCommentById(UUID commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+    }
 
 
 }
