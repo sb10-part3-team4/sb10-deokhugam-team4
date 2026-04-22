@@ -20,3 +20,9 @@ user:
   cleanup:
     cron: "0 */5 * * * *"
     zone: "Asia/Seoul"
+
+naver:
+  api:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+    book-search-url: https://openapi.naver.com/v1/search/book.json
