@@ -52,9 +52,7 @@ public class CommentService {
     public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
         Comment comment = findCommentById(commentId);
 
-        if (!comment.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS, "userId: " + userId);
-        }
+        validateCommentOwnership(comment, userId, "수정");
 
         comment.updateContent(request.content());
 
@@ -66,10 +64,7 @@ public class CommentService {
     public void softDeleteComment(UUID commentId, UUID userId) {
         Comment comment = findCommentById(commentId);
 
-        if (!comment.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS,
-                    String.format("댓글 삭제 권한 없음 - commentId: %s, 요청자: %s", commentId, userId));
-        }
+        validateCommentOwnership(comment, userId, "논리 삭제");
 
         comment.softDelete();
         reviewRepository.decreaseCommentCount(comment.getReview().getId());
@@ -85,5 +80,14 @@ public class CommentService {
                         ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
     }
 
+    private void validateCommentOwnership(Comment comment, UUID userId, String action) {
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new BusinessException(
+                    ErrorCode.UNAUTHORIZED_COMMENT_ACCESS,
+                    String.format("댓글 %s 권한 없음 - commentId: %s, 요청자: %s", action, comment.getId(),
+                            userId)
+            );
+        }
+    }
 
 }
