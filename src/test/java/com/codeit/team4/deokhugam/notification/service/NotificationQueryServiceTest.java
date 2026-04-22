@@ -11,6 +11,7 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Import(TestContainerConfig.class)
@@ -35,6 +37,9 @@ class NotificationQueryServiceTest {
     NotificationRepository notificationRepository;
 
     @Autowired
+    NotificationService notificationService;
+
+    @Autowired
     UserRepository userRepository;
 
     @Autowired
@@ -45,7 +50,7 @@ class NotificationQueryServiceTest {
 
     @Test
     @DisplayName("알림 최신순 정렬 목록 조회 성공")
-    void findNotifications_orderByCreatedAtDesc_success() {
+    void findNotifications_orderByCreatedAtDesc_success() throws Exception {
 
         // given
         User user = createDummyUser();
@@ -59,6 +64,11 @@ class NotificationQueryServiceTest {
                 "msg1"
         );
 
+        notificationRepository.save(n1);
+        notificationRepository.flush();
+
+        Thread.sleep(5);
+
         Notification n2 = new Notification(
                 user.getId(),
                 review.getId(),
@@ -66,7 +76,6 @@ class NotificationQueryServiceTest {
                 "msg2"
         );
 
-        notificationRepository.save(n1);
         notificationRepository.save(n2);
         notificationRepository.flush();
 
@@ -116,6 +125,7 @@ class NotificationQueryServiceTest {
                 );
 
         // then
+        assertThat(result).isNotEmpty();
         assertThat(result)
                 .allMatch(n -> n.createdAt().isBefore(newN.getCreatedAt()));
     }
@@ -191,7 +201,7 @@ class NotificationQueryServiceTest {
         assertThat(result).hasSize(3);
     }
 
-    // 헬퍼 매서드
+    // 헬퍼 메서드
     private User createDummyUser() {
         return userRepository.save(
                 new User(

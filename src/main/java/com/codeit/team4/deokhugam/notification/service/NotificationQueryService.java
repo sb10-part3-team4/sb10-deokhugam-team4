@@ -32,7 +32,7 @@ public class NotificationQueryService {
             );
         }
 
-        return dsl.selectFrom(NOTIFICATIONS)
+        List<NotificationModel> result = dsl.selectFrom(NOTIFICATIONS)
                 .where(condition)
                 .orderBy(NOTIFICATIONS.CREATED_AT.desc())
                 .limit(size + 1)
@@ -46,5 +46,11 @@ public class NotificationQueryService {
                         record.get(NOTIFICATIONS.CREATED_AT).toInstant(),
                         record.get(NOTIFICATIONS.UPDATED_AT).toInstant()
                 ));
+
+        if (result.size() > size) {
+            return result.subList(0, size);
+        }
+
+        return result;
     }
 }
