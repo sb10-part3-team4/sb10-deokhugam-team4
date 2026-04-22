@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.naver;
+package com.codeit.team4.deokhugam.global.config;
 
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;

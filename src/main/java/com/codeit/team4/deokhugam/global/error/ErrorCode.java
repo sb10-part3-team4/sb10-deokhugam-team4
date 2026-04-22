@@ -34,7 +34,10 @@ public enum ErrorCode {
     // Comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다"),
     // TODO: 댓글 수정/삭제 기능 구현에서 사용 예정
-    UNAUTHORIZED_COMMENT_ACCESS(HttpStatus.FORBIDDEN, "해당 댓글을 수정/삭제할 권한이 없습니다");
+    UNAUTHORIZED_COMMENT_ACCESS(HttpStatus.FORBIDDEN, "해당 댓글을 수정/삭제할 권한이 없습니다"),
+
+    // Naver API
+    NAVER_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 API 호출에 실패했습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -102,7 +102,7 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<Void> permanentDeleteBook(
+    ResponseEntity<Void> hardDeleteBook(
             @Parameter(description = "도서 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000") @PathVariable UUID bookId);
 
     @Operation(summary = "도서 상세 정보 조회", description = "도서 ID로 상세 정보를 조회합니다.")
@@ -140,4 +140,19 @@ public interface BookApi {
             @Parameter(description = "페이지 크기", example = "50")
             @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit
     );
+
+    @Operation(summary = "ISBN으로 도서 정보 조회", description = "Naver API를 통해 ISBN으로 도서 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = BookResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 ISBN 형식",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "도서 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<BookResponse> searchByIsbn(@Parameter(description = "ISBN 번호", example ="9788965402602") @RequestParam String isbn);
+
 }
