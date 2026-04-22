@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewQueryService {
 
     private final DSLContext dsl;
-    private final ReviewSearchConditionBuilder conditionBuilder;
+    private final ReviewSearchQueryBuilder queryBuilder;
 
     public PageResponse<ReviewResponse> searchReviews(ReviewSearchRequestParam param) {
 
@@ -33,8 +33,8 @@ public class ReviewQueryService {
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
-                .where(conditionBuilder.toCondition(param))
-                .orderBy(conditionBuilder.toOrderBy(param))
+                .where(queryBuilder.buildCondition(param))
+                .orderBy(queryBuilder.buildOrderBy(param))
                 .limit(param.limit() + 1)
                 .fetch(ReviewSearchModel::fromRecord);
 

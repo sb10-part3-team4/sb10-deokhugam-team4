@@ -1,8 +1,8 @@
 package com.codeit.team4.deokhugam.dashboard.service;
 
-import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
-import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
-import com.codeit.team4.deokhugam.dashboard.repository.PowerUserRepository;
+import com.codeit.team4.deokhugam.dashboard.book.PopularBookRepository;
+import com.codeit.team4.deokhugam.dashboard.review.PopularReviewRepository;
+import com.codeit.team4.deokhugam.dashboard.user.PowerUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,6 @@
-package com.codeit.team4.deokhugam.dashboard.entity;
+package com.codeit.team4.deokhugam.dashboard.book;
+
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.global.entity.BaseEntity;
@@ -31,6 +33,9 @@ import lombok.NoArgsConstructor;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PopularBook extends BaseEntity {
+
+    public static final BigDecimal REVIEW_COUNT_WEIGHT = new BigDecimal("0.4");
+    public static final BigDecimal AVG_RATING_WEIGHT = new BigDecimal("0.6");
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
@@ -71,7 +76,6 @@ public class PopularBook extends BaseEntity {
             String thumbnailUrl,
             PeriodType period,
             int ranking,
-            BigDecimal score,
             int reviewCount,
             BigDecimal rating,
             LocalDate snapshotDate
@@ -82,10 +86,15 @@ public class PopularBook extends BaseEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.period = period;
         this.ranking = ranking;
-        this.score = score;
+        this.score = calculateScore(reviewCount, rating);
         this.reviewCount = reviewCount;
         this.rating = rating;
         this.snapshotDate = snapshotDate;
+    }
+
+    private BigDecimal calculateScore(int reviewCount, BigDecimal avgRating) {
+        return new BigDecimal(reviewCount).multiply(REVIEW_COUNT_WEIGHT)
+                .add(avgRating.multiply(AVG_RATING_WEIGHT));
     }
 
     @Override

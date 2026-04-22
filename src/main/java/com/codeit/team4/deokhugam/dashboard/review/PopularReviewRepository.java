@@ -1,6 +1,4 @@
-package com.codeit.team4.deokhugam.dashboard.repository;
-
-import com.codeit.team4.deokhugam.dashboard.entity.PopularReview;
+package com.codeit.team4.deokhugam.dashboard.review;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 

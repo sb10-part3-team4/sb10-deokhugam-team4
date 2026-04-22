@@ -17,7 +17,6 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SortField;
@@ -35,10 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class ReviewSearchConditionBuilderTest {
+class ReviewSearchQueryBuilderTest {
 
     @Autowired
-    private ReviewSearchConditionBuilder conditionBuilder;
+    private ReviewSearchQueryBuilder queryBuilder;
 
     @Autowired
     private DSLContext dsl;
@@ -90,7 +89,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isZero();
         }
@@ -106,7 +105,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
@@ -122,7 +121,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
@@ -138,7 +137,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
@@ -154,7 +153,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
@@ -170,7 +169,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
@@ -188,7 +187,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            List<SortField<?>> orderBy = conditionBuilder.toOrderBy(param);
+            List<SortField<?>> orderBy = queryBuilder.buildOrderBy(param);
 
             assertThat(orderBy).hasSize(2);
         }
@@ -201,7 +200,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            List<SortField<?>> orderBy = conditionBuilder.toOrderBy(param);
+            List<SortField<?>> orderBy = queryBuilder.buildOrderBy(param);
 
             assertThat(orderBy).hasSize(3);
         }

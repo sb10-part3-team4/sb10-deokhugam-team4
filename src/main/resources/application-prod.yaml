@@ -18,3 +18,8 @@ user:
   cleanup:
     cron: "0 0 4 * * *"
     zone: "Asia/Seoul"
+
+dashboard:
+  batch:
+    cron: "0 0 3 * * *"
+    zone: "Asia/Seoul"
