@@ -30,9 +30,6 @@ jobs:
 
       - name: 테스트 실행
         run: ./gradlew test -PgenerateJooq
-        env:
-          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
-          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
 
       - name: 커버리지 체크
         run: ./gradlew jacocoTestCoverageVerification -PgenerateJooq

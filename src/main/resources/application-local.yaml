@@ -8,6 +8,8 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+  config:
+    import: optional:classpath:application-secret.yaml
 
 logging:
   level:
@@ -20,9 +22,3 @@ user:
   cleanup:
     cron: "0 */5 * * * *"
     zone: "Asia/Seoul"
-
-naver:
-  api:
-    client-id: ${NAVER_CLIENT_ID}
-    client-secret: ${NAVER_CLIENT_SECRET}
-    book-search-url: https://openapi.naver.com/v1/search/book_adv.json
