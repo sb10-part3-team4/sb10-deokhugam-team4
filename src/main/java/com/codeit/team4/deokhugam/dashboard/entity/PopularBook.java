@@ -1,6 +1,4 @@
-package com.codeit.team4.deokhugam.dashboard.book;
-
-import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+package com.codeit.team4.deokhugam.dashboard.entity;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.global.entity.BaseEntity;

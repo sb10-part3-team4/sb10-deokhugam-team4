@@ -2,10 +2,9 @@ package com.codeit.team4.deokhugam.dashboard.service;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.service.BookService;
-import com.codeit.team4.deokhugam.dashboard.book.PopularBook;
-import com.codeit.team4.deokhugam.dashboard.book.PopularBookQueryService;
-import com.codeit.team4.deokhugam.dashboard.book.PopularBookRepository;
-import com.codeit.team4.deokhugam.dashboard.book.PopularBookSearchModel;
+import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
+import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
+import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import java.time.LocalDate;
 import java.util.ArrayList;

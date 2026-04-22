@@ -1,9 +1,10 @@
-package com.codeit.team4.deokhugam.dashboard.book;
+package com.codeit.team4.deokhugam.dashboard.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
