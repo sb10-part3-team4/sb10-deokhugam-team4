@@ -202,4 +202,72 @@ class CommentServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
     }
+
+    @Test
+    @DisplayName("권한이 일치하는 경우 댓글 논리 삭제와 댓글 카운트 감소 성공")
+    void softDeleteComment_Success() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Review mockReview = mock(Review.class);
+        given(mockReview.getId()).willReturn(reviewId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+        given(mockComment.getReview()).willReturn(mockReview);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+
+        // when
+        commentService.softDeleteComment(commentId, userId);
+
+        // then
+        verify(mockComment).softDelete();
+        verify(reviewRepository).decreaseCommentCount(reviewId);
+    }
+
+    @Test
+    @DisplayName("작성자가 일치하지 않으면 댓글 논리 삭제 실패")
+    void softDeleteComment_Fail_Unauthorized() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID authorId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
+
+        User mockAuthor = mock(User.class);
+        given(mockAuthor.getId()).willReturn(authorId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockAuthor);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+
+        // when & then
+        assertThatThrownBy(() -> commentService.softDeleteComment(commentId, requesterId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_COMMENT_ACCESS);
+    }
+
+    @Test
+    @DisplayName("이미 삭제된 댓글에 접근할 경우 실패")
+    void softDeleteComment_Fail_AlreadyDeleted() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getDeletedAt()).willReturn(Instant.now());
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+
+        // when & then
+        assertThatThrownBy(() -> commentService.softDeleteComment(commentId, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+    }
 }

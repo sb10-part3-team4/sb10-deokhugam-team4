@@ -2,7 +2,10 @@ package com.codeit.team4.deokhugam.comment.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -237,5 +240,89 @@ class CommentControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("댓글 논리 삭제 API 검증 성공")
+    void softDeleteComment_Success() throws Exception {
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        willDoNothing().given(commentService).softDeleteComment(any(UUID.class), any(UUID.class));
+
+        mockMvc.perform(delete("/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("작성자가 일치하지 않아 댓글 논리 삭제 API 검증 실패")
+    void softDeleteComment_Fail_Unauthorized() throws Exception {
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        willThrow(new BusinessException(ErrorCode.UNAUTHORIZED_COMMENT_ACCESS))
+                .given(commentService).softDeleteComment(any(UUID.class), any(UUID.class));
+
+        mockMvc.perform(delete("/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED_COMMENT_ACCESS"));
+    }
+
+    @Test
+    @DisplayName("요청자 ID 헤더가 누락되어 댓글 논리 삭제 API 검증 실패")
+    void softDeleteComment_Fail_400_MissingHeader() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}", commentId))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("MISSING_HEADER"));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 댓글로 인해 댓글 논리 삭제 API 검증 실패")
+    void softDeleteComment_Fail_404_NotFound() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+
+        willThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND))
+                .given(commentService).softDeleteComment(any(UUID.class), any(UUID.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isNotFound()) // 404 검증
+                .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("서버 내부 오류로 인해 댓글 논리 삭제 API 검증 실패")
+    void softDeleteComment_Fail_500_InternalServerError() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+
+        willThrow(new RuntimeException("Unexpected Database Error"))
+                .given(commentService).softDeleteComment(any(UUID.class), any(UUID.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isInternalServerError());
     }
 }

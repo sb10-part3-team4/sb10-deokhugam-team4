@@ -75,9 +75,15 @@ public class CommentService {
     // ========== Private Methods ==========
 
     private Comment findCommentById(UUID commentId) {
-        return commentRepository.findById(commentId)
+        Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+
+        if (comment.getDeletedAt() != null) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 삭제된 댓글입니다. commentId: " + commentId);
+        }
+
+        return comment;
     }
 
     private void validateCommentOwnership(Comment comment, UUID userId, String action) {
