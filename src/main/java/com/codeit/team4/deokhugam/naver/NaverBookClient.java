@@ -25,7 +25,8 @@ public class NaverBookClient {
     public NaverBookResponse searchByIsbn(String isbn) {
         // ISBN 정규화 (하이픈 제거)
         String normalizedIsbn = isbn.replaceAll("-", "").trim();
-
+        log.info("네이버 API URL: {}", naverBookProperties.getBookSearchUrl());
+        log.info("네이버 API Client ID: {}", naverBookProperties.getClientId());
         // ISBN 형식 검증 (10자리 또는 13자리 숫자)
         if (!normalizedIsbn.matches("^[0-9]{10}$|^[0-9]{13}$")) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "isbn=" + isbn);
