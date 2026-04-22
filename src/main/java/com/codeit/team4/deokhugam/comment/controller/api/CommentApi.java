@@ -61,11 +61,17 @@ public interface CommentApi {
             @RequestBody CommentUpdateRequest request
     );
 
-    @Operation(summary = "댓글 삭제", description = "댓글 작성자 본인만 댓글을 논리 삭제할 수 있습니다.")
+    @Operation(summary = "댓글 논리 삭제", description = "본인이 작성한 댓글을 논리적으로 삭제합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "댓글 삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "댓글 삭제 권한 없음 (작성자 불일치)"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 댓글")
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (요청자 ID 누락)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "댓글 삭제 권한 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "댓글 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @Parameters({
             @Parameter(
@@ -76,7 +82,7 @@ public interface CommentApi {
             )
     })
     ResponseEntity<Void> softDeleteComment(
-            @Parameter(description = "삭제할 댓글 ID", required = true) @PathVariable UUID commentId,
+            @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId,
             @LoginUser DeokhugamUser loginUser
     );
 
