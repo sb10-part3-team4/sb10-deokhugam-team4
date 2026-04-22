@@ -52,7 +52,7 @@ public class CommentService {
     public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
         Comment comment = findCommentById(commentId);
 
-        validateCommentOwnership(comment, userId, "수정");
+        validateCommentOwner(comment, userId, "수정");
 
         comment.updateContent(request.content());
 
@@ -64,7 +64,7 @@ public class CommentService {
     public void softDeleteComment(UUID commentId, UUID userId) {
         Comment comment = findCommentById(commentId);
 
-        validateCommentOwnership(comment, userId, "논리 삭제");
+        validateCommentOwner(comment, userId, "논리 삭제");
 
         comment.softDelete();
         reviewRepository.decreaseCommentCount(comment.getReview().getId());
@@ -86,7 +86,7 @@ public class CommentService {
         return comment;
     }
 
-    private void validateCommentOwnership(Comment comment, UUID userId, String action) {
+    private void validateCommentOwner(Comment comment, UUID userId, String action) {
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(
                     ErrorCode.COMMENT_NOT_OWNER,
