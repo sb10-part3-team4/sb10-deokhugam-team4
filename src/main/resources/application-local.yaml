@@ -8,8 +8,6 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
-  config:
-    import: optional:classpath:application-secret.yaml
 
 logging:
   level:
