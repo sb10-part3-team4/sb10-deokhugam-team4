@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ReviewLikeRepository extends JpaRepository<ReviewLike, UUID> {
 
     boolean existsByReviewIdAndUserId(UUID reviewId, UUID userId);
+
+    long deleteByReviewIdAndUserId(UUID reviewId, UUID userId);
 }

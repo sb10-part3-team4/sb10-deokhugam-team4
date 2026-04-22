@@ -18,6 +18,7 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
@@ -622,6 +623,73 @@ class ReviewControllerTest {
                     .andDo(print())
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 좋아요 토글")
+    class ToggleLike {
+
+        private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
+
+        @Test
+        @DisplayName("좋아요 추가 성공")
+        void toggleLike_like_success() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            ReviewLikeResponse response = new ReviewLikeResponse(reviewId, userId, true);
+
+            given(reviewService.toggleLike(reviewId, userId)).willReturn(response);
+
+            mockMvc.perform(post("/api/reviews/{reviewId}/like", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.reviewId").value(reviewId.toString()))
+                    .andExpect(jsonPath("$.userId").value(userId.toString()))
+                    .andExpect(jsonPath("$.liked").value(true));
+        }
+
+        @Test
+        @DisplayName("좋아요 취소 성공")
+        void toggleLike_unlike_success() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            ReviewLikeResponse response = new ReviewLikeResponse(reviewId, userId, false);
+
+            given(reviewService.toggleLike(reviewId, userId)).willReturn(response);
+
+            mockMvc.perform(post("/api/reviews/{reviewId}/like", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.reviewId").value(reviewId.toString()))
+                    .andExpect(jsonPath("$.userId").value(userId.toString()))
+                    .andExpect(jsonPath("$.liked").value(false));
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 좋아요 토글 실패")
+        void toggleLike_reviewNotFound_fail() throws Exception {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            given(reviewService.toggleLike(reviewId, userId))
+                    .willThrow(new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+
+            mockMvc.perform(post("/api/reviews/{reviewId}/like", reviewId)
+                            .header(USER_ID_HEADER, userId.toString()))
+                    .andDo(print())
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("REVIEW_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("요청자 ID 누락 시 좋아요 토글 실패")
+        void toggleLike_missingHeader_fail() throws Exception {
+            mockMvc.perform(post("/api/reviews/{reviewId}/like", UUID.randomUUID()))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
         }
     }
 }

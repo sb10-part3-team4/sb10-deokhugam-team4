@@ -5,8 +5,10 @@ import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
+import com.codeit.team4.deokhugam.review.entity.ReviewLike;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
@@ -104,6 +106,40 @@ public class ReviewService {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_REVIEW, "bookId=" + bookId + ", userId=" + userId);
         }
+    }
+
+    @Transactional
+    public ReviewLikeResponse toggleLike(UUID reviewId, UUID userId) {
+        Review review = findById(reviewId);
+
+        if (reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)) {
+            unlikeReview(reviewId, userId);
+            return new ReviewLikeResponse(reviewId, userId, false);
+        }
+
+        likeReview(review, userId);
+        return new ReviewLikeResponse(reviewId, userId, true);
+    }
+
+    private void likeReview(Review review, UUID userId) {
+        try {
+            reviewLikeRepository.save(new ReviewLike(review, userService.findById(userId)));
+            reviewRepository.increaseLikeCount(review.getId());
+        } catch (DataIntegrityViolationException e) {
+            log.debug("이미 좋아요 상태: reviewId={}, userId={}", review.getId(), userId);
+            return;
+        }
+        log.info("리뷰 좋아요 추가: reviewId={}, userId={}", review.getId(), userId);
+    }
+
+    private void unlikeReview(UUID reviewId, UUID userId) {
+        long deleted = reviewLikeRepository.deleteByReviewIdAndUserId(reviewId, userId);
+        if (deleted == 0) {
+            log.debug("이미 좋아요 취소 상태: reviewId={}, userId={}", reviewId, userId);
+            return;
+        }
+        reviewRepository.decreaseLikeCount(reviewId);
+        log.info("리뷰 좋아요 취소: reviewId={}, userId={}", reviewId, userId);
     }
 
     private boolean isLikedByUser(UUID reviewId, UUID userId) {

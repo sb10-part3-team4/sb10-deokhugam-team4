@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -36,6 +37,9 @@ class ReviewLikeRepositoryTest {
 
     @Autowired
     private BookRepository bookRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     private User user;
     private Review review;
@@ -80,6 +84,38 @@ class ReviewLikeRepositoryTest {
             boolean exists = reviewLikeRepository.existsByReviewIdAndUserId(
                     review.getId(), user.getId());
 
+            assertThat(exists).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("좋아요 삭제")
+    class DeleteByReviewIdAndUserId {
+
+        @Test
+        @DisplayName("좋아요 삭제 성공")
+        void deleteByReviewIdAndUserId_success() {
+            reviewLikeRepository.save(new ReviewLike(review, user));
+            entityManager.flush();
+            entityManager.clear();
+
+            reviewLikeRepository.deleteByReviewIdAndUserId(review.getId(), user.getId());
+            entityManager.flush();
+            entityManager.clear();
+
+            boolean exists = reviewLikeRepository.existsByReviewIdAndUserId(
+                    review.getId(), user.getId());
+            assertThat(exists).isFalse();
+        }
+
+        @Test
+        @DisplayName("좋아요가 없어도 삭제 시 에러 없음 성공")
+        void deleteByReviewIdAndUserId_noLike_success() {
+            reviewLikeRepository.deleteByReviewIdAndUserId(review.getId(), user.getId());
+            entityManager.flush();
+
+            boolean exists = reviewLikeRepository.existsByReviewIdAndUserId(
+                    review.getId(), user.getId());
             assertThat(exists).isFalse();
         }
     }
