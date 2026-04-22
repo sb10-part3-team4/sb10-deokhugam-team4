@@ -122,8 +122,13 @@ public class ReviewService {
     }
 
     private void likeReview(Review review, UUID userId) {
-        reviewLikeRepository.save(new ReviewLike(review, userService.findById(userId)));
-        reviewRepository.increaseLikeCount(review.getId());
+        try {
+            reviewLikeRepository.save(new ReviewLike(review, userService.findById(userId)));
+            reviewRepository.increaseLikeCount(review.getId());
+        } catch (DataIntegrityViolationException e) {
+            log.debug("이미 좋아요 상태: reviewId={}, userId={}", review.getId(), userId);
+            return;
+        }
         log.info("리뷰 좋아요 추가: reviewId={}, userId={}", review.getId(), userId);
     }
 
