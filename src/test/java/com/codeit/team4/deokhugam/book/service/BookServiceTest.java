@@ -162,7 +162,7 @@ class BookServiceTest {
         BookResponse result = bookService.createBook(request, null);
 
         // when
-        bookService.permanentDeleteBook(result.id());
+        bookService.hardDeleteBook(result.id());
 
         // then
         // DB 확인
@@ -176,7 +176,7 @@ class BookServiceTest {
         UUID bookId = UUID.randomUUID();
 
         // when & then
-        assertThatThrownBy(() -> bookService.permanentDeleteBook(bookId))
+        assertThatThrownBy(() -> bookService.hardDeleteBook(bookId))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOOK_NOT_FOUND);

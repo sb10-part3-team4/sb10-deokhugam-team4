@@ -100,7 +100,7 @@ public class BookService {
     }
 
     @Transactional
-    public void permanentDeleteBook(UUID bookId) {
+    public void hardDeleteBook(UUID bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));

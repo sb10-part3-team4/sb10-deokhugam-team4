@@ -239,27 +239,27 @@ class BookControllerTest {
 
     @Test
     @DisplayName("도서 물리 삭제 성공")
-    void permanent_delete_success() throws Exception {
+    void hard_delete_success() throws Exception {
         // given
         UUID bookId = UUID.randomUUID();
 
         // when & then
-        mockMvc.perform(delete("/api/books/{bookId}/permanent", bookId))
+        mockMvc.perform(delete("/api/books/{bookId}/hard", bookId))
                 .andDo(print())
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("존재하지 않는 도서 물리 삭제 실패")
-    void permanent_delete_fail_not_found() throws Exception {
+    void hard_delete_fail_not_found() throws Exception {
         // given
         UUID bookId = UUID.randomUUID();
 
         doThrow(new BusinessException(ErrorCode.BOOK_NOT_FOUND))
-                .when(bookService).permanentDeleteBook(bookId);
+                .when(bookService).hardDeleteBook(bookId);
 
         // when & then
-        mockMvc.perform(delete("/api/books/{bookId}/permanent", bookId))
+        mockMvc.perform(delete("/api/books/{bookId}/hard", bookId))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BOOK_NOT_FOUND"));

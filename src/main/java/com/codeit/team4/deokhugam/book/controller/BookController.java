@@ -5,8 +5,6 @@ import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.book.service.BookQueryService;
-import com.codeit.team4.deokhugam.global.error.BusinessException;
-import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -79,7 +77,7 @@ public class BookController implements BookApi {
             @PathVariable UUID bookId
     ) {
         log.info("도서 물리 삭제 요청: bookId={}", bookId);
-        bookService.permanentDeleteBook(bookId);
+        bookService.hardDeleteBook(bookId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
