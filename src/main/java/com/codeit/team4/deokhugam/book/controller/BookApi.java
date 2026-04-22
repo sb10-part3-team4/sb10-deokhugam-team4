@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.MediaType;
@@ -114,7 +116,8 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<BookResponse> getBook(@Parameter(description = "도서 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000") @PathVariable UUID bookId);
+    ResponseEntity<BookResponse> getBook(
+            @Parameter(description = "도서 ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000") @PathVariable UUID bookId);
 
 
     @Operation(summary = "도서 목록 조회", description = "검색 조건에 맞는 도서 목록을 조회합니다.")
@@ -131,7 +134,8 @@ public interface BookApi {
             @RequestParam(required = false) String keyword,
             @Parameter(description = "정렬 기준 (title | publishedDate | rating | reviewCount)", example = "title")
             @RequestParam(defaultValue = "title") String orderBy,
-            @Parameter(description = "정렬 방향", example = "DESC", schema = @Schema(type = "string", allowableValues = {"ASC", "DESC"}))
+            @Parameter(description = "정렬 방향", example = "DESC", schema = @Schema(type = "string", allowableValues = {
+                    "ASC", "DESC"}))
             @RequestParam(defaultValue = "DESC") String direction,
             @Parameter(description = "커서 페이지네이션 커서")
             @RequestParam(required = false) String cursor,
@@ -153,6 +157,11 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<BookResponse> searchByIsbn(@Parameter(description = "ISBN 번호", example ="9788965402602") @RequestParam String isbn);
-
+    ResponseEntity<BookResponse> searchByIsbn(
+            @Parameter(description = "ISBN 번호", example = "9788965402602")
+            @RequestParam
+            @NotBlank
+            @Pattern(regexp = "^(?:\\d{10}\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
+            String isbn
+    );
 }

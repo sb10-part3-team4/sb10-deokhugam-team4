@@ -10,10 +10,10 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -121,6 +121,7 @@ public class BookService {
         return bookResponse;
     }
 
+    @Transactional(readOnly = true)
     public BookResponse searchByIsbn(String isbn) {
         NaverBookResponse response = naverBookClient.searchByIsbn(isbn);
 
@@ -132,19 +133,18 @@ public class BookService {
 
         log.info("ISBN으로 도서 검색 완료: isbn={}", isbn);
 
-        return new BookResponse(
-                null,
-                item.title(),
-                item.author(),
-                item.description(),
-                item.publisher(),
-                item.pubdate() != null ? LocalDate.parse(item.pubdate(), DateTimeFormatter.ofPattern("yyyyMMdd")) : null,
-                item.isbn(),
-                item.image(),
-                0,
-                BigDecimal.ZERO,
-                null,
-                null
-        );
+        return bookMapper.toBookResponse(item);
+    }
+
+    private LocalDate parsePublishedDate(String pubdate) {
+        if (pubdate == null || pubdate.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(pubdate, DateTimeFormatter.ofPattern("yyyyMMdd"));
+        } catch (DateTimeParseException e) {
+            log.warn("pubdate 파싱 실패: pubdate={}", pubdate);
+            return null;
+        }
     }
 }

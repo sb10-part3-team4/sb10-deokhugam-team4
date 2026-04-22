@@ -15,4 +15,13 @@ public class NaverBookProperties {
         this.clientSecret = clientSecret;
         this.bookSearchUrl = bookSearchUrl;
     }
+
+    @Override
+    public String toString() {
+        return "NaverBookProperties{" +
+                "clientId='" + clientId + '\'' +
+                ", clientSecret='***'" +
+                ", bookSearchUrl='" + bookSearchUrl + '\'' +
+                '}';
+    }
 }

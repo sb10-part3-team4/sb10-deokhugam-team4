@@ -9,6 +9,8 @@ import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -110,7 +112,11 @@ public class BookController implements BookApi {
 
     // ISBN으로 도서 정보 조회
     @GetMapping("/search")
-    public ResponseEntity<BookResponse> searchByIsbn(@RequestParam String isbn) {
+    public ResponseEntity<BookResponse> searchByIsbn(
+            @RequestParam
+            @NotBlank
+            @Pattern(regexp = "^(?:\\d{10}\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
+            String isbn) {
         log.info("ISBN으로 도서 검색 요청: isbn={}", isbn);
         BookResponse result = bookService.searchByIsbn(isbn);
         return ResponseEntity.status(HttpStatus.OK).body(result);
