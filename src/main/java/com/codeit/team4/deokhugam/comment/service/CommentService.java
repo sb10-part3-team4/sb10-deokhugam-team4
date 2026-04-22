@@ -56,14 +56,13 @@ public class CommentService {
 
         comment.updateContent(request.content());
 
-        log.info("댓글 수정 완료: commentId: {}, userId: {}", commentId, userId);
+        log.info("댓글 수정 완료: commentId={}, userId={}", commentId, userId);
         return commentMapper.toResponse(comment);
     }
 
     @Transactional
     public void softDeleteComment(UUID commentId, UUID userId) {
         Comment comment = findCommentById(commentId);
-
         validateCommentOwner(comment, userId, "논리 삭제");
 
         comment.softDelete();
@@ -85,10 +84,9 @@ public class CommentService {
         if (comment.getDeletedAt() == null) {
             reviewRepository.decreaseCommentCount(comment.getReview().getId());
         }
-
         commentRepository.delete(comment);
 
-        log.info("Comment hard-deleted successfully. commentId: {}", commentId);
+        log.info("댓글 물리 삭제 완료: commentId={}, userId={}", commentId, userId);
     }
 
     // ========== Private Methods ==========
@@ -109,7 +107,7 @@ public class CommentService {
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(
                     ErrorCode.COMMENT_NOT_OWNER,
-                    String.format("댓글 %s 권한 없음 - commentId: %s, 요청자: %s", action, comment.getId(),
+                    String.format("댓글 %s 권한 없음 - commentId=%s, 요청자=%s", action, comment.getId(),
                             userId)
             );
         }
