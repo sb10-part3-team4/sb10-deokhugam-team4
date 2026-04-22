@@ -8,6 +8,7 @@ import com.codeit.team4.deokhugam.review.service.ReviewService;
 import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
@@ -97,5 +98,16 @@ public class ReviewController implements ReviewApi {
         reviewService.hardDeleteReview(reviewId, user.userId());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{reviewId}/like")
+    public ResponseEntity<ReviewLikeResponse> toggleLike(
+            @PathVariable UUID reviewId,
+            @LoginUser DeokhugamUser user
+    ) {
+        log.info("리뷰 좋아요 요청: reviewId={}, userId={}", reviewId, user.userId());
+        ReviewLikeResponse response = reviewService.toggleLike(reviewId, user.userId());
+
+        return ResponseEntity.ok(response);
     }
 }

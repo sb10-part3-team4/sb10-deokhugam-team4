@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
+import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.Review;
@@ -377,6 +378,67 @@ class ReviewServiceTest {
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> reviewService.softDeleteReview(reviewId, userId))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                            .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 좋아요 토글")
+    class ToggleLike {
+
+        @Test
+        @DisplayName("좋아요 추가 성공")
+        void toggleLike_like_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            Review review = mock(Review.class);
+            User user = mock(User.class);
+
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(false);
+            given(userService.findById(userId)).willReturn(user);
+            given(review.getId()).willReturn(reviewId);
+
+            ReviewLikeResponse response = reviewService.toggleLike(reviewId, userId);
+
+            assertThat(response.liked()).isTrue();
+            assertThat(response.reviewId()).isEqualTo(reviewId);
+            assertThat(response.userId()).isEqualTo(userId);
+            verify(reviewLikeRepository).save(any());
+            verify(reviewRepository).increaseLikeCount(reviewId);
+        }
+
+        @Test
+        @DisplayName("좋아요 취소 성공")
+        void toggleLike_unlike_success() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            Review review = mock(Review.class);
+
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
+            given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
+            given(reviewLikeRepository.deleteByReviewIdAndUserId(reviewId, userId)).willReturn(1L);
+
+            ReviewLikeResponse response = reviewService.toggleLike(reviewId, userId);
+
+            assertThat(response.liked()).isFalse();
+            assertThat(response.reviewId()).isEqualTo(reviewId);
+            assertThat(response.userId()).isEqualTo(userId);
+            verify(reviewLikeRepository).deleteByReviewIdAndUserId(reviewId, userId);
+            verify(reviewRepository).decreaseLikeCount(reviewId);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 리뷰 좋아요 토글 실패")
+        void toggleLike_reviewNotFound_fail() {
+            UUID reviewId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> reviewService.toggleLike(reviewId, userId))
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
