@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.review.service;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
+import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
@@ -32,6 +33,7 @@ public class ReviewService {
     private final ReviewLikeRepository reviewLikeRepository;
     private final UserService userService;
     private final BookService bookService;
+    private final BookRepository bookRepository;
     private final ReviewMapper reviewMapper;
 
     public ReviewResponse getReview(UUID reviewId, UUID userId) {
@@ -54,6 +56,7 @@ public class ReviewService {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_REVIEW, "bookId=" + book.getId() + ", userId=" + user.getId());
         }
+        bookRepository.increaseReviewCount(book.getId());
         log.info("리뷰 생성 완료: reviewId={}", review.getId());
 
         return reviewMapper.toResponse(review, false);
@@ -89,6 +92,7 @@ public class ReviewService {
 
         validateReviewOwner(review, userId);
         review.softDelete();
+        bookRepository.decreaseReviewCount(review.getBook().getId());
         log.info("리뷰 논리 삭제 완료: reviewId={}", review.getId());
     }
 
@@ -97,6 +101,10 @@ public class ReviewService {
         Review review = findWithDeletedById(reviewId);
 
         validateReviewOwner(review, userId);
+        if (review.getDeletedAt() == null) {
+            bookRepository.decreaseReviewCount(review.getBook().getId());
+        }
+
         reviewRepository.delete(review);
         log.info("리뷰 물리 삭제 완료: reviewId={}", review.getId());
     }
