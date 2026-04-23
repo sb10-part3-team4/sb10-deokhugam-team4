@@ -292,7 +292,7 @@ class DashboardBatchServiceTest {
                 List<PowerUser> byPeriod = powerUserRepository.findAll().stream()
                         .filter(pu -> pu.getPeriod() == period && pu.getSnapshotDate().equals(today))
                         .toList();
-                assertThat(byPeriod).hasSizeLessThanOrEqualTo(10);
+                assertThat(byPeriod).hasSize(10);
             }
         }
 
