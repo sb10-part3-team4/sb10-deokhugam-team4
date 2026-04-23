@@ -60,7 +60,7 @@ class PopularBookQueryServiceTest {
     }
 
     private void runBatch() {
-        dashboardBatchService.updatePopularBooks(LocalDate.now());
+        dashboardBatchService.updatePopularBooks(LocalDate.of(2026, 4, 23));
     }
 
     @Nested
@@ -76,7 +76,7 @@ class PopularBookQueryServiceTest {
 
             LocalDate result = popularBookQueryService.findLatestSnapshotDate(PeriodType.DAILY);
 
-            assertThat(result).isEqualTo(LocalDate.now());
+            assertThat(result).isEqualTo(LocalDate.of(2026, 4, 23));
         }
 
         @Test

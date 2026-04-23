@@ -70,7 +70,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.of(2026, 4, 23);
             dashboardBatchService.updatePopularBooks(today);
 
             List<PopularBook> results = popularBookRepository.findAll();
@@ -82,10 +82,10 @@ class DashboardBatchServiceTest {
         void updatePopularBooks_limit_success() {
             for (int i = 0; i < 6; i++) {
                 Book book = createBook("책" + i, "100000000" + i);
-                reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, 5));
+                reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, (i % 5) + 1));
             }
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.of(2026, 4, 23);
             dashboardBatchService.updatePopularBooks(today);
 
             for (PeriodType period : PeriodType.values()) {
@@ -104,7 +104,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "그냥그래요", 1));
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.of(2026, 4, 23);
             dashboardBatchService.updatePopularBooks(today);
 
             List<PopularBook> dailyBooks = popularBookRepository.findAll().stream()
@@ -121,7 +121,7 @@ class DashboardBatchServiceTest {
         @Test
         @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
         void updatePopularBooks_noReviews_success() {
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.of(2026, 4, 23);
             dashboardBatchService.updatePopularBooks(today);
 
             assertThat(popularBookRepository.findAll()).isEmpty();
@@ -133,7 +133,7 @@ class DashboardBatchServiceTest {
             Book book = createBook("책1", "1111111111");
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.of(2026, 4, 23);
             dashboardBatchService.updatePopularBooks(today);
 
             for (PeriodType period : PeriodType.values()) {

@@ -1,8 +1,10 @@
 package com.codeit.team4.deokhugam.dashboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
@@ -60,7 +62,7 @@ class DashboardServiceTest {
     }
 
     private void runBatch() {
-        dashboardBatchService.updatePopularBooks(LocalDate.now());
+        dashboardBatchService.updatePopularBooks(LocalDate.of(2026, 4, 23));
     }
 
     @Nested
@@ -154,5 +156,19 @@ class DashboardServiceTest {
             assertThat(result.hasNext()).isFalse();
         }
 
+        @Test
+        @DisplayName("잘못된 cursor로 조회 실패")
+        void getPopularBooks_invalidCursor_fail() {
+            Book book = createBook("책1", "1111111111");
+            reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
+            runBatch();
+
+            PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC, "invalid", null, 50
+            );
+
+            assertThatThrownBy(() -> dashboardService.getPopularBooks(param))
+                    .isInstanceOf(BusinessException.class);
+        }
     }
 }
