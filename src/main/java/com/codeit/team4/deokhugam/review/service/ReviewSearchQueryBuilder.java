@@ -19,33 +19,13 @@ import org.springframework.stereotype.Component;
 public class ReviewSearchQueryBuilder {
 
     public Condition buildCondition(ReviewSearchRequestParam param) {
-        Condition condition = buildFilterCondition(param);
-
-        if (param.cursor() != null && param.after() != null) {
-            condition = condition.and(buildCursorCondition(param));
-        }
-
-        return condition;
-    }
-
-    private Condition buildFilterCondition(ReviewSearchRequestParam param) {
-        Condition condition = REVIEWS.DELETED_AT.isNull();
-
-        if (param.keyword() != null && !param.keyword().isBlank()) {
-            condition = condition.and(
-                    USERS.NICKNAME.containsIgnoreCase(param.keyword())
-                            .or(REVIEWS.CONTENT.containsIgnoreCase(param.keyword()))
-                            .or(BOOKS.TITLE.containsIgnoreCase(param.keyword()))
-            );
-        }
-        if (param.userId() != null) {
-            condition = condition.and(REVIEWS.USER_ID.eq(param.userId()));
-        }
-        if (param.bookId() != null) {
-            condition = condition.and(REVIEWS.BOOK_ID.eq(param.bookId()));
-        }
-
-        return condition;
+        return DSL.and(
+                REVIEWS.DELETED_AT.isNull(),
+                keywordCondition(param),
+                userIdCondition(param),
+                bookIdCondition(param),
+                cursorCondition(param)
+        );
     }
 
     public List<SortField<?>> buildOrderBy(ReviewSearchRequestParam param) {
@@ -61,12 +41,41 @@ public class ReviewSearchQueryBuilder {
         return orderBy;
     }
 
-    private Condition buildCursorCondition(ReviewSearchRequestParam param) {
+    private Condition keywordCondition(ReviewSearchRequestParam param) {
+        if (param.keyword() == null || param.keyword().isBlank()) {
+            return DSL.noCondition();
+        }
+        return DSL.or(
+                USERS.NICKNAME.containsIgnoreCase(param.keyword()),
+                REVIEWS.CONTENT.containsIgnoreCase(param.keyword()),
+                BOOKS.TITLE.containsIgnoreCase(param.keyword())
+        );
+    }
+
+    private Condition userIdCondition(ReviewSearchRequestParam param) {
+        if (param.userId() == null) {
+            return DSL.noCondition();
+        }
+        return REVIEWS.USER_ID.eq(param.userId());
+    }
+
+    private Condition bookIdCondition(ReviewSearchRequestParam param) {
+        if (param.bookId() == null) {
+            return DSL.noCondition();
+        }
+        return REVIEWS.BOOK_ID.eq(param.bookId());
+    }
+
+    private Condition cursorCondition(ReviewSearchRequestParam param) {
+        if (param.cursor() == null || param.after() == null) {
+            return DSL.noCondition();
+        }
+
         boolean isAsc = SortDirection.ASC == param.direction();
         OffsetDateTime afterTime = param.after().atOffset(ZoneOffset.UTC);
 
         if (param.orderBy().isRating()) {
-            int cursorValue = param.cursorAsInteger();
+            Integer cursorValue = param.cursorAsInteger();
             return isAsc
                     ? DSL.row(REVIEWS.RATING, REVIEWS.CREATED_AT).gt(cursorValue, afterTime)
                     : DSL.row(REVIEWS.RATING, REVIEWS.CREATED_AT).lt(cursorValue, afterTime);

@@ -25,20 +25,12 @@ public class PopularBookAggregationQueryBuilder {
     private String zone;
 
     public Condition buildCondition(PeriodType period, LocalDate snapshotDate) {
-        Condition condition = REVIEWS.DELETED_AT.isNull()
-                .and(BOOKS.DELETED_AT.isNull());
-
-        OffsetDateTime startDateTime = getStartDateTime(period, snapshotDate);
-        if (startDateTime != null) {
-            condition = condition.and(REVIEWS.CREATED_AT.greaterOrEqual(startDateTime));
-        }
-
-        OffsetDateTime endDateTime = snapshotDate.plusDays(1)
-                .atStartOfDay(ZoneId.of(zone))
-                .toOffsetDateTime();
-        condition = condition.and(REVIEWS.CREATED_AT.lessThan(endDateTime));
-
-        return condition;
+        return DSL.and(
+                REVIEWS.DELETED_AT.isNull(),
+                BOOKS.DELETED_AT.isNull(),
+                startDateCondition(period, snapshotDate),
+                endDateCondition(snapshotDate)
+        );
     }
 
     public List<SortField<?>> buildOrderBy() {
@@ -49,6 +41,21 @@ public class PopularBookAggregationQueryBuilder {
                 .desc();
 
         return List.of(scoreDesc, REVIEWS.BOOK_ID.asc());
+    }
+
+    private Condition startDateCondition(PeriodType period, LocalDate snapshotDate) {
+        OffsetDateTime startDateTime = getStartDateTime(period, snapshotDate);
+        if (startDateTime == null) {
+            return DSL.noCondition();
+        }
+        return REVIEWS.CREATED_AT.greaterOrEqual(startDateTime);
+    }
+
+    private Condition endDateCondition(LocalDate snapshotDate) {
+        OffsetDateTime endDateTime = snapshotDate.plusDays(1)
+                .atStartOfDay(ZoneId.of(zone))
+                .toOffsetDateTime();
+        return REVIEWS.CREATED_AT.lessThan(endDateTime);
     }
 
     private OffsetDateTime getStartDateTime(PeriodType period, LocalDate snapshotDate) {
