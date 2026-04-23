@@ -7,9 +7,13 @@ import com.codeit.team4.deokhugam.notification.service.NotificationService;
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +25,33 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationController implements NotificationApi {
 
     private final NotificationService notificationService;
+
+    @Override
+    @PatchMapping("/{notificationId}")
+    public ResponseEntity<NotificationResponse> markAsRead(
+            @PathVariable UUID notificationId,
+            @LoginUser DeokhugamUser loginUser
+    ) {
+        log.info("알림 읽음 처리 요청: notificationId={}, userId={}",
+                notificationId, loginUser.userId());
+
+        NotificationResponse response =
+                notificationService.markAsRead(notificationId, loginUser.userId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    @PatchMapping("/read-all")
+    public ResponseEntity<Void> markAllAsRead(
+            @LoginUser DeokhugamUser loginUser
+    ) {
+        log.info("전체 알림 읽음 처리 요청: userId={}", loginUser.userId());
+
+        notificationService.markAllAsRead(loginUser.userId());
+
+        return ResponseEntity.noContent().build();
+    }
 
     @Override
     @GetMapping
