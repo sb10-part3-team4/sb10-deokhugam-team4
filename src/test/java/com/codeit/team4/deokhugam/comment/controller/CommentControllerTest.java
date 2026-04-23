@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
+import com.codeit.team4.deokhugam.comment.service.CommentQueryService;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -50,6 +51,9 @@ class CommentControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private CommentQueryService commentQueryService;
 
     @Test
     @DisplayName("댓글 등록 성공")
