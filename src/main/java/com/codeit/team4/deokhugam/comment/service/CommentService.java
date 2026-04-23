@@ -73,7 +73,9 @@ public class CommentService {
             reviewRepository.decreaseCommentCount(comment.getReview().getId());
             log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
         } else {
-            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 처리된 요청입니다.");
+            throw new BusinessException(
+                    ErrorCode.COMMENT_NOT_FOUND,
+                    String.format("이미 처리된 요청입니다: commentId=%s, userId=%s", commentId, userId));
         }
     }
 

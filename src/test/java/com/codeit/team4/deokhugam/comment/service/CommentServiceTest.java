@@ -355,10 +355,10 @@ class CommentServiceTest {
         // given
         UUID commentId = UUID.randomUUID();
         UUID requesterId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
+        UUID authorId = UUID.randomUUID();
 
         User mockAuthor = mock(User.class);
-        given(mockAuthor.getId()).willReturn(userId);
+        given(mockAuthor.getId()).willReturn(authorId);
 
         Comment mockComment = mock(Comment.class);
         given(mockComment.getUser()).willReturn(mockAuthor);
