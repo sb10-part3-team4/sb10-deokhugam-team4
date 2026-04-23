@@ -227,6 +227,9 @@ class NotificationRepositoryTest {
         // when
         int deletedCount = notificationRepository.deleteOldReadNotifications(threshold);
 
+        em.flush();
+        em.clear();
+
         // then
         assertThat(deletedCount).isEqualTo(0);
         assertThat(notificationRepository.findById(notification.getId()))
@@ -253,6 +256,9 @@ class NotificationRepositoryTest {
 
         // when
         int deletedCount = notificationRepository.deleteOldReadNotifications(threshold);
+
+        em.flush();
+        em.clear();
 
         // then
         assertThat(deletedCount).isEqualTo(0);
