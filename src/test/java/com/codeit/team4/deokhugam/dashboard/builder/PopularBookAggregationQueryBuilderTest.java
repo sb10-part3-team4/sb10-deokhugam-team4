@@ -177,9 +177,9 @@ class PopularBookAggregationQueryBuilderTest {
     class OrderByCondition {
 
         @Test
-        @DisplayName("정렬 조건 2개 생성 성공")
-        void buildOrderBy_hasTwoFields_success() {
-            assertThat(queryBuilder.buildOrderBy()).hasSize(2);
+        @DisplayName("정렬 조건 3개 생성 성공")
+        void buildOrderBy_hasThreeFields_success() {
+            assertThat(queryBuilder.buildOrderBy()).hasSize(3);
         }
 
         @Test

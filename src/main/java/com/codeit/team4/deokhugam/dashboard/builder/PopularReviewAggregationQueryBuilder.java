@@ -40,7 +40,7 @@ public class PopularReviewAggregationQueryBuilder {
                         .mul(PopularReview.COMMENT_COUNT_WEIGHT))
                 .desc();
 
-        return List.of(scoreDesc, REVIEWS.CREATED_AT.asc());
+        return List.of(scoreDesc, REVIEWS.CREATED_AT.asc(), REVIEWS.ID.asc());
     }
 
     private Condition startDateCondition(PeriodType period, LocalDate snapshotDate) {

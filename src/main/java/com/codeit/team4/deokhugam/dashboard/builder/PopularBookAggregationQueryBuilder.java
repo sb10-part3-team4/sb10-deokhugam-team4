@@ -40,7 +40,7 @@ public class PopularBookAggregationQueryBuilder {
                         .mul(PopularBook.AVG_RATING_WEIGHT))
                 .desc();
 
-        return List.of(scoreDesc, BOOKS.CREATED_AT.asc());
+        return List.of(scoreDesc, BOOKS.CREATED_AT.asc(), REVIEWS.BOOK_ID.asc());
     }
 
     private Condition startDateCondition(PeriodType period, LocalDate snapshotDate) {
