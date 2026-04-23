@@ -7,7 +7,9 @@ import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
+import com.codeit.team4.deokhugam.dashboard.entity.PopularReview;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
+import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -37,6 +39,9 @@ class DashboardBatchServiceTest {
 
     @Autowired
     private PopularBookRepository popularBookRepository;
+
+    @Autowired
+    private PopularReviewRepository popularReviewRepository;
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -144,6 +149,92 @@ class DashboardBatchServiceTest {
             for (PeriodType period : PeriodType.values()) {
                 List<PopularBook> byPeriod = popularBookRepository.findAll().stream()
                         .filter(pb -> pb.getPeriod() == period && pb.getSnapshotDate().equals(today))
+                        .toList();
+                assertThat(byPeriod).isNotEmpty();
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("인기 리뷰 배치")
+    class UpdatePopularReviews {
+
+        @Test
+        @DisplayName("인기 리뷰 배치 실행 성공")
+        void updatePopularReviews_success() {
+            Book book1 = createBook("책1", "1111111111");
+            Book book2 = createBook("책2", "2222222222");
+            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+            reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePopularReviews(today);
+
+            List<PopularReview> results = popularReviewRepository.findAll();
+            assertThat(results).isNotEmpty();
+        }
+
+        @Test
+        @DisplayName("LIMIT 20 적용 성공")
+        void updatePopularReviews_limit_success() {
+            for (int i = 0; i < 25; i++) {
+                Book book = createBook("책" + i, "100000000" + String.format("%02d", i));
+                reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, (i % 5) + 1));
+            }
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePopularReviews(today);
+
+            for (PeriodType period : PeriodType.values()) {
+                List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
+                        .filter(pr -> pr.getPeriod() == period && pr.getSnapshotDate().equals(today))
+                        .toList();
+                assertThat(byPeriod).hasSizeLessThanOrEqualTo(20);
+            }
+        }
+
+        @Test
+        @DisplayName("ranking 순서 부여 성공")
+        void updatePopularReviews_ranking_success() {
+            Book book1 = createBook("책1", "1111111111");
+            Book book2 = createBook("책2", "2222222222");
+            Review review1 = reviewRepository.saveAndFlush(new Review(book1, user, "인기 리뷰", 5));
+            Review review2 = reviewRepository.saveAndFlush(new Review(book2, user, "보통 리뷰", 1));
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePopularReviews(today);
+
+            List<PopularReview> dailyReviews = popularReviewRepository.findAll().stream()
+                    .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
+                    .sorted((a, b) -> Integer.compare(a.getRank(), b.getRank()))
+                    .toList();
+
+            assertThat(dailyReviews).hasSize(2);
+            assertThat(dailyReviews.get(0).getRank()).isEqualTo(1);
+            assertThat(dailyReviews.get(1).getRank()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
+        void updatePopularReviews_noReviews_success() {
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePopularReviews(today);
+
+            assertThat(popularReviewRepository.findAll()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("모든 PeriodType에 대해 배치 실행 성공")
+        void updatePopularReviews_allPeriods_success() {
+            Book book = createBook("책1", "1111111111");
+            reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePopularReviews(today);
+
+            for (PeriodType period : PeriodType.values()) {
+                List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
+                        .filter(pr -> pr.getPeriod() == period && pr.getSnapshotDate().equals(today))
                         .toList();
                 assertThat(byPeriod).isNotEmpty();
             }

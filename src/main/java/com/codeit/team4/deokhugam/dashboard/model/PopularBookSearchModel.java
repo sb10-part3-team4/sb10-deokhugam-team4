@@ -38,7 +38,8 @@ public record PopularBookSearchModel(
                 REVIEWS.BOOK_ID,
                 BOOKS.TITLE,
                 BOOKS.AUTHOR,
-                BOOKS.THUMBNAIL_URL
+                BOOKS.THUMBNAIL_URL,
+                BOOKS.CREATED_AT
         );
     }
 

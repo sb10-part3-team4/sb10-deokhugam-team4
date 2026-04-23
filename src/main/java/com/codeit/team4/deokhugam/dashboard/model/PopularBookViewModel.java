@@ -22,7 +22,7 @@ public record PopularBookViewModel(
         int reviewCount,
         BigDecimal rating,
         Instant createdAt
-) {
+) implements RankedViewModel {
 
     public static List<Field<?>> toSelectedFields() {
         return List.of(

@@ -1,9 +1,10 @@
 package com.codeit.team4.deokhugam.dashboard.controller;
 
-import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
-import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.controller.api.DashboardApi;
-import com.codeit.team4.deokhugam.dashboard.service.DashboardService;
+import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularReviewResponse;
+import com.codeit.team4.deokhugam.dashboard.service.DashboardFacade;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,15 +21,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DashboardController implements DashboardApi {
 
-    private final DashboardService dashboardService;
+    private final DashboardFacade dashboardService;
 
     @GetMapping("/books/popular")
     public ResponseEntity<PageResponse<PopularBookResponse>> getPopularBooks(
-            @Valid @ParameterObject PopularBookSearchRequestParam param
+            @Valid @ParameterObject DashboardSearchRequestParam param
     ) {
         log.info("인기 도서 목록 조회 요청: period={}, direction={}, limit={}",
                 param.period(), param.direction(), param.limit());
 
         return ResponseEntity.ok(dashboardService.getPopularBooks(param));
+    }
+
+    @GetMapping("/reviews/popular")
+    public ResponseEntity<PageResponse<PopularReviewResponse>> getPopularReviews(
+            @Valid @ParameterObject DashboardSearchRequestParam param
+    ) {
+        log.info("인기 리뷰 목록 조회 요청: period={}, direction={}, limit={}",
+                param.period(), param.direction(), param.limit());
+
+        return ResponseEntity.ok(dashboardService.getPopularReviews(param));
     }
 }

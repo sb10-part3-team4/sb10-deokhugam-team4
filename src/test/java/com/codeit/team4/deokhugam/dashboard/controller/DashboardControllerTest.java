@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
-import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
+import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
-import com.codeit.team4.deokhugam.dashboard.service.DashboardService;
+import com.codeit.team4.deokhugam.dashboard.service.DashboardFacade;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.user.service.UserService;
@@ -36,7 +36,7 @@ class DashboardControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private DashboardService dashboardService;
+    private DashboardFacade dashboardService;
 
     @MockitoBean
     private UserService userService;
@@ -64,7 +64,7 @@ class DashboardControllerTest {
                 List.of(createResponse(1), createResponse(2)),
                 null, null, 50, null, false
         );
-        given(dashboardService.getPopularBooks(any(PopularBookSearchRequestParam.class)))
+        given(dashboardService.getPopularBooks(any(DashboardSearchRequestParam.class)))
                 .willReturn(response);
 
         mockMvc.perform(get("/api/books/popular")
@@ -85,7 +85,7 @@ class DashboardControllerTest {
         PageResponse<PopularBookResponse> response = new PageResponse<>(
                 List.of(), null, null, 50, null, false
         );
-        given(dashboardService.getPopularBooks(any(PopularBookSearchRequestParam.class)))
+        given(dashboardService.getPopularBooks(any(DashboardSearchRequestParam.class)))
                 .willReturn(response);
 
         mockMvc.perform(get("/api/books/popular")
