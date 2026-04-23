@@ -54,21 +54,21 @@ public record ReviewSearchModel(
         ));
     }
 
-    public static ReviewSearchModel fromRecord(Record record) {
+    public static ReviewSearchModel fromRecord(Record rec) {
         return new ReviewSearchModel(
-                record.get(REVIEWS.ID),
-                record.get(REVIEWS.BOOK_ID),
-                record.get(BOOKS.TITLE),
-                record.get(BOOKS.THUMBNAIL_URL),
-                record.get(REVIEWS.USER_ID),
-                record.get(USERS.NICKNAME),
-                record.get(REVIEWS.CONTENT),
-                record.get(REVIEWS.RATING),
-                record.get(REVIEWS.LIKE_COUNT),
-                record.get(REVIEWS.COMMENT_COUNT),
-                record.get(DSL.field("liked_by_me", Boolean.class)),
-                record.get(REVIEWS.CREATED_AT).toInstant(),
-                record.get(REVIEWS.UPDATED_AT).toInstant()
+                rec.get(REVIEWS.ID),
+                rec.get(REVIEWS.BOOK_ID),
+                rec.get(BOOKS.TITLE),
+                rec.get(BOOKS.THUMBNAIL_URL),
+                rec.get(REVIEWS.USER_ID),
+                rec.get(USERS.NICKNAME),
+                rec.get(REVIEWS.CONTENT),
+                rec.get(REVIEWS.RATING),
+                rec.get(REVIEWS.LIKE_COUNT),
+                rec.get(REVIEWS.COMMENT_COUNT),
+                rec.get(DSL.field("liked_by_me", Boolean.class)),
+                rec.get(REVIEWS.CREATED_AT).toInstant(),
+                rec.get(REVIEWS.UPDATED_AT).toInstant()
         );
     }
 }
