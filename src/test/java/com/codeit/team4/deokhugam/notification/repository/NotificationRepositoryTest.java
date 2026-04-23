@@ -194,6 +194,7 @@ class NotificationRepositoryTest {
         notification.markAsRead();
         notificationRepository.save(notification);
 
+        // createdAt을 직접 제어할 수 없어 현재 시점 기준으로 threshold를 미래로 설정하여 삭제 조건을 보장함
         Instant threshold = Instant.now().plusSeconds(1);
 
         // when
@@ -209,7 +210,7 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("읽지 않은 알림을 삭제하면 실패")
+    @DisplayName("읽지 않은 알림은 삭제되지 않아서 성공")
     void deleteOldReadNotifications_whenUnread_thenNotDeleted() {
 
         // given
@@ -233,7 +234,7 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("최근 읽음 알림을 삭제하면 실패")
+    @DisplayName("7일 이내 읽음 알림은 삭제되지 않아서 성공")
     void deleteOldReadNotifications_whenNotOld_thenNotDeleted() {
 
         // given
