@@ -34,12 +34,17 @@ public class NotificationService {
             UUID notificationId,
             UUID loginUserId
     ) {
+
         Notification notification = notificationRepository
-                .findByIdAndUserId(notificationId, loginUserId)
+                .findById(notificationId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.NOTIFICATION_NOT_FOUND,
                         "notificationId=" + notificationId
                 ));
+
+        if (!notification.getUserId().equals(loginUserId)) {
+            throw new BusinessException(ErrorCode.USER_FORBIDDEN);
+        }
 
         if (!notification.isConfirmed()) {
             notification.markAsRead();

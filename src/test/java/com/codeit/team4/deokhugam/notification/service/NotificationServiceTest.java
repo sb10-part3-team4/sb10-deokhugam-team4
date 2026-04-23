@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.notification.service;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import com.codeit.team4.deokhugam.notification.entity.Notification;
@@ -53,7 +54,7 @@ class NotificationServiceTest {
                 "message"
         );
 
-        given(notificationRepository.findByIdAndUserId(notificationId, userId))
+        given(notificationRepository.findById(notificationId))
                 .willReturn(Optional.of(notification));
 
         // when
@@ -73,9 +74,10 @@ class NotificationServiceTest {
 
         Notification notification = mock(Notification.class);
 
-        given(notificationRepository.findByIdAndUserId(notificationId, userId))
+        given(notificationRepository.findById(notificationId))
                 .willReturn(Optional.of(notification));
 
+        given(notification.getUserId()).willReturn(userId);
         given(notification.isConfirmed()).willReturn(true);
 
         // when
@@ -86,13 +88,13 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림이 존재하지 않거나 권한이 없으면 조회 실패")
-    void markAsRead_whenNotFoundOrNotOwner_thenFail() {
+    @DisplayName("알림이 존재하지 않으면 조회 실패")
+    void markAsRead_whenNotFound_thenFail() {
         // given
         UUID userId = UUID.randomUUID();
         UUID notificationId = UUID.randomUUID();
 
-        given(notificationRepository.findByIdAndUserId(notificationId, userId))
+        given(notificationRepository.findById(notificationId))
                 .willReturn(Optional.empty());
 
         // when & then
@@ -101,6 +103,30 @@ class NotificationServiceTest {
         )
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("notificationId=" + notificationId);
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 알림이면 읽음 처리 실패")
+    void markAsRead_whenNotOwner_thenFail() {
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID otherUserId = UUID.randomUUID();
+        UUID notificationId = UUID.randomUUID();
+
+        Notification notification = mock(Notification.class);
+
+        given(notificationRepository.findById(notificationId))
+                .willReturn(Optional.of(notification));
+
+        given(notification.getUserId()).willReturn(otherUserId);
+
+        // when & then
+        assertThatThrownBy(() ->
+                notificationService.markAsRead(notificationId, userId)
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_FORBIDDEN);
     }
 
     @Test
