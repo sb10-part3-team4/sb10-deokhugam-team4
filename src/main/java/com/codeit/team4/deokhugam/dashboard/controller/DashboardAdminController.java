@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.dashboard.controller;
 
+import com.codeit.team4.deokhugam.dashboard.controller.api.DashboardAdminApi;
 import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/dashboard")
 @RequiredArgsConstructor
-public class DashboardAdminController {
+public class DashboardAdminController implements DashboardAdminApi {
 
     private final DashboardBatchService dashboardBatchService;
 
@@ -23,10 +24,10 @@ public class DashboardAdminController {
     private String zone;
 
     @PostMapping("/batch")
-    public ResponseEntity<String> runBatch() {
+    public ResponseEntity<Void> runBatch() {
         LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
         log.info("수동 배치 실행 요청: snapshotDate={}", snapshotDate);
         dashboardBatchService.updatePopularBooks(snapshotDate);
-        return ResponseEntity.ok("배치 실행 완료: snapshotDate=" + snapshotDate);
+        return ResponseEntity.noContent().build();
     }
 }
