@@ -43,7 +43,10 @@ public class NotificationService {
                 ));
 
         if (!notification.getUserId().equals(loginUserId)) {
-            throw new BusinessException(ErrorCode.USER_FORBIDDEN);
+            throw new BusinessException(
+                    ErrorCode.USER_FORBIDDEN,
+                    "notificationId=" + notificationId + ", loginUserId=" + loginUserId
+            );
         }
 
         if (!notification.isConfirmed()) {
