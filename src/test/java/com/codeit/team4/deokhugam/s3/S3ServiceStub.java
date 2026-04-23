@@ -10,7 +10,7 @@ public class S3ServiceStub implements S3Service {
 
     @Override
     public String upload(MultipartFile file) {
-        return null;
+        return "https://test-bucket.s3.ap-northeast-2.amazonaws.com/thumbnails/stub";
     }
 
     @Override

@@ -83,11 +83,11 @@ public class BookService {
         // 썸네일 업로드
         String thumbnailUrl = null;
         if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            thumbnailUrl = s3Service.upload(thumbnailImage);
             // 기존 썸네일 삭제
             if (book.getThumbnailUrl() != null) {
                 s3Service.delete(book.getThumbnailUrl());
             }
-            thumbnailUrl = s3Service.upload(thumbnailImage);
         }
 
         // update

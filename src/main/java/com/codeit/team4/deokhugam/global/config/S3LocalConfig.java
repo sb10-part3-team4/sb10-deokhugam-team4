@@ -10,9 +10,10 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-@Profile("!test")
+@Profile("local")
 @EnableConfigurationProperties(S3Properties.class)
-public class S3Config {
+public class S3LocalConfig {
+
     @Bean
     public S3Client s3Client(S3Properties s3Properties) {
         return S3Client.builder()
