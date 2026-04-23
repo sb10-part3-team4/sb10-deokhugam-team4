@@ -119,7 +119,7 @@ class DashboardBatchServiceTest {
         }
 
         @Test
-        @DisplayName("리뷰 없으면 인기 도서 없음 성공")
+        @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
         void updatePopularBooks_noReviews_success() {
             LocalDate today = LocalDate.now();
             dashboardBatchService.updatePopularBooks(today);
