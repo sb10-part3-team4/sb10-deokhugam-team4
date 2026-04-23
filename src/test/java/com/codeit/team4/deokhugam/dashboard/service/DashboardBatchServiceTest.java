@@ -297,17 +297,24 @@ class DashboardBatchServiceTest {
         }
 
         @Test
-        @DisplayName("ranking 순서 부여 성공")
+        @DisplayName("score 기반 ranking 순서 부여 성공")
         void updatePowerUsers_ranking_success() {
             User otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
             Book book1 = createBook("책1", "1111111111");
             Book book2 = createBook("책2", "2222222222");
             Book book3 = createBook("책3", "3333333333");
-            // user가 리뷰 2개 → 점수 높음
-            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
-            reviewRepository.saveAndFlush(new Review(book2, user, "또 좋아요", 5));
-            // otherUser가 리뷰 1개 → 점수 낮음
-            reviewRepository.saveAndFlush(new Review(book3, otherUser, "괜찮아요", 3));
+            Review review1 = reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+            Review review2 = reviewRepository.saveAndFlush(new Review(book2, user, "또 좋아요", 5));
+            Review review3 = reviewRepository.saveAndFlush(new Review(book3, otherUser, "괜찮아요", 3));
+
+            // user 리뷰: like=10, comment=5 각각 → 활동 점수 높음
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 10).set(REVIEWS.COMMENT_COUNT, 5)
+                    .where(REVIEWS.ID.eq(review1.getId())).execute();
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 8).set(REVIEWS.COMMENT_COUNT, 4)
+                    .where(REVIEWS.ID.eq(review2.getId())).execute();
+            // otherUser 리뷰: like=1, comment=0 → 활동 점수 낮음
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 1).set(REVIEWS.COMMENT_COUNT, 0)
+                    .where(REVIEWS.ID.eq(review3.getId())).execute();
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePowerUsers(today);
@@ -320,7 +327,7 @@ class DashboardBatchServiceTest {
             assertThat(dailyUsers).hasSize(2);
             assertThat(dailyUsers.get(0).getRank()).isEqualTo(1);
             assertThat(dailyUsers.get(1).getRank()).isEqualTo(2);
-            assertThat(dailyUsers.get(0).getScore()).isGreaterThanOrEqualTo(dailyUsers.get(1).getScore());
+            assertThat(dailyUsers.get(0).getScore()).isGreaterThan(dailyUsers.get(1).getScore());
         }
 
         @Test
