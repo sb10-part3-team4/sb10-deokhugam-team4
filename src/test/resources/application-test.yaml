@@ -12,5 +12,5 @@ spring:
 
 dashboard:
   batch:
-    cron: "0 0 3 * * *"
+    cron: "-"
     zone: "Asia/Seoul"
