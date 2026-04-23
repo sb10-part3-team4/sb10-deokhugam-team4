@@ -109,12 +109,12 @@ class DashboardBatchServiceTest {
 
             List<PopularBook> dailyBooks = popularBookRepository.findAll().stream()
                     .filter(pb -> pb.getPeriod() == PeriodType.DAILY && pb.getSnapshotDate().equals(today))
-                    .sorted((a, b) -> Integer.compare(a.getRanking(), b.getRanking()))
+                    .sorted((a, b) -> Integer.compare(a.getRank(), b.getRank()))
                     .toList();
 
             assertThat(dailyBooks).hasSize(2);
-            assertThat(dailyBooks.get(0).getRanking()).isEqualTo(1);
-            assertThat(dailyBooks.get(1).getRanking()).isEqualTo(2);
+            assertThat(dailyBooks.get(0).getRank()).isEqualTo(1);
+            assertThat(dailyBooks.get(1).getRank()).isEqualTo(2);
             assertThat(dailyBooks.get(0).getScore()).isGreaterThanOrEqualTo(dailyBooks.get(1).getScore());
         }
 

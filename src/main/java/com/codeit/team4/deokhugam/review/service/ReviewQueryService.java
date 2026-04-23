@@ -32,7 +32,7 @@ public class ReviewQueryService {
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                 .where(queryBuilder.buildCondition(param))
                 .orderBy(queryBuilder.buildOrderBy(param))
-                .limit(param.limit() + 1)
+                .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
                 .fetch(ReviewSearchModel::fromRecord);
 
         List<ReviewSearchModel> content = trimToLimit(results, param.limit());

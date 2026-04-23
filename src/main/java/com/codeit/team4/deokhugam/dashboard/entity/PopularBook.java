@@ -52,8 +52,8 @@ public class PopularBook extends BaseEntity {
     @Column(nullable = false, length = 20)
     private PeriodType period;
 
-    @Column(name = "rank", nullable = false)
-    private int ranking;
+    @Column(nullable = false)
+    private int rank;
 
     @Column(nullable = false, precision = 10, scale = 4)
     private BigDecimal score;
@@ -73,7 +73,7 @@ public class PopularBook extends BaseEntity {
             String author,
             String thumbnailUrl,
             PeriodType period,
-            int ranking,
+            int rank,
             int reviewCount,
             BigDecimal rating,
             LocalDate snapshotDate
@@ -83,7 +83,7 @@ public class PopularBook extends BaseEntity {
         this.author = author;
         this.thumbnailUrl = thumbnailUrl;
         this.period = period;
-        this.ranking = ranking;
+        this.rank = rank;
         this.score = calculateScore(reviewCount, rating);
         this.reviewCount = reviewCount;
         this.rating = rating;
