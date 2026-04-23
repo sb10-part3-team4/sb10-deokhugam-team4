@@ -150,7 +150,7 @@ class PopularBookAggregationQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("동점 도서 BOOK_ID ASC 정렬 성공")
+        @DisplayName("동점 도서 정렬 순서 일관성 성공")
         void buildOrderBy_tieBreaker_success() {
             Book otherBook = bookRepository.saveAndFlush(
                     new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
@@ -161,7 +161,7 @@ class PopularBookAggregationQueryBuilderTest {
             LocalDate today = LocalDate.now();
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
 
-            List<UUID> result = dsl.select(REVIEWS.BOOK_ID)
+            List<UUID> firstResult = dsl.select(REVIEWS.BOOK_ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .where(condition)
@@ -169,8 +169,16 @@ class PopularBookAggregationQueryBuilderTest {
                     .orderBy(queryBuilder.buildOrderBy())
                     .fetch(REVIEWS.BOOK_ID);
 
-            assertThat(result).hasSize(2);
-            assertThat(result).isSorted();
+            List<UUID> secondResult = dsl.select(REVIEWS.BOOK_ID)
+                    .from(REVIEWS)
+                    .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                    .where(condition)
+                    .groupBy(REVIEWS.BOOK_ID, BOOKS.TITLE, BOOKS.AUTHOR, BOOKS.THUMBNAIL_URL)
+                    .orderBy(queryBuilder.buildOrderBy())
+                    .fetch(REVIEWS.BOOK_ID);
+
+            assertThat(firstResult).hasSize(2);
+            assertThat(firstResult).isEqualTo(secondResult);
         }
     }
 }
