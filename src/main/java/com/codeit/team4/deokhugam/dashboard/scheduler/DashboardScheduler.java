@@ -22,7 +22,7 @@ public class DashboardScheduler {
     private String zone;
 
     @EventListener(ApplicationReadyEvent.class)
-    @Scheduled(cron = "${dashboard.batch.cron}")
+    @Scheduled(cron = "${dashboard.batch.cron}", zone = "${dashboard.batch.zone}")
     public void runDashboardBatch() {
         LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
         log.info("대시보드 배치 스케줄러 시작: snapshotDate={}", snapshotDate);
