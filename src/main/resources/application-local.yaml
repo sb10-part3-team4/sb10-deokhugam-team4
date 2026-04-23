@@ -27,9 +27,10 @@ dashboard:
     zone: "Asia/Seoul"
 
 notification:
-  cleanup:
+  batch:
     cron: "0 0 2 * * *"
     zone: "Asia/Seoul"
+
 naver:
   api:
     client-id: ${NAVER_CLIENT_ID}

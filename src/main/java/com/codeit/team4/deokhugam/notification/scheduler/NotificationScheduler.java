@@ -15,7 +15,7 @@ public class NotificationScheduler {
 
     private final NotificationService notificationService;
 
-    @Value("${notification.cleanup.zone}")
+    @Value("${notification.batch.zone}")
     private String zone;
 
     @Scheduled(cron = "${notification.batch.cron}", zone = "${notification.batch.zone}")
