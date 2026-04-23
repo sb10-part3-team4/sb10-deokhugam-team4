@@ -30,7 +30,7 @@ public class ReviewSearchQueryBuilder {
         return condition;
     }
 
-    public Condition buildFilterCondition(ReviewSearchRequestParam param) {
+    private Condition buildFilterCondition(ReviewSearchRequestParam param) {
         Condition condition = REVIEWS.DELETED_AT.isNull();
 
         if (param.keyword() != null && !param.keyword().isBlank()) {
