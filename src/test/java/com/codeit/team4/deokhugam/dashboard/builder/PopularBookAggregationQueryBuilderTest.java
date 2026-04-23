@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -112,6 +113,33 @@ class PopularBookAggregationQueryBuilderTest {
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("ALL_TIME은 과거 리뷰도 포함 성공")
+        void buildCondition_allTime_includesPastReviews_success() {
+            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
+
+            LocalDate today = LocalDate.now();
+
+            Condition dailyCondition = queryBuilder.buildCondition(PeriodType.DAILY, today.minusDays(30));
+            Condition allTimeCondition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
+
+            assertThat(countWithCondition(dailyCondition)).isZero();
+            assertThat(countWithCondition(allTimeCondition)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("소프트 삭제된 도서 제외 성공")
+        void buildCondition_excludesSoftDeletedBook_success() {
+            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
+            book.softDelete(Instant.now());
+            bookRepository.saveAndFlush(book);
+
+            LocalDate today = LocalDate.now();
+            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
+
+            assertThat(countWithCondition(condition)).isZero();
         }
 
         @Test
