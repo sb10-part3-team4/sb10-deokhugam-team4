@@ -21,7 +21,7 @@ public class DashboardScheduler {
     @Value("${dashboard.batch.zone}")
     private String zone;
 
-    @EventListener(ApplicationReadyEvent.class)
+    //TODO: Lock 추가 후 개선 예정
     @Scheduled(cron = "${dashboard.batch.cron}", zone = "${dashboard.batch.zone}")
     public void runDashboardBatch() {
         LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
