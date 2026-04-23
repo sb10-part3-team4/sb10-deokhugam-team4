@@ -81,6 +81,9 @@ public class DashboardFacade {
 
     public PageResponse<PowerUserResponse> getPowerUsers(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = powerUserReader.findLatestSnapshotDate(param.period());
+        if (latestSnapshotDate == null) {
+            return new PageResponse<>(List.of(), null, null, param.limit(), null, false);
+        }
         List<PowerUserViewModel> results = powerUserReader.findPowerUsers(param, latestSnapshotDate);
 
         List<PowerUserViewModel> content = trimToLimit(results, param.limit());
