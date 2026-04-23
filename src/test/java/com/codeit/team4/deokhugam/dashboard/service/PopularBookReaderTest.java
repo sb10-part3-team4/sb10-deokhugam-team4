@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
-import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
+import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
@@ -108,7 +108,7 @@ class PopularBookReaderTest {
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
             runBatch(snapshotDate);
 
-            PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
+            DashboardSearchRequestParam param = new DashboardSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 50
             );
 
@@ -129,7 +129,7 @@ class PopularBookReaderTest {
             runBatch(snapshotDate);
 
             // 1페이지
-            PopularBookSearchRequestParam firstPage = new PopularBookSearchRequestParam(
+            DashboardSearchRequestParam firstPage = new DashboardSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 2
             );
             List<PopularBookViewModel> firstResults = popularBookReader.findPopularBooks(firstPage, snapshotDate);
@@ -137,7 +137,7 @@ class PopularBookReaderTest {
             assertThat(firstResults).hasSize(3); // limit+1
 
             // 2페이지
-            PopularBookSearchRequestParam secondPage = new PopularBookSearchRequestParam(
+            DashboardSearchRequestParam secondPage = new DashboardSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC,
                     String.valueOf(firstResults.get(1).rank()), null, 2
             );

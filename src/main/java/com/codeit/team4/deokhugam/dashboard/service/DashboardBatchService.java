@@ -2,10 +2,17 @@ package com.codeit.team4.deokhugam.dashboard.service;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.service.BookService;
-import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
-import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
-import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
+import com.codeit.team4.deokhugam.dashboard.entity.PopularReview;
+import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
+import com.codeit.team4.deokhugam.dashboard.model.PopularReviewSearchModel;
+import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
+import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
+import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.service.ReviewService;
+import com.codeit.team4.deokhugam.user.entity.User;
+import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +31,11 @@ public class DashboardBatchService {
     private final PopularBookAggregator popularBookAggregator;
     private final BookService bookService;
 
+    private final PopularReviewRepository popularReviewRepository;
+    private final PopularReviewAggregator popularReviewAggregator;
+    private final ReviewService reviewService;
+    private final UserService userService;
+
     public void updatePopularBooks(LocalDate snapshotDate) {
         log.info("인기 도서 배치 시작: snapshotDate={}", snapshotDate);
 
@@ -32,6 +44,16 @@ public class DashboardBatchService {
         }
 
         log.info("인기 도서 배치 완료: snapshotDate={}", snapshotDate);
+    }
+
+    public void updatePopularReviews(LocalDate snapshotDate) {
+        log.info("인기 리뷰 배치 시작: snapshotDate={}", snapshotDate);
+
+        for (PeriodType period : PeriodType.values()) {
+            updatePopularReviewsByPeriod(period, snapshotDate);
+        }
+
+        log.info("인기 리뷰 배치 완료: snapshotDate={}", snapshotDate);
     }
 
     private void updatePopularBooksByPeriod(PeriodType period, LocalDate snapshotDate) {
@@ -59,5 +81,38 @@ public class DashboardBatchService {
 
         popularBookRepository.saveAll(popularBooks);
         log.info("인기 도서 {} 저장 완료: {}건", period, popularBooks.size());
+    }
+
+    private void updatePopularReviewsByPeriod(PeriodType period, LocalDate snapshotDate) {
+        popularReviewRepository.deleteByPeriodAndSnapshotDate(period, snapshotDate);
+
+        List<PopularReviewSearchModel> results = popularReviewAggregator.findTopReviews(period, snapshotDate);
+
+        List<PopularReview> popularReviews = new ArrayList<>();
+        for (int i = 0; i < results.size(); i++) {
+            PopularReviewSearchModel model = results.get(i);
+            Review review = reviewService.findById(model.reviewId());
+            Book book = bookService.findById(model.bookId());
+            User user = userService.findById(model.userId());
+
+            popularReviews.add(new PopularReview(
+                    review,
+                    book,
+                    user,
+                    model.bookTitle(),
+                    model.bookThumbnailUrl(),
+                    model.userNickname(),
+                    model.reviewContent(),
+                    model.reviewRating(),
+                    period,
+                    i + 1,
+                    model.likeCount(),
+                    model.commentCount(),
+                    snapshotDate
+            ));
+        }
+
+        popularReviewRepository.saveAll(popularReviews);
+        log.info("인기 리뷰 {} 저장 완료: {}건", period, popularReviews.size());
     }
 }
