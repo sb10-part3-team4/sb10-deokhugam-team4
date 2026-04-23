@@ -25,8 +25,10 @@ public record PopularBookSearchRequestParam(
         @Schema(description = "페이지 크기", example = "50", defaultValue = "50")
         @Min(1)
         @Max(100)
-        int limit
+        Integer limit
 ) {
+
+    private static final int DEFAULT_LIMIT = 50;
 
     public PopularBookSearchRequestParam {
         if (period == null) {
@@ -34,6 +36,9 @@ public record PopularBookSearchRequestParam(
         }
         if (direction == null) {
             direction = SortDirection.ASC;
+        }
+        if (limit == null) {
+            limit = DEFAULT_LIMIT;
         }
     }
 }
