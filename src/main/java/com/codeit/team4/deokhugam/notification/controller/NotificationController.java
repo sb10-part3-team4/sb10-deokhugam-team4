@@ -30,7 +30,7 @@ public class NotificationController implements NotificationApi {
             @RequestParam(required = false) Instant after,
             @RequestParam(defaultValue = "20") int size
     ) {
-        log.info("Request API: GET /api/notifications userId={}, cursor={}, after={}, size={}",
+        log.info("알림 목록 조회 요청: userId={}, cursor={}, after={}, size={}",
                 loginUser.userId(), cursor, after, size);
 
         return notificationService.getNotifications(
