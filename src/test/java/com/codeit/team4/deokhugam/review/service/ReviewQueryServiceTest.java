@@ -82,6 +82,7 @@ class ReviewQueryServiceTest {
             PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(2);
+            assertThat(result.totalElements()).isEqualTo(2);
             assertThat(result.hasNext()).isFalse();
         }
     }
@@ -107,6 +108,7 @@ class ReviewQueryServiceTest {
             PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(2);
+            assertThat(result.totalElements()).isEqualTo(3);
             assertThat(result.hasNext()).isTrue();
             assertThat(result.nextCursor()).isNotNull();
             assertThat(result.nextAfter()).isNotNull();
@@ -136,6 +138,7 @@ class ReviewQueryServiceTest {
             PageResponse<ReviewResponse> secondResult = reviewQueryService.searchReviews(secondPage);
 
             assertThat(secondResult.content()).hasSize(1);
+            assertThat(secondResult.totalElements()).isEqualTo(3);
             assertThat(secondResult.hasNext()).isFalse();
             // 1페이지와 2페이지 리뷰가 중복 없이 전체를 커버하는지 검증
             List<UUID> allIds = new ArrayList<>(firstResult.content().stream().map(ReviewResponse::id).toList());
@@ -171,6 +174,7 @@ class ReviewQueryServiceTest {
             PageResponse<ReviewResponse> secondResult = reviewQueryService.searchReviews(secondPage);
 
             assertThat(secondResult.content()).hasSize(1);
+            assertThat(secondResult.totalElements()).isEqualTo(3);
             assertThat(secondResult.content().get(0).rating()).isEqualTo(1);
             assertThat(secondResult.hasNext()).isFalse();
         }
@@ -194,6 +198,7 @@ class ReviewQueryServiceTest {
             PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
+            assertThat(result.totalElements()).isEqualTo(1);
             assertThat(result.content().get(0).likedByMe()).isTrue();
         }
 
@@ -210,6 +215,7 @@ class ReviewQueryServiceTest {
             PageResponse<ReviewResponse> result = reviewQueryService.searchReviews(param);
 
             assertThat(result.content()).hasSize(1);
+            assertThat(result.totalElements()).isEqualTo(1);
             assertThat(result.content().get(0).likedByMe()).isFalse();
         }
     }

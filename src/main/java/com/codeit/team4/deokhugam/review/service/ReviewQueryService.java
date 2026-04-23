@@ -5,11 +5,15 @@ import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
 import com.codeit.team4.deokhugam.global.response.PageResponse;
+import com.codeit.team4.deokhugam.jooq.tables.Books;
+import com.codeit.team4.deokhugam.jooq.tables.Reviews;
+import com.codeit.team4.deokhugam.jooq.tables.Users;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.model.ReviewSearchModel;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
@@ -54,6 +58,19 @@ public class ReviewQueryService {
                 .map(ReviewResponse::from)
                 .toList();
 
-        return new PageResponse<>(reviews, nextCursor, nextAfter, param.limit(), null, hasNext);
+        long totalElements = getTotalElements(param);
+
+        return new PageResponse<>(reviews, nextCursor, nextAfter, param.limit(), totalElements, hasNext);
+    }
+
+    private long getTotalElements(ReviewSearchRequestParam param) {
+        return Optional.ofNullable(
+                dsl.selectCount()
+                        .from(REVIEWS)
+                        .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                        .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                        .where(conditionBuilder.toFilterCondition(param))
+                        .fetchOne(0, Long.class))
+                .orElse(0L);
     }
 }
