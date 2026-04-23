@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -88,6 +89,86 @@ class NotificationRepositoryTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    @DisplayName("읽지 않은 알림이 존재할 때 userId로 조회하면 성공")
+    void findByUserIdAndConfirmedFalse_whenUnreadExists_thenSuccess() {
+        // given
+        User user = createDummyUser();
+        Book book = createDummyBook();
+        Review review = createDummyReview(user, book);
+
+        Notification unread1 = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content1", "message1")
+        );
+
+        Notification unread2 = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content2", "message2")
+        );
+
+        Notification read = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content3", "message3")
+        );
+        read.markAsRead();
+
+        // when
+        List<Notification> result =
+                notificationRepository.findByUserIdAndConfirmedFalse(user.getId());
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(Notification::getId)
+                .containsExactlyInAnyOrder(unread1.getId(), unread2.getId());
+    }
+
+    @Test
+    @DisplayName("모든 알림이 읽음 상태일 때 조회하면 결과 없음으로 실패")
+    void findByUserIdAndConfirmedFalse_whenAllRead_thenFail() {
+        // given
+        User user = createDummyUser();
+        Book book = createDummyBook();
+        Review review = createDummyReview(user, book);
+
+        Notification read = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content", "message")
+        );
+        read.markAsRead();
+
+        // when
+        List<Notification> result =
+                notificationRepository.findByUserIdAndConfirmedFalse(user.getId());
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("다른 userId의 알림을 조회하면 필터링되어 조회 실패")
+    void findByUserIdAndConfirmedFalse_whenOtherUser_thenFail() {
+        // given
+        User user1 = createDummyUser();
+        User user2 = createDummyUser();
+
+        Book book = createDummyBook();
+        Review review1 = createDummyReview(user1, book);
+        Review review2 = createDummyReview(user2, book);
+
+        notificationRepository.save(
+                new Notification(user1.getId(), review1.getId(), "content1", "message1")
+        );
+
+        notificationRepository.save(
+                new Notification(user2.getId(), review2.getId(), "content2", "message2")
+        );
+
+        // when
+        List<Notification> result =
+                notificationRepository.findByUserIdAndConfirmedFalse(user1.getId());
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserId()).isEqualTo(user1.getId());
+    }
+
     // 헬퍼 메서드
     private User createDummyUser() {
         return userRepository.save(
@@ -106,7 +187,7 @@ class NotificationRepositoryTest {
                 "description",
                 "publisher",
                 LocalDate.now(),
-                "isbn-" + UUID.randomUUID()
+                "isbn-123"
         );
         return bookRepository.save(book);
     }

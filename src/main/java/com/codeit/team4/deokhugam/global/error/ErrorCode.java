@@ -35,6 +35,9 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다"),
     COMMENT_NOT_OWNER(HttpStatus.FORBIDDEN, "해당 댓글을 수정/삭제할 권한이 없습니다"),
 
+    // Notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."),
+
     // Naver API
     NAVER_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 API 호출에 실패했습니다.");
 
