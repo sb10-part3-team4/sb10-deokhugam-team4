@@ -1,7 +1,6 @@
 package com.codeit.team4.deokhugam.notification.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
@@ -121,9 +120,9 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("모든 알림이 읽음 상태일 때 조회하면 결과 없음으로 실패")
-    void findByUserIdAndConfirmedFalse_whenAllRead_thenFail() {
-        // given
+    @DisplayName("모든 알림이 읽음 상태일 때 조회하면 빈 결과가 반환된다")
+    void findByUserIdAndConfirmedFalse_whenAllRead_thenEmpty() {
+// given
         User user = createDummyUser();
         Book book = createDummyBook();
         Review review = createDummyReview(user, book);
@@ -133,11 +132,11 @@ class NotificationRepositoryTest {
         );
         read.markAsRead();
 
-        // when
+// when
         List<Notification> result =
                 notificationRepository.findByUserIdAndConfirmedFalse(user.getId());
 
-        // then
+// then
         assertThat(result).isEmpty();
     }
 
