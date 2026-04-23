@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,10 +66,14 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
         validateCommentOwner(comment, userId, "논리 삭제");
 
-        comment.softDelete();
-        reviewRepository.decreaseCommentCount(comment.getReview().getId());
+        int updatedRows = commentRepository.softDeleteWithCondition(commentId, Instant.now());
 
-        log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
+        if (updatedRows == 1) {
+            reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            log.info("댓글 논리 삭제 및 카운트 감소 완료: commentId={}", commentId);
+        } else {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 처리된 요청입니다.");
+        }
     }
 
     @Transactional
@@ -80,11 +85,15 @@ public class CommentService {
 
         validateCommentOwner(comment, userId, "물리 삭제");
 
-        // 논리 삭제되지 않은 데이터를 물리 삭제할 때만 카운트 감소
+        // 논리 삭제 여부에 따른 분기 처리
         if (comment.getDeletedAt() == null) {
-            reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            int updatedRows = commentRepository.hardDeleteWithCondition(commentId);
+            if (updatedRows == 1) {
+                reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            }
+        } else {
+            commentRepository.hardDeleteForce(commentId);
         }
-        commentRepository.delete(comment);
 
         log.info("댓글 물리 삭제 완료: commentId={}, userId={}", commentId, userId);
     }

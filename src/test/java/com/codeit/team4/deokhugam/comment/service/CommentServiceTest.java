@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.comment.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -223,18 +224,19 @@ class CommentServiceTest {
         given(mockComment.getReview()).willReturn(mockReview);
 
         given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.softDeleteWithCondition(eq(commentId), any(Instant.class))).willReturn(1);
 
         // when
         commentService.softDeleteComment(commentId, userId);
 
         // then
-        verify(mockComment).softDelete();
+        verify(commentRepository).softDeleteWithCondition(eq(commentId), any(Instant.class));
         verify(reviewRepository).decreaseCommentCount(reviewId);
     }
 
     @Test
     @DisplayName("작성자가 일치하지 않으면 댓글 논리 삭제 실패")
-    void softDeleteComment_Fail_Unauthorized() {
+    void softDeleteComment_Fail_NotOwner() {
         // given
         UUID commentId = UUID.randomUUID();
         UUID authorId = UUID.randomUUID();
@@ -252,6 +254,9 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.softDeleteComment(commentId, requesterId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
+
+        verify(commentRepository, never()).softDeleteWithCondition(any(), any());
+        verify(reviewRepository, never()).decreaseCommentCount(any());
     }
 
     @Test
@@ -293,12 +298,13 @@ class CommentServiceTest {
         // 아직 논리 삭제되지 않은 상태라고 가정
         given(mockComment.getDeletedAt()).willReturn(null);
         given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.hardDeleteWithCondition(commentId)).willReturn(1);
 
         // when
         commentService.hardDeleteComment(commentId, userId);
 
         // then
-        verify(commentRepository).delete(mockComment);
+        verify(commentRepository).hardDeleteWithCondition(commentId);
         verify(reviewRepository).decreaseCommentCount(reviewId);
     }
 
@@ -332,12 +338,13 @@ class CommentServiceTest {
         given(mockComment.getDeletedAt()).willReturn(java.time.Instant.now());
 
         given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.hardDeleteForce(commentId)).willReturn(1);
 
         // when
         commentService.hardDeleteComment(commentId, userId);
 
         // then
-        verify(commentRepository).delete(mockComment);
+        verify(commentRepository).hardDeleteForce(commentId);
         // 카운트 감소 메서드는 호출되지 않아야 함
         verify(reviewRepository, never()).decreaseCommentCount(any());
     }
@@ -363,7 +370,8 @@ class CommentServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
 
-        verify(commentRepository, never()).delete(any());
+        verify(commentRepository, never()).hardDeleteWithCondition(any());
+        verify(commentRepository, never()).hardDeleteForce(any());
         verify(reviewRepository, never()).decreaseCommentCount(any());
     }
 }
