@@ -1,6 +1,8 @@
 package com.codeit.team4.deokhugam.dashboard.dto;
 
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
@@ -39,6 +41,17 @@ public record PopularBookSearchRequestParam(
         }
         if (limit == null) {
             limit = DEFAULT_LIMIT;
+        }
+    }
+
+    public Integer cursorAsInteger() {
+        if (cursor == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(cursor);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "cursor는 정수여야 합니다");
         }
     }
 }

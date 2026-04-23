@@ -1,5 +1,7 @@
 package com.codeit.team4.deokhugam.review.dto;
 
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -53,6 +55,17 @@ public record ReviewSearchRequestParam(
         }
         if (limit == null) {
             limit = DEFAULT_LIMIT;
+        }
+    }
+
+    public Integer cursorAsInteger() {
+        if (cursor == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(cursor);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "rating 정렬에서 cursor는 정수여야 합니다");
         }
     }
 
