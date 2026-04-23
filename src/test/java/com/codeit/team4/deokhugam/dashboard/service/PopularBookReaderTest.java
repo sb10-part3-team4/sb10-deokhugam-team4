@@ -59,8 +59,8 @@ class PopularBookReaderTest {
         );
     }
 
-    private void runBatch() {
-        dashboardBatchService.updatePopularBooks(LocalDate.now());
+    private void runBatch(LocalDate snapshotDate) {
+        dashboardBatchService.updatePopularBooks(snapshotDate);
     }
 
     @Nested
@@ -70,13 +70,14 @@ class PopularBookReaderTest {
         @Test
         @DisplayName("최신 스냅샷 날짜 조회 성공")
         void findLatestSnapshotDate_success() {
+            LocalDate snapshotDate = LocalDate.now();
             Book book = createBook("책1", "1111111111");
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
-            runBatch();
+            runBatch(snapshotDate);
 
             LocalDate result = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
 
-            assertThat(result).isEqualTo(LocalDate.now());
+            assertThat(result).isEqualTo(snapshotDate);
         }
 
         @Test
@@ -95,13 +96,13 @@ class PopularBookReaderTest {
         @Test
         @DisplayName("ASC 정렬 조회 성공")
         void findPopularBooks_asc_success() {
+            LocalDate snapshotDate = LocalDate.now();
             Book book1 = createBook("책1", "1111111111");
             Book book2 = createBook("책2", "2222222222");
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
-            runBatch();
+            runBatch(snapshotDate);
 
-            LocalDate snapshotDate = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
             PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 50
             );
@@ -115,13 +116,12 @@ class PopularBookReaderTest {
         @Test
         @DisplayName("커서로 다음 페이지 조회 성공")
         void findPopularBooks_cursor_success() {
+            LocalDate snapshotDate = LocalDate.now();
             for (int i = 0; i < 3; i++) {
                 Book book = createBook("책" + i, "100000000" + i);
                 reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, 5 - i));
             }
-            runBatch();
-
-            LocalDate snapshotDate = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
+            runBatch(snapshotDate);
 
             // 1페이지
             PopularBookSearchRequestParam firstPage = new PopularBookSearchRequestParam(

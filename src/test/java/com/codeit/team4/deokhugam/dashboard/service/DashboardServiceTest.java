@@ -61,8 +61,8 @@ class DashboardServiceTest {
         );
     }
 
-    private void runBatch() {
-        dashboardBatchService.updatePopularBooks(LocalDate.now());
+    private void runBatch(LocalDate snapshotDate) {
+        dashboardBatchService.updatePopularBooks(snapshotDate);
     }
 
     @Nested
@@ -72,11 +72,12 @@ class DashboardServiceTest {
         @Test
         @DisplayName("인기 도서 조회 성공")
         void getPopularBooks_success() {
+            LocalDate snapshotDate = LocalDate.now();
             Book book1 = createBook("책1", "1111111111");
             Book book2 = createBook("책2", "2222222222");
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
-            runBatch();
+            runBatch(snapshotDate);
 
             PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 50
@@ -94,11 +95,12 @@ class DashboardServiceTest {
         @Test
         @DisplayName("DESC 정렬 조회 성공")
         void getPopularBooks_desc_success() {
+            LocalDate snapshotDate = LocalDate.now();
             Book book1 = createBook("책1", "1111111111");
             Book book2 = createBook("책2", "2222222222");
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
-            runBatch();
+            runBatch(snapshotDate);
 
             PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.DESC, null, null, 50
@@ -114,11 +116,12 @@ class DashboardServiceTest {
         @Test
         @DisplayName("커서 페이지네이션 성공")
         void getPopularBooks_cursor_success() {
+            LocalDate snapshotDate = LocalDate.now();
             for (int i = 0; i < 3; i++) {
                 Book book = createBook("책" + i, "100000000" + i);
                 reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, 5 - i));
             }
-            runBatch();
+            runBatch(snapshotDate);
 
             // 1페이지
             PopularBookSearchRequestParam firstPage = new PopularBookSearchRequestParam(
@@ -144,7 +147,7 @@ class DashboardServiceTest {
         @Test
         @DisplayName("데이터 없을 때 빈 결과 반환 성공")
         void getPopularBooks_empty_success() {
-            runBatch();
+            runBatch(LocalDate.now());
 
             PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 50
@@ -159,9 +162,10 @@ class DashboardServiceTest {
         @Test
         @DisplayName("잘못된 cursor로 조회 실패")
         void getPopularBooks_invalidCursor_fail() {
+            LocalDate snapshotDate = LocalDate.now();
             Book book = createBook("책1", "1111111111");
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
-            runBatch();
+            runBatch(snapshotDate);
 
             PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, "invalid", null, 50
