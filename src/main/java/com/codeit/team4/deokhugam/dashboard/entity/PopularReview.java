@@ -34,6 +34,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PopularReview extends BaseEntity {
 
+    public static final BigDecimal LIKE_COUNT_WEIGHT = new BigDecimal("0.3");
+    public static final BigDecimal COMMENT_COUNT_WEIGHT = new BigDecimal("0.7");
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id")
     private Review review;
@@ -91,7 +94,6 @@ public class PopularReview extends BaseEntity {
             int reviewRating,
             PeriodType period,
             int rank,
-            BigDecimal score,
             int likeCount,
             int commentCount,
             LocalDate snapshotDate
@@ -106,10 +108,15 @@ public class PopularReview extends BaseEntity {
         this.reviewRating = reviewRating;
         this.period = period;
         this.rank = rank;
-        this.score = score;
+        this.score = calculateScore(likeCount, commentCount);
         this.likeCount = likeCount;
         this.commentCount = commentCount;
         this.snapshotDate = snapshotDate;
+    }
+
+    private BigDecimal calculateScore(int likeCount, int commentCount) {
+        return new BigDecimal(likeCount).multiply(LIKE_COUNT_WEIGHT)
+                .add(new BigDecimal(commentCount).multiply(COMMENT_COUNT_WEIGHT));
     }
 
     @Override

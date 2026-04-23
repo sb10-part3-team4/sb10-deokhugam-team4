@@ -2,13 +2,13 @@ package com.codeit.team4.deokhugam.dashboard.builder;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
+import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
-import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -35,10 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class PopularBookAggregationQueryBuilderTest {
+class PopularReviewAggregationQueryBuilderTest {
 
     @Autowired
-    private PopularBookAggregationQueryBuilder queryBuilder;
+    private PopularReviewAggregationQueryBuilder queryBuilder;
 
     @Autowired
     private DSLContext dsl;
@@ -68,6 +68,7 @@ class PopularBookAggregationQueryBuilderTest {
         return dsl.selectCount()
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                 .where(condition)
                 .fetchOne(0, int.class);
     }
@@ -88,39 +89,6 @@ class PopularBookAggregationQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("WEEKLY 고정 기간 조건 생성 성공")
-        void buildCondition_weekly_success() {
-            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-
-            LocalDate today = LocalDate.now(ZoneId.of(zone));
-            Condition condition = queryBuilder.buildCondition(PeriodType.WEEKLY, today);
-
-            assertThat(countWithCondition(condition)).isEqualTo(1);
-        }
-
-        @Test
-        @DisplayName("MONTHLY 고정 기간 조건 생성 성공")
-        void buildCondition_monthly_success() {
-            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-
-            LocalDate today = LocalDate.now(ZoneId.of(zone));
-            Condition condition = queryBuilder.buildCondition(PeriodType.MONTHLY, today);
-
-            assertThat(countWithCondition(condition)).isEqualTo(1);
-        }
-
-        @Test
-        @DisplayName("ALL_TIME 조건 생성 성공")
-        void buildCondition_allTime_success() {
-            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-
-            LocalDate today = LocalDate.now(ZoneId.of(zone));
-            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
-
-            assertThat(countWithCondition(condition)).isEqualTo(1);
-        }
-
-        @Test
         @DisplayName("ALL_TIME은 과거 리뷰도 포함 성공")
         void buildCondition_allTime_includesPastReviews_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
@@ -132,19 +100,6 @@ class PopularBookAggregationQueryBuilderTest {
 
             assertThat(countWithCondition(dailyCondition)).isZero();
             assertThat(countWithCondition(allTimeCondition)).isEqualTo(1);
-        }
-
-        @Test
-        @DisplayName("소프트 삭제된 도서 제외 성공")
-        void buildCondition_excludesSoftDeletedBook_success() {
-            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-            book.softDelete(Instant.now());
-            bookRepository.saveAndFlush(book);
-
-            LocalDate today = LocalDate.now(ZoneId.of(zone));
-            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
-
-            assertThat(countWithCondition(condition)).isZero();
         }
 
         @Test
@@ -161,12 +116,14 @@ class PopularBookAggregationQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("기간 외 리뷰 제외 성공")
-        void buildCondition_excludesOutOfRange_success() {
+        @DisplayName("소프트 삭제된 도서 제외 성공")
+        void buildCondition_excludesSoftDeletedBook_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
+            book.softDelete(Instant.now());
+            bookRepository.saveAndFlush(book);
 
-            LocalDate pastDate = LocalDate.of(2020, 1, 1);
-            Condition condition = queryBuilder.buildCondition(PeriodType.DAILY, pastDate);
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
 
             assertThat(countWithCondition(condition)).isZero();
         }
@@ -183,7 +140,7 @@ class PopularBookAggregationQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("동점 도서 정렬 순서 일관성 성공")
+        @DisplayName("동점 리뷰 정렬 순서 일관성 성공")
         void buildOrderBy_tieBreaker_success() {
             Book otherBook = bookRepository.saveAndFlush(
                     new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
@@ -194,50 +151,51 @@ class PopularBookAggregationQueryBuilderTest {
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
 
-            List<UUID> firstResult = dsl.select(REVIEWS.BOOK_ID)
+            List<UUID> firstResult = dsl.select(REVIEWS.ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                    .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                     .where(condition)
-                    .groupBy(PopularBookSearchModel.toGroupByFields())
                     .orderBy(queryBuilder.buildOrderBy())
-                    .fetch(REVIEWS.BOOK_ID);
+                    .fetch(REVIEWS.ID);
 
-            List<UUID> secondResult = dsl.select(REVIEWS.BOOK_ID)
+            List<UUID> secondResult = dsl.select(REVIEWS.ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                    .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                     .where(condition)
-                    .groupBy(PopularBookSearchModel.toGroupByFields())
                     .orderBy(queryBuilder.buildOrderBy())
-                    .fetch(REVIEWS.BOOK_ID);
+                    .fetch(REVIEWS.ID);
 
             assertThat(firstResult).hasSize(2);
             assertThat(firstResult).isEqualTo(secondResult);
         }
 
         @Test
-        @DisplayName("동점 시 먼저 등록한 도서가 우선 성공")
-        void buildOrderBy_tieBreaker_earlierBookFirst_success() {
-            // book은 setUp에서 publishedDate=2024-01-01로 먼저 생성됨
-            Book laterBook = bookRepository.saveAndFlush(
-                    new Book("나중 책", "저자", "설명", "출판사", LocalDate.of(2024, 6, 1), "1234567891")
+        @DisplayName("동점 시 먼저 작성한 리뷰가 우선 성공")
+        void buildOrderBy_tieBreaker_earlierReviewFirst_success() {
+            Review earlierReview = reviewRepository.saveAndFlush(new Review(book, user, "먼저 쓴 리뷰", 5));
+
+            Book otherBook = bookRepository.saveAndFlush(
+                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
             );
-            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-            reviewRepository.saveAndFlush(new Review(laterBook, user, "좋은 책입니다", 5));
+            User otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
+            Review laterReview = reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "나중에 쓴 리뷰", 5));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
 
-            List<UUID> result = dsl.select(REVIEWS.BOOK_ID)
+            List<UUID> result = dsl.select(REVIEWS.ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                    .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                     .where(condition)
-                    .groupBy(PopularBookSearchModel.toGroupByFields())
                     .orderBy(queryBuilder.buildOrderBy())
-                    .fetch(REVIEWS.BOOK_ID);
+                    .fetch(REVIEWS.ID);
 
             assertThat(result).hasSize(2);
-            assertThat(result.get(0)).isEqualTo(book.getId());
-            assertThat(result.get(1)).isEqualTo(laterBook.getId());
+            assertThat(result.get(0)).isEqualTo(earlierReview.getId());
+            assertThat(result.get(1)).isEqualTo(laterReview.getId());
         }
     }
 }

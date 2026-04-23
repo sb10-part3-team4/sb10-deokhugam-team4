@@ -1,9 +1,12 @@
 package com.codeit.team4.deokhugam.dashboard.service;
 
+import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
-import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularReviewResponse;
 import com.codeit.team4.deokhugam.dashboard.mapper.DashboardMapper;
 import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
+import com.codeit.team4.deokhugam.dashboard.model.PopularReviewViewModel;
+import com.codeit.team4.deokhugam.dashboard.model.RankedViewModel;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -17,13 +20,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class DashboardService {
+public class DashboardFacade {
 
     private final PopularBookReader popularBookReader;
+    private final PopularReviewReader popularReviewReader;
     private final DashboardMapper dashboardMapper;
 
-    public PageResponse<PopularBookResponse> getPopularBooks(PopularBookSearchRequestParam param) {
+    public PageResponse<PopularBookResponse> getPopularBooks(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularBookReader.findLatestSnapshotDate(param.period());
+        if (latestSnapshotDate == null) {
+            return new PageResponse<>(List.of(), null, null, param.limit(), null, false);
+        }
+
         List<PopularBookViewModel> results = popularBookReader.findPopularBooks(param, latestSnapshotDate);
 
         List<PopularBookViewModel> content = trimToLimit(results, param.limit());
@@ -43,18 +51,43 @@ public class DashboardService {
         );
     }
 
-    private List<PopularBookViewModel> trimToLimit(List<PopularBookViewModel> results, int limit) {
+    public PageResponse<PopularReviewResponse> getPopularReviews(DashboardSearchRequestParam param) {
+        LocalDate latestSnapshotDate = popularReviewReader.findLatestSnapshotDate(param.period());
+        if (latestSnapshotDate == null) {
+            return new PageResponse<>(List.of(), null, null, param.limit(), null, false);
+        }
+
+        List<PopularReviewViewModel> results = popularReviewReader.findPopularReviews(param, latestSnapshotDate);
+
+        List<PopularReviewViewModel> content = trimToLimit(results, param.limit());
+        boolean hasNext = results.size() > param.limit();
+
+        List<PopularReviewResponse> responses = content.stream()
+                .map(dashboardMapper::toPopularReviewResponse)
+                .toList();
+
+        return new PageResponse<>(
+                responses,
+                extractNextCursor(content, hasNext),
+                extractNextAfter(content, hasNext),
+                param.limit(),
+                null,
+                hasNext
+        );
+    }
+
+    private <T> List<T> trimToLimit(List<T> results, int limit) {
         return results.subList(0, Math.min(results.size(), limit));
     }
 
-    private String extractNextCursor(List<PopularBookViewModel> content, boolean hasNext) {
+    private <T extends RankedViewModel> String extractNextCursor(List<T> content, boolean hasNext) {
         if (!hasNext || content.isEmpty()) {
             return null;
         }
         return String.valueOf(content.get(content.size() - 1).rank());
     }
 
-    private Instant extractNextAfter(List<PopularBookViewModel> content, boolean hasNext) {
+    private <T extends RankedViewModel> Instant extractNextAfter(List<T> content, boolean hasNext) {
         if (!hasNext || content.isEmpty()) {
             return null;
         }

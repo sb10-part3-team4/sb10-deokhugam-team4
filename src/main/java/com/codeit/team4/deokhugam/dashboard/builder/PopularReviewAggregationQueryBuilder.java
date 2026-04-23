@@ -4,7 +4,7 @@ import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
-import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
+import com.codeit.team4.deokhugam.dashboard.entity.PopularReview;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PopularBookAggregationQueryBuilder {
+public class PopularReviewAggregationQueryBuilder {
 
     @Value("${dashboard.batch.zone}")
     private String zone;
@@ -34,13 +34,13 @@ public class PopularBookAggregationQueryBuilder {
     }
 
     public List<SortField<?>> buildOrderBy() {
-        SortField<?> scoreDesc = DSL.count().cast(BigDecimal.class)
-                .mul(PopularBook.REVIEW_COUNT_WEIGHT)
-                .add(DSL.avg(REVIEWS.RATING).cast(BigDecimal.class)
-                        .mul(PopularBook.AVG_RATING_WEIGHT))
+        SortField<?> scoreDesc = REVIEWS.LIKE_COUNT.cast(BigDecimal.class)
+                .mul(PopularReview.LIKE_COUNT_WEIGHT)
+                .add(REVIEWS.COMMENT_COUNT.cast(BigDecimal.class)
+                        .mul(PopularReview.COMMENT_COUNT_WEIGHT))
                 .desc();
 
-        return List.of(scoreDesc, BOOKS.CREATED_AT.asc(), REVIEWS.BOOK_ID.asc());
+        return List.of(scoreDesc, REVIEWS.CREATED_AT.asc(), REVIEWS.ID.asc());
     }
 
     private Condition startDateCondition(PeriodType period, LocalDate snapshotDate) {

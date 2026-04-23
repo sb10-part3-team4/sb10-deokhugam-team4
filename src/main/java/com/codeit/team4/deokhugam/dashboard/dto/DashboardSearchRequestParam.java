@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
 
-@Schema(description = "인기 도서 검색 요청")
-public record PopularBookSearchRequestParam(
+@Schema(description = "대시보드 검색 요청")
+public record DashboardSearchRequestParam(
 
         @Schema(description = "랭킹 기간", example = "DAILY", defaultValue = "DAILY")
         PeriodType period,
@@ -32,7 +32,7 @@ public record PopularBookSearchRequestParam(
 
     private static final int DEFAULT_LIMIT = 50;
 
-    public PopularBookSearchRequestParam {
+    public DashboardSearchRequestParam {
         if (period == null) {
             period = PeriodType.DAILY;
         }
