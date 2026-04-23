@@ -36,7 +36,13 @@ public enum ErrorCode {
     COMMENT_NOT_OWNER(HttpStatus.FORBIDDEN, "해당 댓글을 수정/삭제할 권한이 없습니다"),
 
     // Naver API
-    NAVER_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 API 호출에 실패했습니다.");
+    NAVER_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 API 호출에 실패했습니다."),
+
+    // S3
+    S3_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3 업로드에 실패했습니다."),
+    S3_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3 삭제에 실패했습니다."),
+    S3_EMPTY_FILE_ERROR(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
+    S3_INVALID_FILE_TYPE_ERROR(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드 가능합니다.");
 
     private final HttpStatus status;
     private final String message;

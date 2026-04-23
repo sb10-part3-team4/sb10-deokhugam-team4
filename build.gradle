@@ -105,6 +105,7 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
+    implementation 'software.amazon.awssdk:s3:2.42.38'
 }
 
 tasks.register('generateJooq') {

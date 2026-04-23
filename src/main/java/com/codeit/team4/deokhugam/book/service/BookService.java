@@ -10,6 +10,7 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
+import com.codeit.team4.deokhugam.s3.S3Service;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
     private final NaverBookClient naverBookClient;
+    private final S3Service s3Service;
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
@@ -39,11 +41,14 @@ public class BookService {
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + isbn);
         }
 
-        // Todo : 썸네일 이미지 저장 로직 구현
+        String thumbnailUrl = null;
+        if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            thumbnailUrl = s3Service.upload(thumbnailImage);
+        }
 
         // 엔티티 생성
         Book book = new Book(request.title(), request.author(), request.description(),
-                request.publisher(), request.publishedDate(), isbn);
+                request.publisher(), request.publishedDate(), isbn, thumbnailUrl);
 
         // db 저장, 동시 요청 대비 save 시 catch
         try {
@@ -75,15 +80,23 @@ public class BookService {
                     return new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId);
                 });
 
+        // 썸네일 업로드
+        String thumbnailUrl = null;
+        if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            // 기존 썸네일 삭제
+            if (book.getThumbnailUrl() != null) {
+                s3Service.delete(book.getThumbnailUrl());
+            }
+            thumbnailUrl = s3Service.upload(thumbnailImage);
+        }
+
         // update
         book.update(request.title(), request.author(), request.description(), request.publisher(),
-                request.publishedDate());
+                request.publishedDate(), thumbnailUrl != null ? thumbnailUrl : book.getThumbnailUrl());
+        log.info("도서 수정 완료: bookId={}", bookId);
 
         BookResponse bookResponse = bookMapper.toResponse(book);
-        log.info("도서 수정 완료: bookId={}", bookId);
         return bookResponse;
-
-        // todo: 썸네일 업데이트 로직 구현
     }
 
     @Transactional
