@@ -14,12 +14,14 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,6 +48,9 @@ class PopularBookReaderTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Value("${dashboard.batch.zone}")
+    private String zone;
+
     private User user;
 
     @BeforeEach
@@ -70,7 +75,7 @@ class PopularBookReaderTest {
         @Test
         @DisplayName("최신 스냅샷 날짜 조회 성공")
         void findLatestSnapshotDate_success() {
-            LocalDate snapshotDate = LocalDate.now();
+            LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
             Book book = createBook("책1", "1111111111");
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
             runBatch(snapshotDate);
@@ -96,7 +101,7 @@ class PopularBookReaderTest {
         @Test
         @DisplayName("ASC 정렬 조회 성공")
         void findPopularBooks_asc_success() {
-            LocalDate snapshotDate = LocalDate.now();
+            LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
             Book book1 = createBook("책1", "1111111111");
             Book book2 = createBook("책2", "2222222222");
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
@@ -116,7 +121,7 @@ class PopularBookReaderTest {
         @Test
         @DisplayName("커서로 다음 페이지 조회 성공")
         void findPopularBooks_cursor_success() {
-            LocalDate snapshotDate = LocalDate.now();
+            LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
             for (int i = 0; i < 3; i++) {
                 Book book = createBook("책" + i, "100000000" + i);
                 reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, 5 - i));

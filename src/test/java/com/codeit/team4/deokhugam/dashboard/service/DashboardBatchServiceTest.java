@@ -13,12 +13,14 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -45,6 +47,9 @@ class DashboardBatchServiceTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Value("${dashboard.batch.zone}")
+    private String zone;
+
     private User user;
 
     @BeforeEach
@@ -70,7 +75,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePopularBooks(today);
 
             List<PopularBook> results = popularBookRepository.findAll();
@@ -85,7 +90,7 @@ class DashboardBatchServiceTest {
                 reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, (i % 5) + 1));
             }
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePopularBooks(today);
 
             for (PeriodType period : PeriodType.values()) {
@@ -104,7 +109,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
             reviewRepository.saveAndFlush(new Review(book2, user, "그냥그래요", 1));
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePopularBooks(today);
 
             List<PopularBook> dailyBooks = popularBookRepository.findAll().stream()
@@ -121,7 +126,7 @@ class DashboardBatchServiceTest {
         @Test
         @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
         void updatePopularBooks_noReviews_success() {
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePopularBooks(today);
 
             assertThat(popularBookRepository.findAll()).isEmpty();
@@ -133,7 +138,7 @@ class DashboardBatchServiceTest {
             Book book = createBook("책1", "1111111111");
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePopularBooks(today);
 
             for (PeriodType period : PeriodType.values()) {
