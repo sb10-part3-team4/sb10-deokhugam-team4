@@ -34,7 +34,7 @@ public class DashboardFacade {
 
         List<PopularBookViewModel> results = popularBookReader.findPopularBooks(param, latestSnapshotDate);
 
-        List<PopularBookViewModel> content = trimToLimit(results, param.limit());ㄷ
+        List<PopularBookViewModel> content = trimToLimit(results, param.limit());
         boolean hasNext = results.size() > param.limit();
 
         List<PopularBookResponse> responses = content.stream()

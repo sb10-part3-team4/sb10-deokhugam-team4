@@ -14,6 +14,8 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import org.jooq.DSLContext;
+import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -51,6 +53,9 @@ class DashboardBatchServiceTest {
 
     @Autowired
     private BookRepository bookRepository;
+
+    @Autowired
+    private DSLContext dsl;
 
     @Value("${dashboard.batch.zone}")
     private String zone;
@@ -189,17 +194,24 @@ class DashboardBatchServiceTest {
                 List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
                         .filter(pr -> pr.getPeriod() == period && pr.getSnapshotDate().equals(today))
                         .toList();
-                assertThat(byPeriod).hasSizeLessThanOrEqualTo(20);
+                assertThat(byPeriod).hasSize(20);
             }
         }
 
         @Test
-        @DisplayName("ranking 순서 부여 성공")
+        @DisplayName("score 기반 ranking 순서 부여 성공")
         void updatePopularReviews_ranking_success() {
             Book book1 = createBook("책1", "1111111111");
             Book book2 = createBook("책2", "2222222222");
             Review review1 = reviewRepository.saveAndFlush(new Review(book1, user, "인기 리뷰", 5));
-            Review review2 = reviewRepository.saveAndFlush(new Review(book2, user, "보통 리뷰", 1));
+            Review review2 = reviewRepository.saveAndFlush(new Review(book2, user, "보통 리뷰", 3));
+
+            // review1: like=10, comment=5 → score = 10*0.3 + 5*0.7 = 6.5
+            // review2: like=2, comment=1 → score = 2*0.3 + 1*0.7 = 1.3
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 10).set(REVIEWS.COMMENT_COUNT, 5)
+                    .where(REVIEWS.ID.eq(review1.getId())).execute();
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 2).set(REVIEWS.COMMENT_COUNT, 1)
+                    .where(REVIEWS.ID.eq(review2.getId())).execute();
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             dashboardBatchService.updatePopularReviews(today);
@@ -212,6 +224,7 @@ class DashboardBatchServiceTest {
             assertThat(dailyReviews).hasSize(2);
             assertThat(dailyReviews.get(0).getRank()).isEqualTo(1);
             assertThat(dailyReviews.get(1).getRank()).isEqualTo(2);
+            assertThat(dailyReviews.get(0).getScore()).isGreaterThan(dailyReviews.get(1).getScore());
         }
 
         @Test

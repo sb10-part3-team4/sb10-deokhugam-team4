@@ -226,6 +226,56 @@ class DashboardFacadeTest {
         }
 
         @Test
+        @DisplayName("DESC 정렬 조회 성공")
+        void getPopularReviews_desc_success() {
+            LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
+            Book book1 = createBook("책1", "1111111111");
+            Book book2 = createBook("책2", "2222222222");
+            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+            reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
+            runBatch(snapshotDate);
+
+            DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.DESC, null, null, 50
+            );
+
+            PageResponse<PopularReviewResponse> result = dashboardService.getPopularReviews(param);
+
+            assertThat(result.content()).hasSize(2);
+            assertThat(result.content().get(0).rank()).isEqualTo(2);
+            assertThat(result.content().get(1).rank()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("커서 페이지네이션 성공")
+        void getPopularReviews_cursor_success() {
+            LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
+            for (int i = 0; i < 3; i++) {
+                Book book = createBook("책" + i, "100000000" + i);
+                reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, 5 - i));
+            }
+            runBatch(snapshotDate);
+
+            DashboardSearchRequestParam firstPage = new DashboardSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC, null, null, 2
+            );
+            PageResponse<PopularReviewResponse> firstResult = dashboardService.getPopularReviews(firstPage);
+
+            assertThat(firstResult.content()).hasSize(2);
+            assertThat(firstResult.hasNext()).isTrue();
+            assertThat(firstResult.nextCursor()).isNotNull();
+
+            DashboardSearchRequestParam secondPage = new DashboardSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC,
+                    firstResult.nextCursor(), firstResult.nextAfter(), 2
+            );
+            PageResponse<PopularReviewResponse> secondResult = dashboardService.getPopularReviews(secondPage);
+
+            assertThat(secondResult.content()).hasSize(1);
+            assertThat(secondResult.hasNext()).isFalse();
+        }
+
+        @Test
         @DisplayName("잘못된 cursor로 조회 실패")
         void getPopularReviews_invalidCursor_fail() {
             LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
