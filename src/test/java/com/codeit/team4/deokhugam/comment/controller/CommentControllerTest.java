@@ -325,4 +325,89 @@ class CommentControllerTest {
                 .andDo(print())
                 .andExpect(status().isInternalServerError());
     }
+
+    @Test
+    @DisplayName("댓글 물리 삭제 API 검증 성공")
+    void hardDeleteComment_Api_Success() throws Exception {
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        willDoNothing().given(commentService).hardDeleteComment(any(UUID.class), any(UUID.class));
+
+        mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("요청자 ID 헤더가 누락되어 댓글 물리 삭제 API 검증 실패")
+    void hardDeleteComment_Fail_400_MissingHeader() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("MISSING_HEADER"));
+    }
+
+    @Test
+    @DisplayName("댓글 작성자가 일치하지 않아 물리 삭제 API 권한 검증 실패")
+    void hardDeleteComment_Fail_403_Forbidden() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        willThrow(new BusinessException(ErrorCode.COMMENT_NOT_OWNER))
+                .given(commentService).hardDeleteComment(any(UUID.class), any(UUID.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_OWNER"));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 댓글 식별자로 물리 삭제 API 조회 실패")
+    void hardDeleteComment_Fail_404_NotFound() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        willThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND))
+                .given(commentService).hardDeleteComment(any(UUID.class), any(UUID.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("COMMENT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("서버 내부 오류 발생 시 물리 삭제 API 응답 실패")
+    void hardDeleteComment_Fail_500_InternalServerError() throws Exception {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        given(userService.findById(userId)).willReturn(mock(User.class));
+        willThrow(new RuntimeException("Unexpected DB Error"))
+                .given(commentService).hardDeleteComment(any(UUID.class), any(UUID.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId)
+                        .header("Deokhugam-Request-User-ID", userId.toString()))
+                .andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"));
+    }
 }

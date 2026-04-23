@@ -53,7 +53,6 @@ public class CommentController implements CommentApi {
                 commentService.updateComment(commentId, loginUser.userId(), request));
     }
 
-    @Override
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> softDeleteComment(
             @PathVariable UUID commentId,
@@ -62,6 +61,18 @@ public class CommentController implements CommentApi {
         log.info("댓글 논리 삭제 요청: commentId={}, userId={}", commentId, loginUser.userId());
 
         commentService.softDeleteComment(commentId, loginUser.userId());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{commentId}/hard")
+    public ResponseEntity<Void> hardDeleteComment(
+            @PathVariable UUID commentId,
+            @LoginUser DeokhugamUser loginUser) {
+
+        log.info("댓글 물리 삭제 요청: commentId={}, userId={}", commentId, loginUser.userId());
+
+        commentService.hardDeleteComment(commentId, loginUser.userId());
 
         return ResponseEntity.noContent().build();
     }

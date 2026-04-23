@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,27 +50,55 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
+    public CommentResponse updateComment(UUID commentId, UUID userId,
+            CommentUpdateRequest request) {
         Comment comment = findCommentById(commentId);
 
         validateCommentOwner(comment, userId, "수정");
 
         comment.updateContent(request.content());
 
-        log.info("댓글 수정 완료: commentId: {}, userId: {}", commentId, userId);
+        log.info("댓글 수정 완료: commentId={}, userId={}", commentId, userId);
         return commentMapper.toResponse(comment);
     }
 
     @Transactional
     public void softDeleteComment(UUID commentId, UUID userId) {
         Comment comment = findCommentById(commentId);
-
         validateCommentOwner(comment, userId, "논리 삭제");
 
-        comment.softDelete();
-        reviewRepository.decreaseCommentCount(comment.getReview().getId());
+        int updatedRows = commentRepository.softDeleteWithCondition(commentId, Instant.now());
 
-        log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
+        if (updatedRows == 1) {
+            reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
+        } else {
+            throw new BusinessException(
+                    ErrorCode.COMMENT_NOT_FOUND,
+                    String.format("이미 처리된 요청입니다: commentId=%s, userId=%s", commentId, userId));
+        }
+    }
+
+    @Transactional
+    public void hardDeleteComment(UUID commentId, UUID userId) {
+        // 이미 논리 삭제된 것도 물리 삭제 가능해야 하므로 findById 사용
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
+
+        validateCommentOwner(comment, userId, "물리 삭제");
+
+        // 논리 삭제 여부에 따른 분기 처리
+        if (comment.getDeletedAt() == null) {
+            int updatedRows = commentRepository.hardDeleteWithCondition(commentId);
+            if (updatedRows == 1) {
+                reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            }
+        } else {
+            commentRepository.hardDeleteForce(commentId);
+        }
+
+        log.info("댓글 물리 삭제 완료: commentId={}, userId={}", commentId, userId);
     }
 
     // ========== Private Methods ==========
@@ -80,7 +109,8 @@ public class CommentService {
                         ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
 
         if (comment.getDeletedAt() != null) {
-            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 삭제된 댓글입니다. commentId: " + commentId);
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND,
+                    "이미 삭제된 댓글입니다. commentId: " + commentId);
         }
 
         return comment;
@@ -90,10 +120,9 @@ public class CommentService {
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(
                     ErrorCode.COMMENT_NOT_OWNER,
-                    String.format("댓글 %s 권한 없음 - commentId: %s, 요청자: %s", action, comment.getId(),
+                    String.format("댓글 %s 권한 없음 - commentId=%s, 요청자=%s", action, comment.getId(),
                             userId)
             );
         }
     }
-
 }
