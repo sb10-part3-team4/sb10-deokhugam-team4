@@ -4,6 +4,7 @@ import com.codeit.team4.deokhugam.global.config.S3Properties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +19,16 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 @RequiredArgsConstructor
-@Profile("!test")
+@Profile({"local", "prod"})
 @Slf4j
 public class S3ServiceImpl implements S3Service {
+
+    private static final Map<String, String> ALLOWED_IMAGE_TYPES = Map.of(
+            "image/jpeg", "jpg",
+            "image/png", "png",
+            "image/gif", "gif",
+            "image/webp", "webp"
+    );
 
     private final S3Client s3Client;    // AWS S3와의 통신을 위한 클라이언트
     private final S3Properties s3Properties;    // 설정 파일(yml)에서 가져온 속성값
@@ -34,17 +42,13 @@ public class S3ServiceImpl implements S3Service {
 
         // 2. 이미지 파일인지 확장자 및 타입 검증
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
+        String ext = ALLOWED_IMAGE_TYPES.get(contentType);
+        if (ext == null) {
             throw new BusinessException(ErrorCode.S3_INVALID_FILE_TYPE_ERROR,
                     "Type=" + contentType);
         }
 
-        // 중복 방지를 위해 파일명 앞에 UUID를 붙여 고유한 키(경로) 생성
-        String original = file.getOriginalFilename();
-        String ext = "";
-        if (original != null && original.contains(".")) {
-            ext = original.substring(original.lastIndexOf('.'));
-        }
+        // 원본 파일명 대신 서버 측 확장자 매핑값 사용
         String key = "thumbnails/" + UUID.randomUUID() + ext;
 
         try {
