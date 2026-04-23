@@ -1,10 +1,16 @@
 package com.codeit.team4.deokhugam.notification.controller;
 
 import com.codeit.team4.deokhugam.global.config.AppProperties;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import com.codeit.team4.deokhugam.notification.service.NotificationService;
 import com.codeit.team4.deokhugam.user.service.UserService;
+
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +48,108 @@ class NotificationControllerTest {
     private NotificationService notificationService;
 
     private static final String USER_HEADER = "Deokhugam-Request-User-ID";
+
+    @Test
+    @DisplayName("알림 읽음 처리 요청이 정상 처리되어 성공")
+    void markAsRead_success() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID notificationId = UUID.randomUUID();
+
+        NotificationResponse response = new NotificationResponse(
+                notificationId,
+                userId,
+                UUID.randomUUID(),
+                "review content",
+                "message",
+                true,
+                Instant.now(),
+                Instant.now()
+        );
+
+        given(notificationService.markAsRead(notificationId, userId))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(patch("/api/notifications/{notificationId}", notificationId)
+                        .header(USER_HEADER, userId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmed").value(true))
+                .andExpect(jsonPath("$.message").value("message"));
+
+        then(notificationService)
+                .should()
+                .markAsRead(notificationId, userId);
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 알림이면 읽음 처리 실패")
+    void markAsRead_forbidden_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID notificationId = UUID.randomUUID();
+
+        given(notificationService.markAsRead(notificationId, userId))
+                .willThrow(new BusinessException(ErrorCode.USER_FORBIDDEN));
+
+        // when & then
+        mockMvc.perform(patch("/api/notifications/{notificationId}", notificationId)
+                        .header(USER_HEADER, userId.toString()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("알림이 존재하지 않으면 읽음 처리 실패")
+    void markAsRead_notFound_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID notificationId = UUID.randomUUID();
+
+        given(notificationService.markAsRead(notificationId, userId))
+                .willThrow(new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(patch("/api/notifications/{notificationId}", notificationId)
+                        .header(USER_HEADER, userId.toString()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("모든 알림 읽음 처리 요청이 정상 처리되어 성공")
+    void markAllAsRead_success() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        // when & then
+        mockMvc.perform(patch("/api/notifications/read-all")
+                        .header(USER_HEADER, userId.toString()))
+                .andExpect(status().isNoContent());
+
+        then(notificationService)
+                .should()
+                .markAllAsRead(userId);
+    }
+
+    @Test
+    @DisplayName("사용자가 없으면 전체 읽음 처리 실패")
+    void markAllAsRead_userNotFound_fail() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
+                .given(notificationService)
+                .markAllAsRead(userId);
+
+        // when & then
+        mockMvc.perform(patch("/api/notifications/read-all")
+                        .header(USER_HEADER, userId.toString()))
+                .andExpect(status().isNotFound());
+    }
 
     @Test
     @DisplayName("로그인 사용자의 알림 목록 조회 요청이 정상 처리되어서 알림 목록 조회 성공")
