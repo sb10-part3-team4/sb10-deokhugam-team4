@@ -42,7 +42,7 @@ public class PowerUserAggregationQueryBuilder {
                 .add(DSL.sum(REVIEWS.COMMENT_COUNT).cast(BigDecimal.class).mul(PowerUser.COMMENT_COUNT_WEIGHT))
                 .desc();
 
-        return List.of(scoreDesc, USERS.CREATED_AT.asc());
+        return List.of(scoreDesc, USERS.CREATED_AT.asc(), REVIEWS.USER_ID.asc());
     }
 
     private Condition startDateCondition(PeriodType period, LocalDate snapshotDate) {
