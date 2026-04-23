@@ -25,6 +25,12 @@ dashboard:
   batch:
     cron: "0 0 3 * * *"
     zone: "Asia/Seoul"
+
+notification:
+  batch:
+    cron: "0 0 2 * * *"
+    zone: "Asia/Seoul"
+
 naver:
   api:
     client-id: ${NAVER_CLIENT_ID}

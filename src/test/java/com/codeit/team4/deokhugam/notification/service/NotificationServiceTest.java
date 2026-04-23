@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
@@ -318,5 +319,55 @@ class NotificationServiceTest {
 
         // then
         assertThat(result.size()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("7일 이전 읽음 알림을 삭제해서 성공")
+    void deleteExpiredNotifications_success() {
+
+        // given
+        given(notificationRepository.deleteOldReadNotifications(any()))
+                .willReturn(3);
+
+        // when
+        notificationService.deleteExpiredNotifications();
+
+        // then
+        then(notificationRepository)
+                .should()
+                .deleteOldReadNotifications(any());
+    }
+
+    @Test
+    @DisplayName("삭제 대상이 없으면 0건으로 처리해서 성공")
+    void deleteExpiredNotifications_whenNothingToDelete_success() {
+
+        // given
+        given(notificationRepository.deleteOldReadNotifications(any()))
+                .willReturn(0);
+
+        // when
+        notificationService.deleteExpiredNotifications();
+
+        // then
+        then(notificationRepository)
+                .should()
+                .deleteOldReadNotifications(any());
+    }
+
+    @Test
+    @DisplayName("삭제 중 DB 오류로 인해 예외 발생")
+    void deleteExpiredNotifications_whenRepositoryThrowsException_thenFail() {
+
+        // given
+        given(notificationRepository.deleteOldReadNotifications(any()))
+                .willThrow(new RuntimeException("DB error"));
+
+        // when & then
+        assertThatThrownBy(() ->
+                notificationService.deleteExpiredNotifications()
+        )
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB error");
     }
 }
