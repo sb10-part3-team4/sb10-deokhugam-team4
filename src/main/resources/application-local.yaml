@@ -21,6 +21,10 @@ user:
     cron: "0 */5 * * * *"
     zone: "Asia/Seoul"
 
+dashboard:
+  batch:
+    cron: "0 0 3 * * *"
+    zone: "Asia/Seoul"
 naver:
   api:
     client-id: ${NAVER_CLIENT_ID}

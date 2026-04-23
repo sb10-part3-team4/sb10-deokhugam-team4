@@ -17,7 +17,6 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SortField;
@@ -35,10 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class ReviewSearchConditionBuilderTest {
+class ReviewSearchQueryBuilderTest {
 
     @Autowired
-    private ReviewSearchConditionBuilder conditionBuilder;
+    private ReviewSearchQueryBuilder queryBuilder;
 
     @Autowired
     private DSLContext dsl;
@@ -80,7 +79,7 @@ class ReviewSearchConditionBuilderTest {
 
         @Test
         @DisplayName("소프트 삭제된 리뷰 제외 성공")
-        void toCondition_excludesSoftDeleted_success() {
+        void buildCondition_excludesSoftDeleted_success() {
             Review review = reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             review.softDelete();
             reviewRepository.saveAndFlush(review);
@@ -90,14 +89,14 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isZero();
         }
 
         @Test
         @DisplayName("작성자 ID 필터링 성공")
-        void toCondition_filterByUserId_success() {
+        void buildCondition_filterByUserId_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "괜찮습니다", 3));
 
@@ -106,14 +105,14 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
 
         @Test
         @DisplayName("도서 ID 필터링 성공")
-        void toCondition_filterByBookId_success() {
+        void buildCondition_filterByBookId_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "괜찮습니다", 3));
 
@@ -122,14 +121,14 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
 
         @Test
         @DisplayName("키워드로 내용 검색 성공")
-        void toCondition_filterByKeywordContent_success() {
+        void buildCondition_filterByKeywordContent_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "별로입니다", 2));
 
@@ -138,14 +137,14 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
 
         @Test
         @DisplayName("키워드로 도서 제목 검색 성공")
-        void toCondition_filterByKeywordBookTitle_success() {
+        void buildCondition_filterByKeywordBookTitle_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "별로입니다", 2));
 
@@ -154,14 +153,14 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
 
         @Test
         @DisplayName("키워드로 작성자 닉네임 검색 성공")
-        void toCondition_filterByKeywordNickname_success() {
+        void buildCondition_filterByKeywordNickname_success() {
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "별로입니다", 2));
 
@@ -170,7 +169,7 @@ class ReviewSearchConditionBuilderTest {
                     null, null, 50, user.getId()
             );
 
-            Condition condition = conditionBuilder.toCondition(param);
+            Condition condition = queryBuilder.buildCondition(param);
 
             assertThat(countWithCondition(condition)).isEqualTo(1);
         }
@@ -182,26 +181,26 @@ class ReviewSearchConditionBuilderTest {
 
         @Test
         @DisplayName("createdAt DESC 정렬 성공")
-        void toOrderBy_createdAtDesc_success() {
+        void buildOrderBy_createdAtDesc_success() {
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
                     null, null, null, ReviewOrderBy.CREATED_AT, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            List<SortField<?>> orderBy = conditionBuilder.toOrderBy(param);
+            List<SortField<?>> orderBy = queryBuilder.buildOrderBy(param);
 
             assertThat(orderBy).hasSize(2);
         }
 
         @Test
         @DisplayName("rating DESC 정렬 시 필드 3개 성공")
-        void toOrderBy_ratingDesc_success() {
+        void buildOrderBy_ratingDesc_success() {
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
                     null, null, null, ReviewOrderBy.RATING, SortDirection.DESC,
                     null, null, 50, user.getId()
             );
 
-            List<SortField<?>> orderBy = conditionBuilder.toOrderBy(param);
+            List<SortField<?>> orderBy = queryBuilder.buildOrderBy(param);
 
             assertThat(orderBy).hasSize(3);
         }

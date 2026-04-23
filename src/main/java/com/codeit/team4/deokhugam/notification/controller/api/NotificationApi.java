@@ -14,10 +14,65 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "알림 관리", description = "알림 관련 API")
 public interface NotificationApi {
+
+    @Operation(summary = "알림 읽음 상태 업데이트", description = "특정 알림을 읽음 상태로 변경합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "알림 상태 업데이트 성공",
+                    content = @Content(schema = @Schema(implementation = NotificationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "알림 수정 권한 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "알림 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @Parameter(
+            name = "Deokhugam-Request-User-ID",
+            in = ParameterIn.HEADER,
+            required = true,
+            description = "요청자 ID",
+            example = "123e4567-e89b-12d3-a456-426614174000"
+    )
+    ResponseEntity<NotificationResponse> markAsRead(
+            @Parameter(
+                    description = "알림 ID",
+                    required = true,
+                    example = "123e4567-e89b-12d3-a456-426614174000"
+            )
+            @PathVariable UUID notificationId,
+
+            @LoginUser DeokhugamUser loginUser
+    );
+
+    @Operation(summary = "모든 알림 읽음 처리", description = "사용자의 모든 알림을 읽음 상태로 처리합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "알림 읽음 처리 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @Parameter(
+            name = "Deokhugam-Request-User-ID",
+            in = ParameterIn.HEADER,
+            required = true,
+            description = "사용자 ID",
+            example = "123e4567-e89b-12d3-a456-426614174000"
+    )
+    ResponseEntity<Void> markAllAsRead(
+            @LoginUser DeokhugamUser loginUser
+    );
 
     @Operation(summary = "알림 목록 조회", description = "사용자의 알림 목록을 조회합니다.")
     @ApiResponses({

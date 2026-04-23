@@ -9,3 +9,8 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
+
+dashboard:
+  batch:
+    cron: "-"
+    zone: "Asia/Seoul"

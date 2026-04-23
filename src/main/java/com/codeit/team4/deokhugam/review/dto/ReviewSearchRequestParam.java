@@ -1,5 +1,7 @@
 package com.codeit.team4.deokhugam.review.dto;
 
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -35,12 +37,14 @@ public record ReviewSearchRequestParam(
         @Schema(description = "페이지 크기", example = "50", defaultValue = "50")
         @Min(1)
         @Max(100)
-        int limit,
+        Integer limit,
 
         @Schema(description = "요청자 ID", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull
         UUID requestUserId
 ) {
+
+    private static final int DEFAULT_LIMIT = 50;
 
     public ReviewSearchRequestParam {
         if (orderBy == null) {
@@ -48,6 +52,20 @@ public record ReviewSearchRequestParam(
         }
         if (direction == null) {
             direction = SortDirection.DESC;
+        }
+        if (limit == null) {
+            limit = DEFAULT_LIMIT;
+        }
+    }
+
+    public Integer cursorAsInteger() {
+        if (cursor == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(cursor);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "cursor는 정수여야 합니다: " + cursor);
         }
     }
 
