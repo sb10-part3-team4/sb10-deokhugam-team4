@@ -50,7 +50,8 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
+    public CommentResponse updateComment(UUID commentId, UUID userId,
+            CommentUpdateRequest request) {
         Comment comment = findCommentById(commentId);
 
         validateCommentOwner(comment, userId, "수정");
@@ -70,7 +71,7 @@ public class CommentService {
 
         if (updatedRows == 1) {
             reviewRepository.decreaseCommentCount(comment.getReview().getId());
-            log.info("댓글 논리 삭제 및 카운트 감소 완료: commentId={}", commentId);
+            log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
         } else {
             throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 처리된 요청입니다.");
         }
@@ -106,7 +107,8 @@ public class CommentService {
                         ErrorCode.COMMENT_NOT_FOUND, "commentId: " + commentId));
 
         if (comment.getDeletedAt() != null) {
-            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "이미 삭제된 댓글입니다. commentId: " + commentId);
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND,
+                    "이미 삭제된 댓글입니다. commentId: " + commentId);
         }
 
         return comment;
