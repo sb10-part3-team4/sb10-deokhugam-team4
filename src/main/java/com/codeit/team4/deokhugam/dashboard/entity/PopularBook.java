@@ -32,6 +32,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PopularBook extends BaseEntity {
 
+    public static final BigDecimal REVIEW_COUNT_WEIGHT = new BigDecimal("0.4");
+    public static final BigDecimal AVG_RATING_WEIGHT = new BigDecimal("0.6");
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
     private Book book;
@@ -49,8 +52,8 @@ public class PopularBook extends BaseEntity {
     @Column(nullable = false, length = 20)
     private PeriodType period;
 
-    @Column(name = "rank", nullable = false)
-    private int ranking;
+    @Column(nullable = false)
+    private int rank;
 
     @Column(nullable = false, precision = 10, scale = 4)
     private BigDecimal score;
@@ -70,8 +73,7 @@ public class PopularBook extends BaseEntity {
             String author,
             String thumbnailUrl,
             PeriodType period,
-            int ranking,
-            BigDecimal score,
+            int rank,
             int reviewCount,
             BigDecimal rating,
             LocalDate snapshotDate
@@ -81,11 +83,16 @@ public class PopularBook extends BaseEntity {
         this.author = author;
         this.thumbnailUrl = thumbnailUrl;
         this.period = period;
-        this.ranking = ranking;
-        this.score = score;
+        this.rank = rank;
+        this.score = calculateScore(reviewCount, rating);
         this.reviewCount = reviewCount;
         this.rating = rating;
         this.snapshotDate = snapshotDate;
+    }
+
+    private BigDecimal calculateScore(int reviewCount, BigDecimal avgRating) {
+        return new BigDecimal(reviewCount).multiply(REVIEW_COUNT_WEIGHT)
+                .add(avgRating.multiply(AVG_RATING_WEIGHT));
     }
 
     @Override
