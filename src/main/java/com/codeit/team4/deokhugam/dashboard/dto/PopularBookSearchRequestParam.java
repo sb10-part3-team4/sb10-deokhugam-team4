@@ -51,7 +51,7 @@ public record PopularBookSearchRequestParam(
         try {
             return Integer.parseInt(cursor);
         } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "cursor는 정수여야 합니다");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "cursor는 정수여야 합니다: " + cursor);
         }
     }
 }
