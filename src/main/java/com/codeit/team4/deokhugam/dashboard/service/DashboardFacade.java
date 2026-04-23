@@ -28,9 +28,13 @@ public class DashboardFacade {
 
     public PageResponse<PopularBookResponse> getPopularBooks(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularBookReader.findLatestSnapshotDate(param.period());
+        if (latestSnapshotDate == null) {
+            return new PageResponse<>(List.of(), null, null, param.limit(), null, false);
+        }
+
         List<PopularBookViewModel> results = popularBookReader.findPopularBooks(param, latestSnapshotDate);
 
-        List<PopularBookViewModel> content = trimToLimit(results, param.limit());
+        List<PopularBookViewModel> content = trimToLimit(results, param.limit());ㄷ
         boolean hasNext = results.size() > param.limit();
 
         List<PopularBookResponse> responses = content.stream()
@@ -49,6 +53,10 @@ public class DashboardFacade {
 
     public PageResponse<PopularReviewResponse> getPopularReviews(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularReviewReader.findLatestSnapshotDate(param.period());
+        if (latestSnapshotDate == null) {
+            return new PageResponse<>(List.of(), null, null, param.limit(), null, false);
+        }
+
         List<PopularReviewViewModel> results = popularReviewReader.findPopularReviews(param, latestSnapshotDate);
 
         List<PopularReviewViewModel> content = trimToLimit(results, param.limit());
