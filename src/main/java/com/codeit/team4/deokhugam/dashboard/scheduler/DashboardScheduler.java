@@ -28,6 +28,9 @@ public class DashboardScheduler {
         log.info("대시보드 배치 스케줄러 시작: snapshotDate={}", snapshotDate);
         try {
             dashboardBatchService.updatePopularBooks(snapshotDate);
+            dashboardBatchService.updatePopularReviews(snapshotDate);
+            dashboardBatchService.updatePowerUsers(snapshotDate);
+            log.info("대시보드 배치 스케줄러 완료");
         } catch (Exception e) {
             log.error("인기 도서 배치 실패", e);
         }

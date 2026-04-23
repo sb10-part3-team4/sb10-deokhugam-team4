@@ -1,6 +1,5 @@
 package com.codeit.team4.deokhugam.dashboard.builder;
 
-import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,11 +8,11 @@ import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.dashboard.model.PowerUserSearchModel;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -35,10 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class PopularReviewAggregationQueryBuilderTest {
+class PowerUserAggregationQueryBuilderTest {
 
     @Autowired
-    private PopularReviewAggregationQueryBuilder queryBuilder;
+    private PowerUserAggregationQueryBuilder queryBuilder;
 
     @Autowired
     private DSLContext dsl;
@@ -67,7 +66,6 @@ class PopularReviewAggregationQueryBuilderTest {
     private int countWithCondition(Condition condition) {
         return dsl.selectCount()
                 .from(REVIEWS)
-                .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                 .where(condition)
                 .fetchOne(0, int.class);
@@ -147,19 +145,6 @@ class PopularReviewAggregationQueryBuilderTest {
 
             assertThat(countWithCondition(condition)).isZero();
         }
-
-        @Test
-        @DisplayName("소프트 삭제된 도서 제외 성공")
-        void buildCondition_excludesSoftDeletedBook_success() {
-            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-            book.softDelete(Instant.now());
-            bookRepository.saveAndFlush(book);
-
-            LocalDate today = LocalDate.now(ZoneId.of(zone));
-            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
-
-            assertThat(countWithCondition(condition)).isZero();
-        }
     }
 
     @Nested
@@ -167,68 +152,35 @@ class PopularReviewAggregationQueryBuilderTest {
     class OrderByCondition {
 
         @Test
-        @DisplayName("정렬 조건 3개 생성 성공")
-        void buildOrderBy_hasThreeFields_success() {
-            assertThat(queryBuilder.buildOrderBy()).hasSize(3);
+        @DisplayName("정렬 조건 2개 생성 성공")
+        void buildOrderBy_hasTwoFields_success() {
+            assertThat(queryBuilder.buildOrderBy()).hasSize(2);
         }
 
         @Test
-        @DisplayName("동점 리뷰 정렬 순서 일관성 성공")
-        void buildOrderBy_tieBreaker_success() {
+        @DisplayName("동점 시 먼저 가입한 유저가 우선 성공")
+        void buildOrderBy_tieBreaker_earlierUserFirst_success() {
+            User laterUser = userRepository.saveAndFlush(new User("later@test.com", "나중이", "password123"));
             Book otherBook = bookRepository.saveAndFlush(
                     new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
             );
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
-            reviewRepository.saveAndFlush(new Review(otherBook, user, "좋은 책입니다", 5));
+            reviewRepository.saveAndFlush(new Review(otherBook, laterUser, "좋은 책입니다", 5));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
 
-            List<UUID> firstResult = dsl.select(REVIEWS.ID)
+            List<UUID> result = dsl.select(REVIEWS.USER_ID)
                     .from(REVIEWS)
-                    .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
                     .where(condition)
+                    .groupBy(PowerUserSearchModel.toGroupByFields())
                     .orderBy(queryBuilder.buildOrderBy())
-                    .fetch(REVIEWS.ID);
-
-            List<UUID> secondResult = dsl.select(REVIEWS.ID)
-                    .from(REVIEWS)
-                    .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
-                    .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
-                    .where(condition)
-                    .orderBy(queryBuilder.buildOrderBy())
-                    .fetch(REVIEWS.ID);
-
-            assertThat(firstResult).hasSize(2);
-            assertThat(firstResult).isEqualTo(secondResult);
-        }
-
-        @Test
-        @DisplayName("동점 시 먼저 작성한 리뷰가 우선 성공")
-        void buildOrderBy_tieBreaker_earlierReviewFirst_success() {
-            Review earlierReview = reviewRepository.saveAndFlush(new Review(book, user, "먼저 쓴 리뷰", 5));
-
-            Book otherBook = bookRepository.saveAndFlush(
-                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
-            );
-            User otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
-            Review laterReview = reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "나중에 쓴 리뷰", 5));
-
-            LocalDate today = LocalDate.now(ZoneId.of(zone));
-            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
-
-            List<UUID> result = dsl.select(REVIEWS.ID)
-                    .from(REVIEWS)
-                    .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
-                    .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
-                    .where(condition)
-                    .orderBy(queryBuilder.buildOrderBy())
-                    .fetch(REVIEWS.ID);
+                    .fetch(REVIEWS.USER_ID);
 
             assertThat(result).hasSize(2);
-            assertThat(result.get(0)).isEqualTo(earlierReview.getId());
-            assertThat(result.get(1)).isEqualTo(laterReview.getId());
+            assertThat(result.get(0)).isEqualTo(user.getId());
+            assertThat(result.get(1)).isEqualTo(laterUser.getId());
         }
     }
 }

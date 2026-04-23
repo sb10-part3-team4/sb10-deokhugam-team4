@@ -5,10 +5,13 @@ import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
 import com.codeit.team4.deokhugam.dashboard.entity.PopularReview;
+import com.codeit.team4.deokhugam.dashboard.entity.PowerUser;
 import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
 import com.codeit.team4.deokhugam.dashboard.model.PopularReviewSearchModel;
+import com.codeit.team4.deokhugam.dashboard.model.PowerUserSearchModel;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
+import com.codeit.team4.deokhugam.dashboard.repository.PowerUserRepository;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -35,6 +38,9 @@ public class DashboardBatchService {
     private final PopularReviewAggregator popularReviewAggregator;
     private final ReviewService reviewService;
     private final UserService userService;
+
+    private final PowerUserRepository powerUserRepository;
+    private final PowerUserAggregator powerUserAggregator;
 
     public void updatePopularBooks(LocalDate snapshotDate) {
         log.info("인기 도서 배치 시작: snapshotDate={}", snapshotDate);
@@ -114,5 +120,41 @@ public class DashboardBatchService {
 
         popularReviewRepository.saveAll(popularReviews);
         log.info("인기 리뷰 {} 저장 완료: {}건", period, popularReviews.size());
+    }
+
+    public void updatePowerUsers(LocalDate snapshotDate) {
+        log.info("파워 유저 배치 시작: snapshotDate={}", snapshotDate);
+
+        for (PeriodType period : PeriodType.values()) {
+            updatePowerUsersByPeriod(period, snapshotDate);
+        }
+
+        log.info("파워 유저 배치 완료: snapshotDate={}", snapshotDate);
+    }
+
+    private void updatePowerUsersByPeriod(PeriodType period, LocalDate snapshotDate) {
+        powerUserRepository.deleteByPeriodAndSnapshotDate(period, snapshotDate);
+
+        List<PowerUserSearchModel> results = powerUserAggregator.findTopPowerUsers(period, snapshotDate);
+
+        List<PowerUser> powerUsers = new ArrayList<>();
+        for (int i = 0; i < results.size(); i++) {
+            PowerUserSearchModel model = results.get(i);
+            User user = userService.findById(model.userId());
+
+            powerUsers.add(new PowerUser(
+                    user,
+                    model.nickname(),
+                    period,
+                    i + 1,
+                    model.reviewScoreSum(),
+                    model.likeCount(),
+                    model.commentCount(),
+                    snapshotDate
+            ));
+        }
+
+        powerUserRepository.saveAll(powerUsers);
+        log.info("파워 유저 {} 저장 완료: {}건", period, powerUsers.size());
     }
 }

@@ -28,6 +28,8 @@ public class DashboardAdminController implements DashboardAdminApi {
         LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
         log.info("수동 배치 실행 요청: snapshotDate={}", snapshotDate);
         dashboardBatchService.updatePopularBooks(snapshotDate);
+        dashboardBatchService.updatePopularReviews(snapshotDate);
+        dashboardBatchService.updatePowerUsers(snapshotDate);
         return ResponseEntity.noContent().build();
     }
 }
