@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 import org.jooq.Condition;
 import org.jooq.SortField;
 import org.jooq.impl.DSL;
@@ -40,12 +41,14 @@ public class PopularBookBatchQueryBuilder {
         return condition;
     }
 
-    public SortField<?> buildOrderBy() {
-        return DSL.count().cast(BigDecimal.class)
+    public List<SortField<?>> buildOrderBy() {
+        SortField<?> scoreDesc = DSL.count().cast(BigDecimal.class)
                 .mul(PopularBook.REVIEW_COUNT_WEIGHT)
                 .add(DSL.avg(REVIEWS.RATING).cast(BigDecimal.class)
                         .mul(PopularBook.AVG_RATING_WEIGHT))
                 .desc();
+
+        return List.of(scoreDesc, REVIEWS.BOOK_ID.asc());
     }
 
     private OffsetDateTime getStartDateTime(PeriodType period, LocalDate snapshotDate) {

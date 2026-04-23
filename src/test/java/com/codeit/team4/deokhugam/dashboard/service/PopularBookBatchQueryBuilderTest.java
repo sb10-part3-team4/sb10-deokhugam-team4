@@ -142,9 +142,40 @@ class PopularBookBatchQueryBuilderTest {
     class OrderByCondition {
 
         @Test
-        @DisplayName("정렬 조건 생성 성공")
-        void buildOrderBy_success() {
-            assertThat(queryBuilder.buildOrderBy()).isNotNull();
+        @DisplayName("정렬 조건 2개 생성 성공")
+        void buildOrderBy_hasTwoFields_success() {
+            assertThat(queryBuilder.buildOrderBy()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("동점 도서 정렬 결정적 성공")
+        void buildOrderBy_tieBreaker_success() {
+            Book otherBook = bookRepository.saveAndFlush(
+                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
+            );
+            reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
+            reviewRepository.saveAndFlush(new Review(otherBook, user, "좋은 책입니다", 5));
+
+            LocalDate today = LocalDate.now();
+            Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
+
+            var firstResult = dsl.select(REVIEWS.BOOK_ID)
+                    .from(REVIEWS)
+                    .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                    .where(condition)
+                    .groupBy(REVIEWS.BOOK_ID, BOOKS.TITLE, BOOKS.AUTHOR, BOOKS.THUMBNAIL_URL)
+                    .orderBy(queryBuilder.buildOrderBy())
+                    .fetch(REVIEWS.BOOK_ID);
+
+            var secondResult = dsl.select(REVIEWS.BOOK_ID)
+                    .from(REVIEWS)
+                    .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
+                    .where(condition)
+                    .groupBy(REVIEWS.BOOK_ID, BOOKS.TITLE, BOOKS.AUTHOR, BOOKS.THUMBNAIL_URL)
+                    .orderBy(queryBuilder.buildOrderBy())
+                    .fetch(REVIEWS.BOOK_ID);
+
+            assertThat(firstResult).isEqualTo(secondResult);
         }
     }
 }
