@@ -1,0 +1,158 @@
+package com.codeit.team4.deokhugam.dashboard.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.codeit.team4.deokhugam.book.entity.Book;
+import com.codeit.team4.deokhugam.book.repository.BookRepository;
+import com.codeit.team4.deokhugam.config.TestContainerConfig;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
+import com.codeit.team4.deokhugam.global.response.SortDirection;
+import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.user.entity.User;
+import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.time.LocalDate;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@Import(TestContainerConfig.class)
+@ActiveProfiles("test")
+@Transactional
+class DashboardServiceTest {
+
+    @Autowired
+    private DashboardService dashboardService;
+
+    @Autowired
+    private DashboardBatchService dashboardBatchService;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
+    }
+
+    private Book createBook(String title, String isbn) {
+        return bookRepository.saveAndFlush(
+                new Book(title, "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), isbn)
+        );
+    }
+
+    private void runBatch() {
+        dashboardBatchService.updatePopularBooks(LocalDate.now());
+    }
+
+    @Nested
+    @DisplayName("인기 도서 조회")
+    class GetPopularBooks {
+
+        @Test
+        @DisplayName("인기 도서 조회 성공")
+        void getPopularBooks_success() {
+            Book book1 = createBook("책1", "1111111111");
+            Book book2 = createBook("책2", "2222222222");
+            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+            reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
+            runBatch();
+
+            PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC, null, null, 50
+            );
+
+            PageResponse<PopularBookResponse> result = dashboardService.getPopularBooks(param);
+
+            assertThat(result.content()).hasSize(2);
+            assertThat(result.content().get(0).rank()).isEqualTo(1);
+            assertThat(result.content().get(1).rank()).isEqualTo(2);
+            assertThat(result.hasNext()).isFalse();
+            assertThat(result.totalElements()).isNull();
+        }
+
+        @Test
+        @DisplayName("DESC 정렬 조회 성공")
+        void getPopularBooks_desc_success() {
+            Book book1 = createBook("책1", "1111111111");
+            Book book2 = createBook("책2", "2222222222");
+            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+            reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
+            runBatch();
+
+            PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.DESC, null, null, 50
+            );
+
+            PageResponse<PopularBookResponse> result = dashboardService.getPopularBooks(param);
+
+            assertThat(result.content()).hasSize(2);
+            assertThat(result.content().get(0).rank()).isEqualTo(2);
+            assertThat(result.content().get(1).rank()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("커서 페이지네이션 성공")
+        void getPopularBooks_cursor_success() {
+            for (int i = 0; i < 3; i++) {
+                Book book = createBook("책" + i, "100000000" + i);
+                reviewRepository.saveAndFlush(new Review(book, user, "리뷰" + i, 5 - i));
+            }
+            runBatch();
+
+            // 1페이지
+            PopularBookSearchRequestParam firstPage = new PopularBookSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC, null, null, 2
+            );
+            PageResponse<PopularBookResponse> firstResult = dashboardService.getPopularBooks(firstPage);
+
+            assertThat(firstResult.content()).hasSize(2);
+            assertThat(firstResult.hasNext()).isTrue();
+            assertThat(firstResult.nextCursor()).isNotNull();
+
+            // 2페이지
+            PopularBookSearchRequestParam secondPage = new PopularBookSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC,
+                    firstResult.nextCursor(), firstResult.nextAfter(), 2
+            );
+            PageResponse<PopularBookResponse> secondResult = dashboardService.getPopularBooks(secondPage);
+
+            assertThat(secondResult.content()).hasSize(1);
+            assertThat(secondResult.hasNext()).isFalse();
+        }
+
+        @Test
+        @DisplayName("데이터 없을 때 빈 결과 반환 성공")
+        void getPopularBooks_empty_success() {
+            runBatch();
+
+            PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
+                    PeriodType.DAILY, SortDirection.ASC, null, null, 50
+            );
+
+            PageResponse<PopularBookResponse> result = dashboardService.getPopularBooks(param);
+
+            assertThat(result.content()).isEmpty();
+            assertThat(result.hasNext()).isFalse();
+        }
+
+    }
+}

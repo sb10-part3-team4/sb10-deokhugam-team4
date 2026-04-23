@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DashboardBatchService {
 
     private final PopularBookRepository popularBookRepository;
-    private final PopularBookQueryService popularBookQueryService;
+    private final PopularBookBatchQueryService popularBookBatchQueryService;
     private final BookService bookService;
 
     public void updatePopularBooks(LocalDate snapshotDate) {
@@ -37,7 +37,7 @@ public class DashboardBatchService {
     private void updatePopularBooksByPeriod(PeriodType period, LocalDate snapshotDate) {
         popularBookRepository.deleteByPeriodAndSnapshotDate(period, snapshotDate);
 
-        List<PopularBookSearchModel> results = popularBookQueryService.findTopBooks(period, snapshotDate);
+        List<PopularBookSearchModel> results = popularBookBatchQueryService.findTopBooks(period, snapshotDate);
 
         List<PopularBook> popularBooks = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {

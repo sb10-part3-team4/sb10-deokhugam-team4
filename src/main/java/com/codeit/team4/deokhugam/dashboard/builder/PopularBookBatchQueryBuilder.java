@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.builder;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PopularBookQueryBuilder {
+public class PopularBookBatchQueryBuilder {
 
     @Value("${dashboard.batch.zone}")
     private String zone;

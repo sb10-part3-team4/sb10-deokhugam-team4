@@ -21,6 +21,16 @@ import org.springframework.stereotype.Component;
 public class ReviewSearchQueryBuilder {
 
     public Condition buildCondition(ReviewSearchRequestParam param) {
+        Condition condition = buildFilterCondition(param);
+
+        if (param.cursor() != null && param.after() != null) {
+            condition = condition.and(buildCursorCondition(param));
+        }
+
+        return condition;
+    }
+
+    public Condition buildFilterCondition(ReviewSearchRequestParam param) {
         Condition condition = REVIEWS.DELETED_AT.isNull();
 
         if (param.keyword() != null && !param.keyword().isBlank()) {
@@ -35,9 +45,6 @@ public class ReviewSearchQueryBuilder {
         }
         if (param.bookId() != null) {
             condition = condition.and(REVIEWS.BOOK_ID.eq(param.bookId()));
-        }
-        if (param.cursor() != null && param.after() != null) {
-            condition = condition.and(buildCursorCondition(param));
         }
 
         return condition;

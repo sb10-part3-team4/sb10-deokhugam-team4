@@ -1,14 +1,16 @@
 package com.codeit.team4.deokhugam.dashboard.service;
 
-import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
-import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
+import static com.codeit.team4.deokhugam.jooq.tables.PopularBooks.POPULAR_BOOKS;
 
+import com.codeit.team4.deokhugam.dashboard.builder.PopularBookViewQueryBuilder;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
-import com.codeit.team4.deokhugam.dashboard.model.PopularBookSearchModel;
+import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,19 +19,26 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PopularBookQueryService {
 
-    private static final int POPULAR_BOOK_LIMIT = 4;
-
     private final DSLContext dsl;
-    private final PopularBookQueryBuilder queryBuilder;
+    private final PopularBookViewQueryBuilder viewQueryBuilder;
 
-    public List<PopularBookSearchModel> findTopBooks(PeriodType period, LocalDate snapshotDate) {
-        return dsl.select(PopularBookSearchModel.toSelectedFields())
-                .from(REVIEWS)
-                .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
-                .where(queryBuilder.buildCondition(period, snapshotDate))
-                .groupBy(PopularBookSearchModel.toGroupByFields())
-                .orderBy(queryBuilder.buildOrderBy())
-                .limit(POPULAR_BOOK_LIMIT)
-                .fetch(PopularBookSearchModel::fromRecord);
+    public LocalDate findLatestSnapshotDate(PeriodType period) {
+        return dsl.select(DSL.max(POPULAR_BOOKS.SNAPSHOT_DATE))
+                .from(POPULAR_BOOKS)
+                .where(POPULAR_BOOKS.PERIOD.eq(period.name()))
+                .fetchOneInto(LocalDate.class);
     }
+
+    public List<PopularBookViewModel> findPopularBooks(
+            PopularBookSearchRequestParam param,
+            LocalDate snapshotDate
+    ) {
+        return dsl.select(PopularBookViewModel.toSelectedFields())
+                .from(POPULAR_BOOKS)
+                .where(viewQueryBuilder.buildCondition(param, snapshotDate))
+                .orderBy(viewQueryBuilder.buildOrderBy(param.direction()))
+                .limit(param.limit() + 1)
+                .fetch(PopularBookViewModel::fromRecord);
+    }
+
 }

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
+import com.codeit.team4.deokhugam.dashboard.builder.PopularBookBatchQueryBuilder;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
@@ -29,10 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class PopularBookQueryBuilderTest {
+class PopularBookBatchQueryBuilderTest {
 
     @Autowired
-    private PopularBookQueryBuilder queryBuilder;
+    private PopularBookBatchQueryBuilder queryBuilder;
 
     @Autowired
     private DSLContext dsl;
