@@ -2,10 +2,12 @@ package com.codeit.team4.deokhugam.comment.controller.api;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
+import com.codeit.team4.deokhugam.comment.dto.CommentSearchRequestParam;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -16,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -115,6 +118,36 @@ public interface CommentApi {
     ResponseEntity<Void> hardDeleteComment(
             @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId,
             @LoginUser DeokhugamUser loginUser
+    );
+
+    @Operation(summary = "댓글 단건 조회", description = "특정 댓글의 상세 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "댓글 조회 성공",
+                    content = @Content(schema = @Schema(implementation = CommentResponse.class))),
+            @ApiResponse(responseCode = "404", description = "댓글 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<CommentResponse> getComment(
+            @Parameter(description = "댓글 ID", required = true,
+                    example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID commentId
+    );
+
+    @Operation(summary = "리뷰 댓글 목록 조회", description = "특정 리뷰에 달린 댓글 목록을 시간순으로 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공",
+                    content = @Content(schema = @Schema(implementation = PageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (정렬 방향 오류, 페이지네이션 파라미터 오류, 리뷰 ID 누락)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "리뷰 정보 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<PageResponse<CommentResponse>> getComments(
+            @ParameterObject CommentSearchRequestParam param
     );
 
 }
