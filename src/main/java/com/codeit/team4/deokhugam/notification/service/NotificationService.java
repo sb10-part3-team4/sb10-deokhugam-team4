@@ -7,11 +7,14 @@ import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import com.codeit.team4.deokhugam.notification.entity.Notification;
 import com.codeit.team4.deokhugam.notification.model.NotificationModel;
 import com.codeit.team4.deokhugam.notification.repository.NotificationRepository;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,9 +115,14 @@ public class NotificationService {
         );
     }
 
-    // TODO: 구현 예정
     @Transactional
     public void deleteExpiredNotifications() {
+
+        Instant threshold = Instant.now().minus(7, ChronoUnit.DAYS);
+
+        int deletedCount = notificationRepository.deleteOldReadNotifications(threshold);
+
+        log.info("알림 물리 삭제 완료: count={}, threshold={}", deletedCount, threshold);
     }
 
     // 헬퍼 메서드

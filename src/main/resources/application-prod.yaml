@@ -23,3 +23,8 @@ dashboard:
   batch:
     cron: "0 0 3 * * *"
     zone: "Asia/Seoul"
+
+notification:
+  cleanup:
+    cron: "0 0 2 * * *"
+    zone: "Asia/Seoul"
