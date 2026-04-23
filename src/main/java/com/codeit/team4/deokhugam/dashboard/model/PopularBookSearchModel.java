@@ -42,14 +42,14 @@ public record PopularBookSearchModel(
         );
     }
 
-    public static PopularBookSearchModel fromRecord(Record record) {
+    public static PopularBookSearchModel fromRecord(Record rec) {
         return new PopularBookSearchModel(
-                record.get(REVIEWS.BOOK_ID),
-                record.get(BOOKS.TITLE),
-                record.get(BOOKS.AUTHOR),
-                record.get(BOOKS.THUMBNAIL_URL),
-                record.get(REVIEW_COUNT),
-                record.get(AVG_RATING)
+                rec.get(REVIEWS.BOOK_ID),
+                rec.get(BOOKS.TITLE),
+                rec.get(BOOKS.AUTHOR),
+                rec.get(BOOKS.THUMBNAIL_URL),
+                rec.get(REVIEW_COUNT),
+                rec.get(AVG_RATING)
         );
     }
 }

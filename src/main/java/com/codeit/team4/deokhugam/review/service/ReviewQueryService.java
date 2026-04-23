@@ -53,8 +53,7 @@ public class ReviewQueryService {
     }
 
     private List<ReviewSearchModel> trimToLimit(List<ReviewSearchModel> results, int limit) {
-        return results.size() > limit
-                ? results.subList(0, limit) : results;
+        return results.subList(0, Math.min(results.size(), limit));
     }
 
     private String extractNextCursor(

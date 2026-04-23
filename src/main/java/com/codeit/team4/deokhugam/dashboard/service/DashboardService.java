@@ -44,8 +44,7 @@ public class DashboardService {
     }
 
     private List<PopularBookViewModel> trimToLimit(List<PopularBookViewModel> results, int limit) {
-        return results.size() > limit
-                ? results.subList(0, limit) : results;
+        return results.subList(0, Math.min(results.size(), limit));
     }
 
     private String extractNextCursor(List<PopularBookViewModel> content, boolean hasNext) {

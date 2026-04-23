@@ -40,19 +40,19 @@ public record PopularBookViewModel(
         );
     }
 
-    public static PopularBookViewModel fromRecord(Record record) {
+    public static PopularBookViewModel fromRecord(Record rec) {
         return new PopularBookViewModel(
-                record.get(POPULAR_BOOKS.ID),
-                record.get(POPULAR_BOOKS.BOOK_ID),
-                record.get(POPULAR_BOOKS.TITLE),
-                record.get(POPULAR_BOOKS.AUTHOR),
-                record.get(POPULAR_BOOKS.THUMBNAIL_URL),
-                PeriodType.valueOf(record.get(POPULAR_BOOKS.PERIOD)),
-                record.get(POPULAR_BOOKS.RANK),
-                record.get(POPULAR_BOOKS.SCORE),
-                record.get(POPULAR_BOOKS.REVIEW_COUNT),
-                record.get(POPULAR_BOOKS.RATING),
-                record.get(POPULAR_BOOKS.CREATED_AT).toInstant()
+                rec.get(POPULAR_BOOKS.ID),
+                rec.get(POPULAR_BOOKS.BOOK_ID),
+                rec.get(POPULAR_BOOKS.TITLE),
+                rec.get(POPULAR_BOOKS.AUTHOR),
+                rec.get(POPULAR_BOOKS.THUMBNAIL_URL),
+                PeriodType.valueOf(rec.get(POPULAR_BOOKS.PERIOD)),
+                rec.get(POPULAR_BOOKS.RANK),
+                rec.get(POPULAR_BOOKS.SCORE),
+                rec.get(POPULAR_BOOKS.REVIEW_COUNT),
+                rec.get(POPULAR_BOOKS.RATING),
+                rec.get(POPULAR_BOOKS.CREATED_AT).toInstant()
         );
     }
 }

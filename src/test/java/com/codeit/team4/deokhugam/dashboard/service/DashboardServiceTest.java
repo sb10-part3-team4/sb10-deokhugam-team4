@@ -62,7 +62,7 @@ class DashboardServiceTest {
     }
 
     private void runBatch() {
-        dashboardBatchService.updatePopularBooks(LocalDate.of(2026, 4, 23));
+        dashboardBatchService.updatePopularBooks(LocalDate.now());
     }
 
     @Nested
