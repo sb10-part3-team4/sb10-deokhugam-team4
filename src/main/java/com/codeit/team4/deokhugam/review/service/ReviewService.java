@@ -16,6 +16,7 @@ import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,10 @@ public class ReviewService {
         return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.REVIEW_NOT_FOUND, "reviewId=" + reviewId));
+    }
+
+    public List<Review> findAllByIds(List<UUID> reviewIds) {
+        return reviewRepository.findAllById(reviewIds);
     }
 
     public Review findWithDeletedById(UUID reviewId) {

@@ -12,6 +12,7 @@ import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +71,10 @@ public class UserService {
         return userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.USER_NOT_FOUND, "userId=" + userId));
+    }
+
+    public List<User> findAllByIds(List<UUID> userIds) {
+        return userRepository.findAllById(userIds);
     }
 
     @Transactional

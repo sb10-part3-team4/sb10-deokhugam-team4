@@ -29,21 +29,18 @@ public class DashboardScheduler {
 
         try {
             dashboardBatchService.updatePopularBooks(snapshotDate);
-            log.info("인기 도서 배치 완료");
         } catch (Exception e) {
             log.error("인기 도서 배치 실패", e);
         }
 
         try {
             dashboardBatchService.updatePopularReviews(snapshotDate);
-            log.info("인기 리뷰 배치 완료");
         } catch (Exception e) {
             log.error("인기 리뷰 배치 실패", e);
         }
 
         try {
             dashboardBatchService.updatePowerUsers(snapshotDate);
-            log.info("파워 유저 배치 완료");
         } catch (Exception e) {
             log.error("파워 유저 배치 실패", e);
         }

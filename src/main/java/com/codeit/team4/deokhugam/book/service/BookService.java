@@ -12,6 +12,7 @@ import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +72,11 @@ public class BookService {
         return bookRepository.findByIdAndDeletedAtIsNull(bookId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Book> findAllByIds(List<UUID> bookIds) {
+        return bookRepository.findAllById(bookIds);
     }
 
     @Transactional
