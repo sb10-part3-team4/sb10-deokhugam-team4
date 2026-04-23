@@ -19,12 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    private final PopularBookQueryService popularBookQueryService;
+    private final PopularBookReader popularBookReader;
     private final DashboardMapper dashboardMapper;
 
     public PageResponse<PopularBookResponse> getPopularBooks(PopularBookSearchRequestParam param) {
-        LocalDate latestSnapshotDate = popularBookQueryService.findLatestSnapshotDate(param.period());
-        List<PopularBookViewModel> results = popularBookQueryService.findPopularBooks(param, latestSnapshotDate);
+        LocalDate latestSnapshotDate = popularBookReader.findLatestSnapshotDate(param.period());
+        List<PopularBookViewModel> results = popularBookReader.findPopularBooks(param, latestSnapshotDate);
 
         List<PopularBookViewModel> content = trimToLimit(results, param.limit());
         boolean hasNext = results.size() > param.limit();

@@ -29,10 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestContainerConfig.class)
 @ActiveProfiles("test")
 @Transactional
-class PopularBookQueryServiceTest {
+class PopularBookReaderTest {
 
     @Autowired
-    private PopularBookQueryService popularBookQueryService;
+    private PopularBookReader popularBookReader;
 
     @Autowired
     private DashboardBatchService dashboardBatchService;
@@ -74,7 +74,7 @@ class PopularBookQueryServiceTest {
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
             runBatch();
 
-            LocalDate result = popularBookQueryService.findLatestSnapshotDate(PeriodType.DAILY);
+            LocalDate result = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
 
             assertThat(result).isEqualTo(LocalDate.of(2026, 4, 23));
         }
@@ -82,7 +82,7 @@ class PopularBookQueryServiceTest {
         @Test
         @DisplayName("데이터 없을 때 null 반환 성공")
         void findLatestSnapshotDate_empty_success() {
-            LocalDate result = popularBookQueryService.findLatestSnapshotDate(PeriodType.DAILY);
+            LocalDate result = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
 
             assertThat(result).isNull();
         }
@@ -101,12 +101,12 @@ class PopularBookQueryServiceTest {
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
             runBatch();
 
-            LocalDate snapshotDate = popularBookQueryService.findLatestSnapshotDate(PeriodType.DAILY);
+            LocalDate snapshotDate = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
             PopularBookSearchRequestParam param = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 50
             );
 
-            List<PopularBookViewModel> results = popularBookQueryService.findPopularBooks(param, snapshotDate);
+            List<PopularBookViewModel> results = popularBookReader.findPopularBooks(param, snapshotDate);
 
             assertThat(results).hasSize(2);
             assertThat(results.get(0).rank()).isLessThan(results.get(1).rank());
@@ -121,13 +121,13 @@ class PopularBookQueryServiceTest {
             }
             runBatch();
 
-            LocalDate snapshotDate = popularBookQueryService.findLatestSnapshotDate(PeriodType.DAILY);
+            LocalDate snapshotDate = popularBookReader.findLatestSnapshotDate(PeriodType.DAILY);
 
             // 1페이지
             PopularBookSearchRequestParam firstPage = new PopularBookSearchRequestParam(
                     PeriodType.DAILY, SortDirection.ASC, null, null, 2
             );
-            List<PopularBookViewModel> firstResults = popularBookQueryService.findPopularBooks(firstPage, snapshotDate);
+            List<PopularBookViewModel> firstResults = popularBookReader.findPopularBooks(firstPage, snapshotDate);
 
             assertThat(firstResults).hasSize(3); // limit+1
 
@@ -136,7 +136,7 @@ class PopularBookQueryServiceTest {
                     PeriodType.DAILY, SortDirection.ASC,
                     String.valueOf(firstResults.get(1).rank()), null, 2
             );
-            List<PopularBookViewModel> secondResults = popularBookQueryService.findPopularBooks(secondPage, snapshotDate);
+            List<PopularBookViewModel> secondResults = popularBookReader.findPopularBooks(secondPage, snapshotDate);
 
             assertThat(secondResults).hasSize(1);
         }

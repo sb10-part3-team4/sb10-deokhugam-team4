@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PopularBookBatchQueryBuilder {
+public class PopularBookAggregationQueryBuilder {
 
     @Value("${dashboard.batch.zone}")
     private String zone;

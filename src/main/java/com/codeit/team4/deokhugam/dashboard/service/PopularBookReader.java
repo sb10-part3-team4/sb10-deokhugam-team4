@@ -2,7 +2,7 @@ package com.codeit.team4.deokhugam.dashboard.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.PopularBooks.POPULAR_BOOKS;
 
-import com.codeit.team4.deokhugam.dashboard.builder.PopularBookViewQueryBuilder;
+import com.codeit.team4.deokhugam.dashboard.builder.PopularBookReadQueryBuilder;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
@@ -17,10 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class PopularBookQueryService {
+public class PopularBookReader {
 
     private final DSLContext dsl;
-    private final PopularBookViewQueryBuilder viewQueryBuilder;
+    private final PopularBookReadQueryBuilder readQueryBuilder;
 
     public LocalDate findLatestSnapshotDate(PeriodType period) {
         return dsl.select(DSL.max(POPULAR_BOOKS.SNAPSHOT_DATE))
@@ -35,9 +35,9 @@ public class PopularBookQueryService {
     ) {
         return dsl.select(PopularBookViewModel.toSelectedFields())
                 .from(POPULAR_BOOKS)
-                .where(viewQueryBuilder.buildCondition(param, snapshotDate))
-                .orderBy(viewQueryBuilder.buildOrderBy(param.direction()))
-                .limit(param.limit() + 1)
+                .where(readQueryBuilder.buildCondition(param, snapshotDate))
+                .orderBy(readQueryBuilder.buildOrderBy(param.direction()))
+                .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
                 .fetch(PopularBookViewModel::fromRecord);
     }
 

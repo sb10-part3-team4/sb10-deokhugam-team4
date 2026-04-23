@@ -12,7 +12,7 @@ import org.jooq.SortField;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PopularBookViewQueryBuilder {
+public class PopularBookReadQueryBuilder {
 
     public Condition buildCondition(PopularBookSearchRequestParam param, LocalDate latestSnapshotDate) {
         Condition condition = POPULAR_BOOKS.PERIOD.eq(param.period().name())
