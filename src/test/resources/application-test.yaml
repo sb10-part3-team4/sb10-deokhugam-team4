@@ -14,3 +14,8 @@ dashboard:
   batch:
     cron: "-"
     zone: "Asia/Seoul"
+
+notification:
+  batch:
+    cron: "-"
+    zone: "Asia/Seoul"

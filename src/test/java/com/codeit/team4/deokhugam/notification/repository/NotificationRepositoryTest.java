@@ -11,6 +11,7 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
@@ -37,9 +39,13 @@ class NotificationRepositoryTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private TestEntityManager em;
+
     @Test
     @DisplayName("알림 ID와 userId가 일치하면 조회 성공")
     void findByIdAndUserId_success() {
+
         // given
         User user = createDummyUser();
         Book book = createDummyBook();
@@ -66,6 +72,7 @@ class NotificationRepositoryTest {
     @Test
     @DisplayName("다른 userId로 조회하면 조회 실패")
     void findByIdAndUserId_fail() {
+
         // given
         User user = createDummyUser();
         Book book = createDummyBook();
@@ -91,6 +98,7 @@ class NotificationRepositoryTest {
     @Test
     @DisplayName("읽지 않은 알림이 존재할 때 userId로 조회하면 성공")
     void findByUserIdAndConfirmedFalse_whenUnreadExists_thenSuccess() {
+
         // given
         User user = createDummyUser();
         Book book = createDummyBook();
@@ -122,7 +130,8 @@ class NotificationRepositoryTest {
     @Test
     @DisplayName("모든 알림이 읽음 상태일 때 조회하면 빈 결과가 반환된다")
     void findByUserIdAndConfirmedFalse_whenAllRead_thenEmpty() {
-// given
+
+        // given
         User user = createDummyUser();
         Book book = createDummyBook();
         Review review = createDummyReview(user, book);
@@ -132,17 +141,18 @@ class NotificationRepositoryTest {
         );
         read.markAsRead();
 
-// when
+        // when
         List<Notification> result =
                 notificationRepository.findByUserIdAndConfirmedFalse(user.getId());
 
-// then
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("다른 userId의 알림을 조회하면 필터링되어 조회 실패")
     void findByUserIdAndConfirmedFalse_whenOtherUser_thenFail() {
+
         // given
         User user1 = createDummyUser();
         User user2 = createDummyUser();
@@ -166,6 +176,94 @@ class NotificationRepositoryTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getUserId()).isEqualTo(user1.getId());
+    }
+
+    @Test
+    @DisplayName("읽음 상태이고 7일 이전 알림을 삭제하면 성공")
+    void deleteOldReadNotifications_success() {
+
+        // given
+        User user = createDummyUser();
+        Book book = createDummyBook();
+        Review review = createDummyReview(user, book);
+
+        Notification notification = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content", "message")
+        );
+
+        notification.markAsRead();
+        notificationRepository.save(notification);
+
+        // createdAt을 직접 제어할 수 없어 현재 시점 기준으로 threshold를 미래로 설정하여 삭제 조건을 보장함
+        Instant threshold = Instant.now().plusSeconds(1);
+
+        // when
+        int deletedCount = notificationRepository.deleteOldReadNotifications(threshold);
+
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(deletedCount).isEqualTo(1);
+        assertThat(notificationRepository.findById(notification.getId()))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("읽지 않은 알림은 삭제되지 않아서 성공")
+    void deleteOldReadNotifications_whenUnread_thenNotDeleted() {
+
+        // given
+        User user = createDummyUser();
+        Book book = createDummyBook();
+        Review review = createDummyReview(user, book);
+
+        Notification notification = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content", "message")
+        );
+
+        Instant threshold = Instant.now().plusSeconds(1);
+
+        // when
+        int deletedCount = notificationRepository.deleteOldReadNotifications(threshold);
+
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(deletedCount).isEqualTo(0);
+        assertThat(notificationRepository.findById(notification.getId()))
+                .isPresent();
+    }
+
+    @Test
+    @DisplayName("7일 이내 읽음 알림은 삭제되지 않아서 성공")
+    void deleteOldReadNotifications_whenNotOld_thenNotDeleted() {
+
+        // given
+        User user = createDummyUser();
+        Book book = createDummyBook();
+        Review review = createDummyReview(user, book);
+
+        Notification notification = notificationRepository.save(
+                new Notification(user.getId(), review.getId(), "content", "message")
+        );
+
+        notification.markAsRead();
+        notificationRepository.save(notification);
+
+        Instant threshold = Instant.now().minusSeconds(1); // 과거 기준 → 삭제 안됨
+
+        // when
+        int deletedCount = notificationRepository.deleteOldReadNotifications(threshold);
+
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(deletedCount).isEqualTo(0);
+        assertThat(notificationRepository.findById(notification.getId()))
+                .isPresent();
     }
 
     // 헬퍼 메서드
