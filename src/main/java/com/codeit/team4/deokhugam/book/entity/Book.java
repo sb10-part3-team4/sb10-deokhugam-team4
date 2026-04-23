@@ -58,25 +58,41 @@ public class Book extends BaseUpdatableEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    // 기존 생성자 유지
     public Book(String title, String author, String description, String publisher,
             LocalDate publishedDate, String isbn) {
+        this(title, author, description, publisher, publishedDate, isbn, null);
+    }
+
+    // thumbnailUrl 포함 생성자
+    public Book(String title, String author, String description, String publisher,
+            LocalDate publishedDate, String isbn, String thumbnailUrl) {
         this.title = title;
         this.author = author;
         this.description = description;
         this.publisher = publisher;
         this.publishedDate = publishedDate;
         this.isbn = isbn;
+        this.thumbnailUrl = thumbnailUrl;
         this.reviewCount = 0;
         this.rating = BigDecimal.ZERO;
     }
 
+    // 기존 update 유지 (thumbnailUrl 없는 버전)
     public void update(String title, String author, String description,
             String publisher, LocalDate publishedDate) {
+        this.update(title, author, description, publisher, publishedDate, this.thumbnailUrl);
+    }
+
+    // thumbnailUrl 포함 update
+    public void update(String title, String author, String description,
+            String publisher, LocalDate publishedDate, String thumbnailUrl) {
         this.title = title;
         this.author = author;
         this.description = description;
         this.publisher = publisher;
         this.publishedDate = publishedDate;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public void softDelete(Instant deletedAt){

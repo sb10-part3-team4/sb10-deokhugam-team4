@@ -10,6 +10,7 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
+import com.codeit.team4.deokhugam.s3.S3Service;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -27,6 +30,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
     private final NaverBookClient naverBookClient;
+    private final S3Service s3Service;
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
@@ -39,11 +43,14 @@ public class BookService {
             throw new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + isbn);
         }
 
-        // Todo : 썸네일 이미지 저장 로직 구현
+        String thumbnailUrl = null;
+        if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            thumbnailUrl = s3Service.upload(thumbnailImage);
+        }
 
         // 엔티티 생성
         Book book = new Book(request.title(), request.author(), request.description(),
-                request.publisher(), request.publishedDate(), isbn);
+                request.publisher(), request.publishedDate(), isbn, thumbnailUrl);
 
         // db 저장, 동시 요청 대비 save 시 catch
         try {
@@ -75,15 +82,50 @@ public class BookService {
                     return new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId);
                 });
 
-        // update
+        // 썸네일 업로드
+        String thumbnailUrl = null;
+        String oldThumbnailUrl = book.getThumbnailUrl();    // 기존에 등록되어 있던 썸네일 URL 보관
+
+        // 새로운 이미지 파일이 넘어온 경우에만 S3 업로드 수행
+        if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            thumbnailUrl = s3Service.upload(thumbnailImage);
+        }
+
+        // 도서 정보 업데이트 (Dirty Checking 활용)
         book.update(request.title(), request.author(), request.description(), request.publisher(),
-                request.publishedDate());
+                request.publishedDate(),
+                thumbnailUrl != null ? thumbnailUrl : book.getThumbnailUrl());
+        log.info("도서 수정 완료: bookId={}", bookId);
+
+        // 3. 트랜잭션 상태에 따른 S3 파일 사후 관리
+        if (thumbnailUrl != null) {
+            String uploadedThumbnailUrl = thumbnailUrl;
+
+            // 현재 진행 중인 DB 트랜잭션에 사후 작업(Synchronization)을 등록
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+
+                        // DB 업데이트가 최종 성공했을 때
+                        @Override
+                        public void afterCommit() {
+                            // 새 이미지가 잘 올라갔으니, 더 이상 필요 없는 '기존 이미지'를 S3에서 삭제
+                            if (oldThumbnailUrl != null) {
+                                s3Service.delete(oldThumbnailUrl);
+                            }
+                        }
+
+                        // 트랜잭션이 종료되었을 때 (성공/실패 모두 포함)
+                        @Override
+                        public void afterCompletion(int status) {
+                            if (status == STATUS_ROLLED_BACK) {
+                                s3Service.delete(uploadedThumbnailUrl); // 롤백되면 새로 올린 것도 삭제
+                            }
+                        }
+                    });
+        }
 
         BookResponse bookResponse = bookMapper.toResponse(book);
-        log.info("도서 수정 완료: bookId={}", bookId);
         return bookResponse;
-
-        // todo: 썸네일 업데이트 로직 구현
     }
 
     @Transactional
