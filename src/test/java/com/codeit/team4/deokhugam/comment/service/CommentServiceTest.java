@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -313,5 +314,56 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("논리 삭제된 댓글은 댓글 카운트 유지한 상태로 물리 삭제 성공")
+    void hardDeleteComment_Success_AlreadyLogicallyDeleted() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+
+        given(mockComment.getDeletedAt()).willReturn(java.time.Instant.now());
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+
+        // when
+        commentService.hardDeleteComment(commentId, userId);
+
+        // then
+        verify(commentRepository).delete(mockComment);
+        // 카운트 감소 메서드는 호출되지 않아야 함
+        verify(reviewRepository, never()).decreaseCommentCount(any());
+    }
+
+    @Test
+    @DisplayName("댓글 작성자가 일치하지 않아 물리 삭제 실패")
+    void hardDeleteComment_Fail_NotOwner() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User mockAuthor = mock(User.class);
+        given(mockAuthor.getId()).willReturn(userId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockAuthor);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+
+        // when & then
+        assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, requesterId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
+
+        verify(commentRepository, never()).delete(any());
+        verify(reviewRepository, never()).decreaseCommentCount(any());
     }
 }
