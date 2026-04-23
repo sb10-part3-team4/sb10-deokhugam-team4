@@ -142,13 +142,15 @@ class NotificationControllerTest {
         UUID userId = UUID.randomUUID();
 
         willThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
-                .given(notificationService)
-                .markAllAsRead(userId);
+                .given(userService)
+                .findById(userId);
 
         // when & then
         mockMvc.perform(patch("/api/notifications/read-all")
                         .header(USER_HEADER, userId.toString()))
                 .andExpect(status().isNotFound());
+
+        then(notificationService).shouldHaveNoInteractions();
     }
 
     @Test
