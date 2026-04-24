@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>{@code lockParam} - 메서드 파라미터 이름 배열. 지정하면 {@code key + ":" + 값1 + ":" + 값2}로 키 생성.
  *       중첩 접근도 가능 (예: {@code "request.userId"})</li>
  *   <li>{@code waitTime} - 락 대기 시간 (기본 5초). 0이면 즉시 실패</li>
- *   <li>{@code leaseTime} - 락 자동 해제 시간 (기본 10초). 메서드 최대 실행 시간보다 길게 설정 필요</li>
+ *   <li>{@code leaseTime} - 락 자동 해제 시간 (기본 30초). 메서드 최대 실행 시간보다 길게 설정 필요</li>
  *   <li>{@code timeUnit} - waitTime, leaseTime의 시간 단위 (기본 SECONDS)</li>
  * </ul>
  *
@@ -60,7 +60,7 @@ public @interface DistributedLock {
 
     long waitTime() default 5;
 
-    long leaseTime() default 10;
+    long leaseTime() default 30;
 
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 }
