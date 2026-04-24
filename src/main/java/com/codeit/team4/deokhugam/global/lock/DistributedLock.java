@@ -39,6 +39,16 @@ import java.util.concurrent.TimeUnit;
  * </ul>
  *
  * <p>락 획득 실패 시 {@code BusinessException(ErrorCode.LOCK_ACQUISITION_FAILED)}가 발생합니다.</p>
+ *
+ * <h3>주의 사항</h3>
+ * <ul>
+ *   <li><b>Self-invocation 불가</b> - Spring AOP 프록시 기반이므로, 같은 빈 내부에서
+ *       {@code @DistributedLock} 메서드를 직접 호출하면 락이 적용되지 않습니다.
+ *       반드시 다른 빈을 통해 호출해야 합니다.</li>
+ *   <li><b>중첩 접근은 record 전용</b> - {@code "request.userId"} 같은 중첩 접근은
+ *       record의 accessor 메서드({@code userId()})를 호출합니다.
+ *       JavaBeans 스타일 getter({@code getUserId()})는 지원하지 않습니다.</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

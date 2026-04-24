@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LockKeyResolver {
 
-    private static final int MAX_NESTED_DEPTH = 2;
+    private static final int SPLIT_LIMIT = 2;
 
     public String resolve(String key, String[] lockParams, String[] paramNames, Object[] args) {
         if (lockParams.length == 0) {
@@ -25,12 +25,12 @@ public class LockKeyResolver {
     }
 
     private Object resolveValue(String expression, String[] names, Object[] args) {
-        String[] parts = expression.split("\\.", MAX_NESTED_DEPTH);
+        String[] parts = expression.split("\\.", SPLIT_LIMIT);
         String paramName = parts[0];
 
         Object value = findArgByName(paramName, names, args);
 
-        if (parts.length == MAX_NESTED_DEPTH) {
+        if (parts.length == SPLIT_LIMIT) {
             value = getNestedValue(value, parts[1], expression);
         }
 

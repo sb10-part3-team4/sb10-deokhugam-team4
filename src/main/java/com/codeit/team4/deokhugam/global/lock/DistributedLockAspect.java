@@ -54,7 +54,7 @@ public class DistributedLockAspect {
         );
 
         if (!acquired) {
-            log.debug("락 획득 실패: {}", lockKey);
+            log.warn("락 획득 실패: {}", lockKey);
             throw new BusinessException(ErrorCode.LOCK_ACQUISITION_FAILED, "락 획득 실패: " + lockKey);
         }
 

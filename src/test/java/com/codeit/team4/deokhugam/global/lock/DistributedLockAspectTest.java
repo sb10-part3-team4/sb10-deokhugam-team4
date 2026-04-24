@@ -153,13 +153,8 @@ class DistributedLockAspectTest {
             CountDownLatch lockAcquired = new CountDownLatch(1);
             CountDownLatch testDone = new CountDownLatch(1);
 
-            Thread holder = new Thread(() -> {
-                try {
-                    testLockService.doWorkWithCallback(99L, lockAcquired);
-                    testDone.await(10, TimeUnit.SECONDS);
-                } catch (InterruptedException ignored) {
-                }
-            });
+            Thread holder = new Thread(() ->
+                    testLockService.doWorkWithCallback(99L, lockAcquired, testDone));
             holder.start();
 
             boolean acquired = lockAcquired.await(5, TimeUnit.SECONDS);
@@ -219,11 +214,11 @@ class DistributedLockAspectTest {
             return "done";
         }
 
-        @DistributedLock(key = "test:slow", lockParam = {"id"}, waitTime = 0, leaseTime = 10)
-        public String doWorkWithCallback(Long id, CountDownLatch lockAcquired) {
+        @DistributedLock(key = "test:slow", lockParam = {"id"}, waitTime = 0, leaseTime = 30)
+        public String doWorkWithCallback(Long id, CountDownLatch lockAcquired, CountDownLatch release) {
             lockAcquired.countDown();
             try {
-                Thread.sleep(5000);
+                release.await(30, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
