@@ -98,7 +98,8 @@ public class CommentQueryService {
 
         log.info("댓글 목록 조회 완료: reviewId={}, size={}", param.reviewId(), responses.size());
 
-        return new PageResponse<>(responses, nextCursor, nextAfter, param.limit(), totalElements, hasNext);
+        return new PageResponse<>(responses, nextCursor, nextAfter, param.limit(), totalElements,
+                hasNext);
     }
 
     // ===== private =====
@@ -108,7 +109,8 @@ public class CommentQueryService {
         if ((param.cursor() == null) != (param.after() == null)) {
             throw new BusinessException(
                     ErrorCode.INVALID_INPUT,
-                    "cursor와 after는 함께 제공되어야 합니다. cursor=" + param.cursor() + ", after=" + param.after()
+                    "cursor와 after는 함께 제공되어야 합니다. cursor=" + param.cursor() + ", after="
+                            + param.after()
             );
         }
     }

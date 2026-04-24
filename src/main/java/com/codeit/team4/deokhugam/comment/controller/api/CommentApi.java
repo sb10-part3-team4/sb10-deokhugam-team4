@@ -120,7 +120,7 @@ public interface CommentApi {
             @LoginUser DeokhugamUser loginUser
     );
 
-    @Operation(summary = "댓글 단건 조회", description = "특정 댓글의 상세 정보를 조회합니다.")
+    @Operation(summary = "댓글 정보 상세 조회", description = "특정 댓글의 상세 정보를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "댓글 조회 성공",
                     content = @Content(schema = @Schema(implementation = CommentResponse.class))),
