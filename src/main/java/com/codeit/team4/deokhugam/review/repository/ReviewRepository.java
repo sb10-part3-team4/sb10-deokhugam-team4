@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.review.repository;
 
+import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,4 +32,6 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Review r SET r.likeCount = r.likeCount - 1 WHERE r.id = :reviewId AND r.likeCount > 0")
     void decreaseLikeCount(@Param("reviewId") UUID reviewId);
+
+    Book book(Book book);
 }

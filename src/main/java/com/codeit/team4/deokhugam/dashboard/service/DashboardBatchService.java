@@ -12,19 +12,24 @@ import com.codeit.team4.deokhugam.dashboard.model.PowerUserSearchModel;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
 import com.codeit.team4.deokhugam.dashboard.repository.PowerUserRepository;
+import com.codeit.team4.deokhugam.notification.event.ReviewRankedEvent;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +51,8 @@ public class DashboardBatchService {
     private final ReviewService reviewService;
     private final UserService userService;
     private final BookService bookService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     public void updatePopularBooks(LocalDate snapshotDate) {
         log.info("인기 도서 배치 시작: snapshotDate={}", snapshotDate);
@@ -145,6 +152,21 @@ public class DashboardBatchService {
         }
 
         popularReviewRepository.saveAll(popularReviews);
+
+        if (shouldPublish(period, snapshotDate)) {
+            for (PopularReview p : popularReviews) {
+                eventPublisher.publishEvent(
+                        new ReviewRankedEvent(
+                                p.getReview().getId(),
+                                p.getUser().getId(),
+                                period,
+                                p.getRank(),
+                                snapshotDate
+                        )
+                );
+            }
+        }
+
         log.info("인기 리뷰 {} 저장 완료: {}건", period, popularReviews.size());
     }
 
@@ -175,5 +197,13 @@ public class DashboardBatchService {
 
         powerUserRepository.saveAll(powerUsers);
         log.info("파워 유저 {} 저장 완료: {}건", period, powerUsers.size());
+    }
+
+    private boolean shouldPublish(PeriodType period, LocalDate snapshotDate) {
+        return switch (period) {
+            case DAILY -> true;
+            case WEEKLY -> snapshotDate.getDayOfWeek() == DayOfWeek.SUNDAY;
+            case MONTHLY, ALL_TIME -> snapshotDate.getDayOfMonth() == 1;
+        };
     }
 }

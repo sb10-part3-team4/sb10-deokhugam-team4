@@ -6,6 +6,7 @@ import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.lock.DistributedLock;
+import com.codeit.team4.deokhugam.notification.event.LikeEvent;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ public class ReviewService {
     private final BookService bookService;
     private final BookRepository bookRepository;
     private final ReviewMapper reviewMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ReviewResponse getReview(UUID reviewId, UUID userId) {
         Review review = findById(reviewId);
@@ -140,6 +143,15 @@ public class ReviewService {
 
         reviewLikeRepository.save(reviewLike);
         reviewRepository.increaseLikeCount(review.getId());
+
+        eventPublisher.publishEvent(
+                new LikeEvent(
+                        review.getId(),
+                        review.getUser().getId(),
+                        userId
+                )
+        );
+
         log.info("리뷰 좋아요 추가: reviewId={}, userId={}", review.getId(), userId);
     }
 

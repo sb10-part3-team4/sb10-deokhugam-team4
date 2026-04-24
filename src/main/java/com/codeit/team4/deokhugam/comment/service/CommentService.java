@@ -9,6 +9,7 @@ import com.codeit.team4.deokhugam.comment.repository.CommentRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.lock.DistributedLock;
+import com.codeit.team4.deokhugam.notification.event.CommentEvent;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
@@ -18,6 +19,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +34,7 @@ public class CommentService {
     private final ReviewService reviewService;
     private final UserService userService;
     private final ReviewRepository reviewRepository;
-
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CommentResponse createComment(CommentCreateRequest request) {
@@ -43,6 +45,14 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         reviewRepository.increaseCommentCount(review.getId());
+
+        eventPublisher.publishEvent(
+                new CommentEvent(
+                        review.getId(),
+                        review.getUser().getId(),
+                        user.getId()
+                )
+        );
 
         log.info("댓글 생성 완료: commentId={}, userId={}, reviewId={}", savedComment.getId(),
                 user.getId(), review.getId());

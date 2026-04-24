@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.notification.service;
 
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
@@ -7,6 +8,9 @@ import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import com.codeit.team4.deokhugam.notification.entity.Notification;
 import com.codeit.team4.deokhugam.notification.model.NotificationModel;
 import com.codeit.team4.deokhugam.notification.repository.NotificationRepository;
+import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -23,11 +27,55 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
     private final NotificationQueryService notificationQueryService;
-
     private final NotificationRepository notificationRepository;
+    private final ReviewRepository reviewRepository;
+    private final UserService userService;
 
-    // TODO: 구현 예정
-    public void createNotification(UUID receiverId, UUID reviewId, String reviewContent, String message) {
+    @Transactional
+    public void createLikeNotification(UUID receiverId, UUID reviewId, UUID actorId) {
+
+        String actorName = getActorNickname(actorId);
+        Review review = findActiveReview(reviewId);
+
+        saveNotification(
+                receiverId,
+                reviewId,
+                review,
+                "[" + actorName + "]님이 나의 리뷰를 좋아합니다."
+        );
+    }
+
+    @Transactional
+    public void createCommentNotification(UUID receiverId, UUID reviewId, UUID actorId) {
+
+        String actorName = getActorNickname(actorId);
+        Review review = findActiveReview(reviewId);
+
+        saveNotification(
+                receiverId,
+                reviewId,
+                review,
+                "[" + actorName + "]님이 나의 리뷰에 댓글을 남겼습니다."
+        );
+    }
+
+    @Transactional
+    public void createRankNotification(UUID receiverId, UUID reviewId, PeriodType period, int rank) {
+        String periodText = switch (period) {
+            case DAILY -> "일간";
+            case WEEKLY -> "주간";
+            case MONTHLY -> "월간";
+            case ALL_TIME -> "전체";
+        };
+
+        Review review = findActiveReview(reviewId);
+
+        saveNotification(
+                receiverId,
+                reviewId,
+                review,
+                "나의 리뷰가 " + periodText + " TOP10에 진입했습니다. (" + rank + "위)"
+        );
     }
 
     @Transactional
@@ -150,5 +198,25 @@ public class NotificationService {
                 n.getCreatedAt(),
                 n.getUpdatedAt()
         );
+    }
+
+    private String getActorNickname(UUID actorId) {
+        return userService.findById(actorId).getNickname();
+    }
+
+    private Review findActiveReview(UUID reviewId) {
+        return reviewRepository.findByIdAndDeletedAtIsNull(reviewId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.REVIEW_NOT_FOUND,
+                        "reviewId=" + reviewId
+                ));
+    }
+
+    private void saveNotification(UUID receiverId, UUID reviewId, Review review, String message) {
+        Notification notification = new Notification(
+                receiverId, reviewId, review.getContent(), message
+        );
+
+        notificationRepository.saveAndFlush(notification);
     }
 }

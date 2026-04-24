@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
+import com.codeit.team4.deokhugam.notification.event.CommentEvent;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
@@ -34,6 +35,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CommentService 단위 테스트")
@@ -53,6 +55,9 @@ class CommentServiceTest {
     @InjectMocks
     private CommentService commentService;
 
+    @Mock
+    ApplicationEventPublisher eventPublisher;
+
     // ===== createComment() =====
     @Test
     @DisplayName("댓글 등록 성공")
@@ -62,9 +67,14 @@ class CommentServiceTest {
         UUID reviewId = UUID.randomUUID();
         CommentCreateRequest request = new CommentCreateRequest(reviewId, userId, "좋습니다");
 
+        User reviewOwner = mock(User.class);
+        given(reviewOwner.getId()).willReturn(UUID.randomUUID());
+
         User mockUser = mock(User.class);
+
         Review mockReview = mock(Review.class);
         given(mockReview.getId()).willReturn(reviewId);
+        given(mockReview.getUser()).willReturn(reviewOwner);
         CommentResponse mockResponse = new CommentResponse(
                 UUID.randomUUID(),
                 request.content(),
@@ -87,6 +97,8 @@ class CommentServiceTest {
         // then
         assertThat(response).isEqualTo(mockResponse);
         then(reviewRepository).should(times(1)).increaseCommentCount(reviewId);
+
+        then(eventPublisher).should().publishEvent(any(CommentEvent.class));
 
         // ArgumentCaptor로 mapper나 repository에 전달된 객체를 잡아서 확인
         ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
