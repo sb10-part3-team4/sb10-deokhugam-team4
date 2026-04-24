@@ -76,6 +76,8 @@ jobs:
           export NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
           export NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
           export OCR_API_KEY=${{ secrets.OCR_API_KEY }}
+          export REDIS_HOST=${{ secrets.REDIS_HOST }}
+          export REDIS_PORT=6379
           envsubst < ecs-task-def.json > task-def.rendered.json
 
       - name: 새로운 작업 정의 등록
