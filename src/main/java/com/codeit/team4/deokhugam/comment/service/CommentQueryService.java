@@ -92,7 +92,7 @@ public class CommentQueryService {
             nextAfter = last.createdAt();
         }
 
-        long totalElements = countActiveComments(param.reviewId());
+        long totalElements = fetchReviewCommentCount(param.reviewId());
 
         List<CommentResponse> responses = content.stream()
                 .map(commentMapper::toResponse)
@@ -122,14 +122,22 @@ public class CommentQueryService {
             return DSL.noCondition();
         }
         OffsetDateTime afterOffset = param.after().atOffset(ZoneOffset.UTC);
-        UUID cursorId = UUID.fromString(param.cursor());
+        UUID cursorId;
+        try {
+            cursorId = UUID.fromString(param.cursor());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_INPUT,
+                    "cursor는 UUID 형식이어야 합니다. cursor=" + param.cursor()
+            );
+        }
 
         return isAsc
                 ? DSL.row(COMMENTS.CREATED_AT, COMMENTS.ID).gt(afterOffset, cursorId)
                 : DSL.row(COMMENTS.CREATED_AT, COMMENTS.ID).lt(afterOffset, cursorId);
     }
 
-    private long countActiveComments(UUID reviewId) {
+    private long fetchReviewCommentCount(UUID reviewId) {
         return Optional.ofNullable(
                 dsl.select(REVIEWS.COMMENT_COUNT)
                         .from(REVIEWS)
