@@ -11,21 +11,23 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Aspect
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 public class DistributedLockAspect {
 
     private final RedissonClient redissonClient;
 
-    @Around("@annotation(distributedLock)")
-    public Object around(
-            ProceedingJoinPoint joinPoint,
-            DistributedLock distributedLock
-    ) throws Throwable {
+    @Around("@annotation(com.codeit.team4.deokhugam.global.lock.DistributedLock)")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        DistributedLock distributedLock = signature.getMethod().getAnnotation(DistributedLock.class);
         String lockKey = buildLockKey(distributedLock, joinPoint);
         RLock lock = redissonClient.getLock(lockKey);
 
