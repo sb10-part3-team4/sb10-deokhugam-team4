@@ -2,7 +2,7 @@ package com.codeit.team4.deokhugam.global.lock;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -11,7 +11,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.Ordered;
+import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Component;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 public class DistributedLockAspect {
+
+    private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
     private final RedissonClient redissonClient;
 
@@ -65,16 +69,23 @@ public class DistributedLockAspect {
         }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Parameter[] parameters = signature.getMethod().getParameters();
+        Method method = signature.getMethod();
+        String[] names = PARAMETER_NAME_DISCOVERER.getParameterNames(method);
         Object[] args = joinPoint.getArgs();
 
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getName().equals(lockParam)) {
-                return key + ":" + args[i];
+        if (names != null) {
+            for (int i = 0; i < names.length; i++) {
+                if (lockParam.equals(names[i])) {
+                    if (args[i] == null) {
+                        //개발자가 키 파라미터를 null로 작성했을 경우 에러 발생
+                        throw new IllegalArgumentException("lockParam '" + lockParam + "' 값이 null입니다");
+                    }
+                    return key + ":" + args[i];
+                }
             }
         }
 
-        //개발자가 어노테이션을 잘못 작성했을 때 에러 발생
+        //개발자가 키 파라미터를 잘못 작성했을 때 에러 발생
         throw new IllegalArgumentException("lockParam '" + lockParam + "'에 해당하는 파라미터를 찾을 수 없습니다");
     }
 }
