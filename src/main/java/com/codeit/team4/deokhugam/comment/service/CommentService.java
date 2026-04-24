@@ -35,7 +35,6 @@ public class CommentService {
 
 
     @Transactional
-    @DistributedLock(key = "deokhugam:comment", lockParam = {"request.userId", "request.reviewId"})
     public CommentResponse createComment(CommentCreateRequest request) {
         User user = userService.findById(request.userId());
         Review review = reviewService.findById(request.reviewId());
