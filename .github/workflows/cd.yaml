@@ -34,10 +34,6 @@ jobs:
 
       - name: Build JAR
         run: ./gradlew clean bootJar -PgenerateJooq
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
