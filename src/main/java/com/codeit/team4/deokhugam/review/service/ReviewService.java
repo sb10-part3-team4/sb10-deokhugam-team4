@@ -5,6 +5,7 @@ import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +43,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:review", lockParam = {"request.userId", "request.bookId"})
     public ReviewResponse createReview(ReviewCreateRequest request) {
         User user = userService.findById(request.userId());
         Book book = bookService.findById(request.bookId());
@@ -51,12 +52,7 @@ public class ReviewService {
 
         Review review = new Review(book, user, request.content(), request.rating());
 
-        try {
-            reviewRepository.save(review);
-        } catch (DataIntegrityViolationException e) {
-            throw new BusinessException(
-                    ErrorCode.DUPLICATE_REVIEW, "bookId=" + book.getId() + ", userId=" + user.getId());
-        }
+        reviewRepository.save(review);
         bookRepository.increaseReviewCount(book.getId());
         log.info("리뷰 생성 완료: reviewId={}", review.getId());
 
@@ -80,6 +76,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:review", lockParam = {"reviewId"})
     public ReviewResponse updateReview(UUID reviewId, UUID userId, ReviewUpdateRequest request) {
         Review review = findById(reviewId);
 
@@ -92,6 +89,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:review", lockParam = {"reviewId"})
     public void softDeleteReview(UUID reviewId, UUID userId) {
         Review review = findById(reviewId);
 
@@ -102,6 +100,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:review", lockParam = {"reviewId"})
     public void hardDeleteReview(UUID reviewId, UUID userId) {
         Review review = findWithDeletedById(reviewId);
 
@@ -122,6 +121,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:review-like", lockParam = {"reviewId", "userId"})
     public ReviewLikeResponse toggleLike(UUID reviewId, UUID userId) {
         Review review = findById(reviewId);
 
@@ -135,13 +135,11 @@ public class ReviewService {
     }
 
     private void likeReview(Review review, UUID userId) {
-        try {
-            reviewLikeRepository.save(new ReviewLike(review, userService.findById(userId)));
-            reviewRepository.increaseLikeCount(review.getId());
-        } catch (DataIntegrityViolationException e) {
-            log.debug("이미 좋아요 상태: reviewId={}, userId={}", review.getId(), userId);
-            return;
-        }
+        User user = userService.findById(userId);
+        ReviewLike reviewLike = new ReviewLike(review, user);
+
+        reviewLikeRepository.save(reviewLike);
+        reviewRepository.increaseLikeCount(review.getId());
         log.info("리뷰 좋아요 추가: reviewId={}, userId={}", review.getId(), userId);
     }
 
