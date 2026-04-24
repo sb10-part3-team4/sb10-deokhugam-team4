@@ -35,6 +35,8 @@ public class BookService {
     private final NaverBookClient naverBookClient;
     private final S3Service s3Service;
     private final OcrSpaceClient ocrSpaceClient;
+    private static final Pattern ISBN_PATTERN = Pattern.compile(
+            "(?:ISBN[:\\s-]*)?(97[89][\\d-]{10,17})|(\\d{9}[\\dXx])");
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
@@ -183,22 +185,22 @@ public class BookService {
         // OCR Client를 통해 전체 텍스트 추출
         String text = ocrSpaceClient.extractText(image);
 
-        // 정규식 패턴 생성
-        // (?:ISBN[:\s-]*)? : ISBN이라는 접두사가 있어도 되고 없어도 됨
-        // (97[89][\d-]{10,17}) : 978/979로 시작하는 ISBN-13
-        // |(\d{9}[\dXx]) : ISBN-10 형식
-        Pattern pattern = Pattern.compile("(?:ISBN[:\\s-]*)?(97[89][\\d-]{10,17})|(\\d{9}[\\dXx])");
-        Matcher matcher = pattern.matcher(text);
+        Matcher matcher = ISBN_PATTERN.matcher(text);
 
         // 정규식 매칭 확인
         if (!matcher.find()) {
-            throw new BusinessException(ErrorCode.OCR_ISBN_NOT_FOUND, "text=" + text);
+            throw new BusinessException(ErrorCode.OCR_ISBN_NOT_FOUND,
+                    "textLength=" + text.length());
         }
 
         // 추출된 그룹 확인 및 공백/하이픈 제거
         String isbn = (matcher.group(1) != null ? matcher.group(1) : matcher.group(2))
                 .replaceAll("[-\\s]", "");
 
+        // 정규화 후 자릿수 재검증 (ISBN-10=10, ISBN-13=13)
+        if (isbn.length() != 10 && isbn.length() != 13) {
+            throw new BusinessException(ErrorCode.OCR_ISBN_NOT_FOUND, "isbn=" + isbn);
+        }
         log.info("이미지에서 ISBN 추출 완료: isbn={}", isbn);
         return isbn;
     }

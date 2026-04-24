@@ -171,11 +171,9 @@ public interface BookApi {
                     content = @Content(mediaType = "*/*",
                             schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "잘못된 이미지 형식 또는 OCR 인식 실패",
-                    content = @Content(mediaType = "*/*",
-                            schema = @Schema(type = "string"))),
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
-                    content = @Content(mediaType = "*/*",
-                            schema = @Schema(type = "string")))
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     ResponseEntity<String> extractIsbnFromImage(
             @Parameter(description = "도서 이미지", required = true)
