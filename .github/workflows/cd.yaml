@@ -33,7 +33,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build JAR
-        run: ./gradlew clean bootJar
+        run: ./gradlew clean bootJar -PgenerateJooq
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -69,6 +69,13 @@ jobs:
           export AWS_REGION=${{ secrets.AWS_REGION }}
           export IMAGE_TAG=${{ env.IMAGE_TAG }}
           export ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }}
+          export DB_URL=${{ secrets.DB_URL }}
+          export DB_USERNAME=${{ secrets.DB_USERNAME }}
+          export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          export AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
+          export NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
+          export NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
+          export OCR_API_KEY=${{ secrets.OCR_API_KEY }}
           envsubst < ecs-task-def.json > task-def.rendered.json
 
       - name: 새로운 작업 정의 등록
