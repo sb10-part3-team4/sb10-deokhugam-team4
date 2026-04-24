@@ -11,7 +11,7 @@ import java.util.UUID;
 @Schema(description = "댓글 목록 조회 요청")
 public record CommentSearchRequestParam(
 
-        @Schema(description = "리뷰 ID", required = true)
+        @Schema(description = "리뷰 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "리뷰 ID는 필수입니다.")
         UUID reviewId,
 
@@ -28,10 +28,15 @@ public record CommentSearchRequestParam(
         @Min(1) @Max(100)
         Integer limit
 ) {
+
     private static final int DEFAULT_LIMIT = 50;
 
     public CommentSearchRequestParam {
-        if (direction == null) direction = SortDirection.DESC;
-        if (limit == null) limit = DEFAULT_LIMIT;
+        if (direction == null) {
+            direction = SortDirection.DESC;
+        }
+        if (limit == null) {
+            limit = DEFAULT_LIMIT;
+        }
     }
 }

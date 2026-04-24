@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.comment.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Comments.COMMENTS;
+import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
@@ -61,18 +62,19 @@ public class CommentQueryService {
 
         Condition condition = COMMENTS.REVIEW_ID.eq(param.reviewId())
                 .and(COMMENTS.DELETED_AT.isNull())
-                .and(buildCursorCondition(param.after(), isAsc));
+                .and(buildCursorCondition(param, isAsc));
 
         SortField<?> sortField = isAsc
-                ? COMMENTS.CREATED_AT.asc()
-                : COMMENTS.CREATED_AT.desc();
+                ? COMMENTS.CREATED_AT.asc() : COMMENTS.CREATED_AT.desc();
+        SortField<?> tieBreaker = isAsc
+                ? COMMENTS.ID.asc() : COMMENTS.ID.desc();
 
         List<CommentModel> results = dsl
                 .select(CommentModel.toSelectedFields())
                 .from(COMMENTS)
                 .join(USERS).on(COMMENTS.USER_ID.eq(USERS.ID))
                 .where(condition)
-                .orderBy(sortField)
+                .orderBy(sortField, tieBreaker)
                 .limit(param.limit() + 1)   // hasNext 판단을 위해 +1 조회
                 .fetch(CommentModel::fromRecord);
 
@@ -115,23 +117,24 @@ public class CommentQueryService {
         }
     }
 
-    private Condition buildCursorCondition(Instant after, boolean isAsc) {
-        if (after == null) {
+    private Condition buildCursorCondition(CommentSearchRequestParam param, boolean isAsc) {
+        if (param.after() == null || param.cursor() == null) {
             return DSL.noCondition();
         }
-        OffsetDateTime afterOffset = after.atOffset(ZoneOffset.UTC);
+        OffsetDateTime afterOffset = param.after().atOffset(ZoneOffset.UTC);
+        UUID cursorId = UUID.fromString(param.cursor());
+
         return isAsc
-                ? COMMENTS.CREATED_AT.gt(afterOffset)
-                : COMMENTS.CREATED_AT.lt(afterOffset);
+                ? DSL.row(COMMENTS.CREATED_AT, COMMENTS.ID).gt(afterOffset, cursorId)
+                : DSL.row(COMMENTS.CREATED_AT, COMMENTS.ID).lt(afterOffset, cursorId);
     }
 
     private long countActiveComments(UUID reviewId) {
         return Optional.ofNullable(
-                dsl.selectCount()
-                        .from(COMMENTS)
-                        .where(COMMENTS.REVIEW_ID.eq(reviewId)
-                                .and(COMMENTS.DELETED_AT.isNull()))
-                        .fetchOne(0, Long.class)
+                dsl.select(REVIEWS.COMMENT_COUNT)
+                        .from(REVIEWS)
+                        .where(REVIEWS.ID.eq(reviewId))
+                        .fetchOneInto(Long.class)
         ).orElse(0L);
     }
 }
