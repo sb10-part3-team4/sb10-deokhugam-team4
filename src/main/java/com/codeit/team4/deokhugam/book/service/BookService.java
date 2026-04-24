@@ -10,9 +10,12 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
+import com.codeit.team4.deokhugam.ocr.OcrSpaceClient;
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -31,6 +34,7 @@ public class BookService {
     private final BookMapper bookMapper;
     private final NaverBookClient naverBookClient;
     private final S3Service s3Service;
+    private final OcrSpaceClient ocrSpaceClient;
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
@@ -173,5 +177,29 @@ public class BookService {
         log.info("ISBN으로 도서 검색 완료: isbn={}", isbn);
 
         return bookMapper.toBookResponse(item);
+    }
+
+    public String extractIsbnFromImage(MultipartFile image) {
+        // OCR Client를 통해 전체 텍스트 추출
+        String text = ocrSpaceClient.extractText(image);
+
+        // 정규식 패턴 생성
+        // (?:ISBN[:\s-]*)? : ISBN이라는 접두사가 있어도 되고 없어도 됨
+        // (97[89][\d-]{10,17}) : 978/979로 시작하는 ISBN-13
+        // |(\d{9}[\dXx]) : ISBN-10 형식
+        Pattern pattern = Pattern.compile("(?:ISBN[:\\s-]*)?(97[89][\\d-]{10,17})|(\\d{9}[\\dXx])");
+        Matcher matcher = pattern.matcher(text);
+
+        // 정규식 매칭 확인
+        if (!matcher.find()) {
+            throw new BusinessException(ErrorCode.OCR_ISBN_NOT_FOUND, "text=" + text);
+        }
+
+        // 추출된 그룹 확인 및 공백/하이픈 제거
+        String isbn = (matcher.group(1) != null ? matcher.group(1) : matcher.group(2))
+                .replaceAll("[-\\s]", "");
+
+        log.info("이미지에서 ISBN 추출 완료: isbn={}", isbn);
+        return isbn;
     }
 }

@@ -121,4 +121,13 @@ public class BookController implements BookApi {
         BookResponse result = bookService.searchByIsbn(isbn);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
+
+    // OCR ISBN 인식
+    @PostMapping(value = "/isbn/ocr", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> extractIsbnFromImage(
+            @RequestPart("image") MultipartFile image) {
+        log.info("이미지 OCR ISBN 추출 요청");
+        String isbn = bookService.extractIsbnFromImage(image);
+        return ResponseEntity.ok(isbn);
+    }
 }

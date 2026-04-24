@@ -45,7 +45,11 @@ public enum ErrorCode {
     S3_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3 업로드에 실패했습니다."),
     S3_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3 삭제에 실패했습니다."),
     S3_EMPTY_FILE_ERROR(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
-    S3_INVALID_FILE_TYPE_ERROR(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드 가능합니다.");
+    S3_INVALID_FILE_TYPE_ERROR(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드 가능합니다."),
+
+    // OCR
+    OCR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "OCR 처리에 실패했습니다."),
+    OCR_ISBN_NOT_FOUND(HttpStatus.BAD_REQUEST, "ISBN 인식에 실패했습니다. 올바른 바코드 이미지를 선택해주세요.");
 
     private final HttpStatus status;
     private final String message;

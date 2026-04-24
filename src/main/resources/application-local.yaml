@@ -43,3 +43,9 @@ aws:
     region: ${AWS_REGION}
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+
+ocr:
+  api:
+    key: ${OCR_API_KEY}
+    url: https://api.ocr.space/parse/image
