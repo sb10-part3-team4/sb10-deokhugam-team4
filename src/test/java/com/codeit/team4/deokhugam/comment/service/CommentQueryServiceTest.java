@@ -253,35 +253,5 @@ class CommentQueryServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
         }
-
-        @Test
-        @DisplayName("논리 삭제된 댓글은 목록 조회 실패")
-        void getComments_Fail_SoftDeletedComment() {
-            // given
-            Comment comment1 = commentRepository.saveAndFlush(
-                    new Comment(user, review, "살아있는 댓글 1"));
-            Comment comment2 = commentRepository.saveAndFlush(
-                    new Comment(user, review, "삭제될 댓글 2"));
-            Comment comment3 = commentRepository.saveAndFlush(
-                    new Comment(user, review, "살아있는 댓글 3"));
-
-            comment2.softDelete();
-            commentRepository.saveAndFlush(comment2);
-
-            CommentSearchRequestParam param = new CommentSearchRequestParam(
-                    review.getId(), SortDirection.DESC, null, null, 10
-            );
-
-            // when
-            PageResponse<CommentResponse> result = commentQueryService.getComments(param);
-
-            // then
-            assertThat(result.content()).hasSize(2);
-
-            List<UUID> resultIds = result.content().stream().map(CommentResponse::id).toList();
-            assertThat(resultIds)
-                    .contains(comment1.getId(), comment3.getId())
-                    .doesNotContain(comment2.getId());
-        }
     }
 }

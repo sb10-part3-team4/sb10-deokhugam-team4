@@ -236,6 +236,17 @@ class ReviewRepositoryTest {
 
             assertThat(updatedReview.getCommentCount()).isEqualTo(1);
         }
+
+        @Test
+        @DisplayName("댓글 수 0 이하로 감소하지 않음 성공")
+        void decreaseCommentCount_notBelowZero_success() {
+            Review review = reviewRepository.saveAndFlush(new Review(book, user, "content", 5));
+            reviewRepository.decreaseCommentCount(review.getId());
+            entityManager.clear();
+
+            Review found = reviewRepository.findById(review.getId()).get();
+            assertThat(found.getCommentCount()).isEqualTo(0);
+        }
     }
 
     @Nested
