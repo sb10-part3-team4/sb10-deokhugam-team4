@@ -17,7 +17,12 @@ import java.util.concurrent.TimeUnit;
  * @DistributedLock(key = "deokhugam:book", lockParam = "bookId")
  * public void updateBook(Long bookId, ...) { ... }
  *
- * // 2. 전역 락 (스케줄러 중복 실행 방지)
+ * // 2. 복합 키 락 (request 객체의 필드 조합)
+ * //    락 키: "deokhugam:review:userId값:bookId값"
+ * @DistributedLock(key = "deokhugam:review", lockParam = {"request.userId", "request.bookId"})
+ * public ReviewResponse createReview(ReviewCreateRequest request) { ... }
+ *
+ * // 3. 전역 락 (스케줄러 중복 실행 방지)
  * //    락 키: "dashboard-batch"
  * @DistributedLock(key = "dashboard-batch", waitTime = 0, leaseTime = 30)
  * public void runDashboardBatch() { ... }
@@ -26,7 +31,8 @@ import java.util.concurrent.TimeUnit;
  * <h3>파라미터</h3>
  * <ul>
  *   <li>{@code key} - 락 키 prefix (필수)</li>
- *   <li>{@code lockParam} - 메서드 파라미터 이름. 지정하면 {@code key + ":" + 파라미터값}으로 키 생성</li>
+ *   <li>{@code lockParam} - 메서드 파라미터 이름 배열. 지정하면 {@code key + ":" + 값1 + ":" + 값2}로 키 생성.
+ *       중첩 접근도 가능 (예: {@code "request.userId"})</li>
  *   <li>{@code waitTime} - 락 대기 시간 (기본 5초). 0이면 즉시 실패</li>
  *   <li>{@code leaseTime} - 락 자동 해제 시간 (기본 10초). 메서드 최대 실행 시간보다 길게 설정 필요</li>
  *   <li>{@code timeUnit} - waitTime, leaseTime의 시간 단위 (기본 SECONDS)</li>
@@ -40,7 +46,7 @@ public @interface DistributedLock {
 
     String key();
 
-    String lockParam() default "";
+    String[] lockParam() default {};
 
     long waitTime() default 5;
 

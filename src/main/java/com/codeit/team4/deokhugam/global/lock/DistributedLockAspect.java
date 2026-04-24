@@ -27,12 +27,22 @@ public class DistributedLockAspect {
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
     private final RedissonClient redissonClient;
+    private final LockKeyResolver lockKeyResolver;
 
     @Around("@annotation(com.codeit.team4.deokhugam.global.lock.DistributedLock)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        DistributedLock distributedLock = signature.getMethod().getAnnotation(DistributedLock.class);
-        String lockKey = buildLockKey(distributedLock, joinPoint);
+        Method method = signature.getMethod();
+        DistributedLock distributedLock = method.getAnnotation(DistributedLock.class);
+
+        String[] paramNames = PARAMETER_NAME_DISCOVERER.getParameterNames(method);
+        String lockKey = lockKeyResolver.resolve(
+                distributedLock.key(),
+                distributedLock.lockParam(),
+                paramNames,
+                joinPoint.getArgs()
+        );
+
         RLock lock = redissonClient.getLock(lockKey);
 
         log.debug("락 획득 시도: {}", lockKey);
@@ -58,34 +68,5 @@ public class DistributedLockAspect {
                 log.debug("락 해제: {}", lockKey);
             }
         }
-    }
-
-    private String buildLockKey(DistributedLock distributedLock, ProceedingJoinPoint joinPoint) {
-        String key = distributedLock.key();
-        String lockParam = distributedLock.lockParam();
-
-        if (lockParam.isEmpty()) {
-            return key;
-        }
-
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
-        String[] names = PARAMETER_NAME_DISCOVERER.getParameterNames(method);
-        Object[] args = joinPoint.getArgs();
-
-        if (names != null) {
-            for (int i = 0; i < names.length; i++) {
-                if (lockParam.equals(names[i])) {
-                    if (args[i] == null) {
-                        //개발자가 키 파라미터를 null로 작성했을 경우 에러 발생
-                        throw new IllegalArgumentException("lockParam '" + lockParam + "' 값이 null입니다");
-                    }
-                    return key + ":" + args[i];
-                }
-            }
-        }
-
-        //개발자가 키 파라미터를 잘못 작성했을 때 에러 발생
-        throw new IllegalArgumentException("lockParam '" + lockParam + "'에 해당하는 파라미터를 찾을 수 없습니다");
     }
 }

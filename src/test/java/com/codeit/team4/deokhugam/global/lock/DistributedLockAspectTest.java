@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +51,29 @@ class DistributedLockAspectTest {
             String result = testLockService.doWorkWithParam(123L);
 
             assertThat(result).isEqualTo("done:123");
+        }
+
+        @Test
+        @DisplayName("복수 lockParam으로 복합 키 조합 성공")
+        void acquireLockWithMultipleParams() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+
+            String result = testLockService.doWorkWithMultipleParams(userId, bookId);
+
+            assertThat(result).isEqualTo("done:" + userId + ":" + bookId);
+        }
+
+        @Test
+        @DisplayName("중첩 lockParam으로 객체 필드 키 조합 성공")
+        void acquireLockWithNestedParam() {
+            UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
+            TestRequest request = new TestRequest(userId, bookId);
+
+            String result = testLockService.doWorkWithNestedParam(request);
+
+            assertThat(result).isEqualTo("done:" + userId + ":" + bookId);
         }
     }
 
@@ -160,19 +184,32 @@ class DistributedLockAspectTest {
         }
     }
 
+    record TestRequest(UUID userId, UUID bookId) {
+    }
+
     static class TestLockService {
 
-        @DistributedLock(key = "test:work", lockParam = "id")
+        @DistributedLock(key = "test:work", lockParam = {"id"})
         public String doWork(Long id) {
             return "done";
         }
 
-        @DistributedLock(key = "test:param", lockParam = "bookId")
+        @DistributedLock(key = "test:param", lockParam = {"bookId"})
         public String doWorkWithParam(Long bookId) {
             return "done:" + bookId;
         }
 
-        @DistributedLock(key = "test:slow", lockParam = "id", waitTime = 0, leaseTime = 5)
+        @DistributedLock(key = "test:multi", lockParam = {"userId", "bookId"})
+        public String doWorkWithMultipleParams(UUID userId, UUID bookId) {
+            return "done:" + userId + ":" + bookId;
+        }
+
+        @DistributedLock(key = "test:nested", lockParam = {"request.userId", "request.bookId"})
+        public String doWorkWithNestedParam(TestRequest request) {
+            return "done:" + request.userId() + ":" + request.bookId();
+        }
+
+        @DistributedLock(key = "test:slow", lockParam = {"id"}, waitTime = 0, leaseTime = 5)
         public String doSlowWork(Long id) {
             try {
                 Thread.sleep(3000);
@@ -182,7 +219,7 @@ class DistributedLockAspectTest {
             return "done";
         }
 
-        @DistributedLock(key = "test:slow", lockParam = "id", waitTime = 0, leaseTime = 10)
+        @DistributedLock(key = "test:slow", lockParam = {"id"}, waitTime = 0, leaseTime = 10)
         public String doWorkWithCallback(Long id, CountDownLatch lockAcquired) {
             lockAcquired.countDown();
             try {
