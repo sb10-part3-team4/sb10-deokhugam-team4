@@ -8,6 +8,7 @@ import com.codeit.team4.deokhugam.comment.mapper.CommentMapper;
 import com.codeit.team4.deokhugam.comment.repository.CommentRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
@@ -50,6 +51,7 @@ public class CommentService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:comment", lockParam = {"commentId"})
     public CommentResponse updateComment(UUID commentId, UUID userId,
             CommentUpdateRequest request) {
         Comment comment = findCommentById(commentId);
@@ -63,6 +65,7 @@ public class CommentService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:comment", lockParam = {"commentId"})
     public void softDeleteComment(UUID commentId, UUID userId) {
         Comment comment = findCommentById(commentId);
         validateCommentOwner(comment, userId, "논리 삭제");
@@ -80,6 +83,7 @@ public class CommentService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:comment", lockParam = {"commentId"})
     public void hardDeleteComment(UUID commentId, UUID userId) {
         // 이미 논리 삭제된 것도 물리 삭제 가능해야 하므로 findById 사용
         Comment comment = commentRepository.findById(commentId)
