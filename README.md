@@ -29,7 +29,7 @@ docker compose down -v
 
 IntelliJ에서 `DeokhugamApplication`을 실행합니다. (기본 프로필이 `local`입니다)
 
-### 4. 기존 Docker 단독 컨테이너에서 전환
+### 3. 기존 Docker 단독 컨테이너에서 전환
 
 기존에 PostgreSQL을 단독 컨테이너로 사용하던 경우:
 
@@ -51,7 +51,7 @@ docker volume rm <볼륨명>
 
 Flyway가 스키마를 자동 생성하므로 앱 실행 시 테이블이 만들어집니다.
 
-## 테스트
+### 4. 테스트
 
 ```bash
 ./gradlew test
