@@ -4,6 +4,7 @@ import com.codeit.team4.deokhugam.dashboard.controller.api.DashboardApi;
 import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularReviewResponse;
+import com.codeit.team4.deokhugam.dashboard.dto.PowerUserResponse;
 import com.codeit.team4.deokhugam.dashboard.service.DashboardFacade;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
@@ -41,5 +42,15 @@ public class DashboardController implements DashboardApi {
                 param.period(), param.direction(), param.limit());
 
         return ResponseEntity.ok(dashboardService.getPopularReviews(param));
+    }
+
+    @GetMapping("/users/power")
+    public ResponseEntity<PageResponse<PowerUserResponse>> getPowerUsers(
+            @Valid @ParameterObject DashboardSearchRequestParam param
+    ) {
+        log.info("파워 유저 목록 조회 요청: period={}, direction={}, limit={}",
+                param.period(), param.direction(), param.limit());
+
+        return ResponseEntity.ok(dashboardService.getPowerUsers(param));
     }
 }

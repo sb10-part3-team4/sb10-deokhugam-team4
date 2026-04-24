@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 import lombok.AccessLevel;
@@ -116,7 +117,8 @@ public class PopularReview extends BaseEntity {
 
     private BigDecimal calculateScore(int likeCount, int commentCount) {
         return new BigDecimal(likeCount).multiply(LIKE_COUNT_WEIGHT)
-                .add(new BigDecimal(commentCount).multiply(COMMENT_COUNT_WEIGHT));
+                .add(new BigDecimal(commentCount).multiply(COMMENT_COUNT_WEIGHT))
+                .setScale(4, RoundingMode.HALF_UP);
     }
 
     @Override

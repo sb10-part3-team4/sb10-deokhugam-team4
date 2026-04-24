@@ -3,9 +3,11 @@ package com.codeit.team4.deokhugam.dashboard.service;
 import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularReviewResponse;
+import com.codeit.team4.deokhugam.dashboard.dto.PowerUserResponse;
 import com.codeit.team4.deokhugam.dashboard.mapper.DashboardMapper;
 import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
 import com.codeit.team4.deokhugam.dashboard.model.PopularReviewViewModel;
+import com.codeit.team4.deokhugam.dashboard.model.PowerUserViewModel;
 import com.codeit.team4.deokhugam.dashboard.model.RankedViewModel;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import java.time.Instant;
@@ -24,6 +26,7 @@ public class DashboardFacade {
 
     private final PopularBookReader popularBookReader;
     private final PopularReviewReader popularReviewReader;
+    private final PowerUserReader powerUserReader;
     private final DashboardMapper dashboardMapper;
 
     public PageResponse<PopularBookResponse> getPopularBooks(DashboardSearchRequestParam param) {
@@ -64,6 +67,30 @@ public class DashboardFacade {
 
         List<PopularReviewResponse> responses = content.stream()
                 .map(dashboardMapper::toPopularReviewResponse)
+                .toList();
+
+        return new PageResponse<>(
+                responses,
+                extractNextCursor(content, hasNext),
+                extractNextAfter(content, hasNext),
+                param.limit(),
+                null,
+                hasNext
+        );
+    }
+
+    public PageResponse<PowerUserResponse> getPowerUsers(DashboardSearchRequestParam param) {
+        LocalDate latestSnapshotDate = powerUserReader.findLatestSnapshotDate(param.period());
+        if (latestSnapshotDate == null) {
+            return new PageResponse<>(List.of(), null, null, param.limit(), null, false);
+        }
+        List<PowerUserViewModel> results = powerUserReader.findPowerUsers(param, latestSnapshotDate);
+
+        List<PowerUserViewModel> content = trimToLimit(results, param.limit());
+        boolean hasNext = results.size() > param.limit();
+
+        List<PowerUserResponse> responses = content.stream()
+                .map(dashboardMapper::toPowerUserResponse)
                 .toList();
 
         return new PageResponse<>(

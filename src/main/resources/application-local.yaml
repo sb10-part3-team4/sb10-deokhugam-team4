@@ -1,4 +1,8 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   datasource:
     url: jdbc:postgresql://localhost:5433/deokhugam
     username: deokhugam
@@ -33,19 +37,18 @@ notification:
 
 naver:
   api:
-    client-id: ${NAVER_CLIENT_ID}
-    client-secret: ${NAVER_CLIENT_SECRET}
+    client-id: ${NAVER_CLIENT_ID:dummy}
+    client-secret: ${NAVER_CLIENT_SECRET:dummy}
     book-search-url: https://openapi.naver.com/v1/search/book_adv.json
-
-aws:
-  s3:
-    bucket-name: ${AWS_S3_BUCKET_NAME}
-    region: ${AWS_REGION}
-    access-key: ${AWS_ACCESS_KEY_ID}
-    secret-key: ${AWS_SECRET_ACCESS_KEY}
-
 
 ocr:
   api:
-    key: ${OCR_API_KEY}
+    key: ${OCR_API_KEY:dummy}
     url: https://api.ocr.space/parse/image
+
+aws:
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME:dummy-bucket}
+    region: ${AWS_REGION:ap-northeast-2}
+    access-key: ${AWS_ACCESS_KEY_ID:dummy-key}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:dummy-secret}

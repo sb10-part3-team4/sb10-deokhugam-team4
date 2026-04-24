@@ -8,8 +8,10 @@ import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.entity.PopularBook;
 import com.codeit.team4.deokhugam.dashboard.entity.PopularReview;
+import com.codeit.team4.deokhugam.dashboard.entity.PowerUser;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
+import com.codeit.team4.deokhugam.dashboard.repository.PowerUserRepository;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -44,6 +46,9 @@ class DashboardBatchServiceTest {
 
     @Autowired
     private PopularReviewRepository popularReviewRepository;
+
+    @Autowired
+    private PowerUserRepository powerUserRepository;
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -248,6 +253,104 @@ class DashboardBatchServiceTest {
             for (PeriodType period : PeriodType.values()) {
                 List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
                         .filter(pr -> pr.getPeriod() == period && pr.getSnapshotDate().equals(today))
+                        .toList();
+                assertThat(byPeriod).isNotEmpty();
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("파워 유저 배치")
+    class UpdatePowerUsers {
+
+        @Test
+        @DisplayName("파워 유저 배치 실행 성공")
+        void updatePowerUsers_success() {
+            Book book1 = createBook("책1", "1111111111");
+            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePowerUsers(today);
+
+            List<PowerUser> results = powerUserRepository.findAll();
+            assertThat(results).isNotEmpty();
+        }
+
+        @Test
+        @DisplayName("LIMIT 10 적용 성공")
+        void updatePowerUsers_limit_success() {
+            for (int i = 0; i < 15; i++) {
+                User u = userRepository.saveAndFlush(new User("user" + i + "@test.com", "유저" + i, "password123"));
+                Book b = createBook("책" + i, "100000000" + String.format("%02d", i));
+                reviewRepository.saveAndFlush(new Review(b, u, "리뷰" + i, (i % 5) + 1));
+            }
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePowerUsers(today);
+
+            for (PeriodType period : PeriodType.values()) {
+                List<PowerUser> byPeriod = powerUserRepository.findAll().stream()
+                        .filter(pu -> pu.getPeriod() == period && pu.getSnapshotDate().equals(today))
+                        .toList();
+                assertThat(byPeriod).hasSize(10);
+            }
+        }
+
+        @Test
+        @DisplayName("score 기반 ranking 순서 부여 성공")
+        void updatePowerUsers_ranking_success() {
+            User otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
+            Book book1 = createBook("책1", "1111111111");
+            Book book2 = createBook("책2", "2222222222");
+            Book book3 = createBook("책3", "3333333333");
+            Review review1 = reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+            Review review2 = reviewRepository.saveAndFlush(new Review(book2, user, "또 좋아요", 5));
+            Review review3 = reviewRepository.saveAndFlush(new Review(book3, otherUser, "괜찮아요", 3));
+
+            // user 리뷰: like=10, comment=5 각각 → 활동 점수 높음
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 10).set(REVIEWS.COMMENT_COUNT, 5)
+                    .where(REVIEWS.ID.eq(review1.getId())).execute();
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 8).set(REVIEWS.COMMENT_COUNT, 4)
+                    .where(REVIEWS.ID.eq(review2.getId())).execute();
+            // otherUser 리뷰: like=1, comment=0 → 활동 점수 낮음
+            dsl.update(REVIEWS).set(REVIEWS.LIKE_COUNT, 1).set(REVIEWS.COMMENT_COUNT, 0)
+                    .where(REVIEWS.ID.eq(review3.getId())).execute();
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePowerUsers(today);
+
+            List<PowerUser> dailyUsers = powerUserRepository.findAll().stream()
+                    .filter(pu -> pu.getPeriod() == PeriodType.DAILY && pu.getSnapshotDate().equals(today))
+                    .sorted((a, b) -> Integer.compare(a.getRank(), b.getRank()))
+                    .toList();
+
+            assertThat(dailyUsers).hasSize(2);
+            assertThat(dailyUsers.get(0).getRank()).isEqualTo(1);
+            assertThat(dailyUsers.get(1).getRank()).isEqualTo(2);
+            assertThat(dailyUsers.get(0).getScore()).isGreaterThan(dailyUsers.get(1).getScore());
+        }
+
+        @Test
+        @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
+        void updatePowerUsers_noReviews_success() {
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePowerUsers(today);
+
+            assertThat(powerUserRepository.findAll()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("모든 PeriodType에 대해 배치 실행 성공")
+        void updatePowerUsers_allPeriods_success() {
+            Book book1 = createBook("책1", "1111111111");
+            reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePowerUsers(today);
+
+            for (PeriodType period : PeriodType.values()) {
+                List<PowerUser> byPeriod = powerUserRepository.findAll().stream()
+                        .filter(pu -> pu.getPeriod() == period && pu.getSnapshotDate().equals(today))
                         .toList();
                 assertThat(byPeriod).isNotEmpty();
             }
