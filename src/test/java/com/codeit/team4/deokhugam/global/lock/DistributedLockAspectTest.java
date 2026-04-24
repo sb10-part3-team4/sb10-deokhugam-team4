@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,13 +19,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.stereotype.Service;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestContainerConfig.class)
+@Import({TestContainerConfig.class, DistributedLockAspectTest.TestLockConfig.class})
 class DistributedLockAspectTest {
 
     @Autowired
@@ -75,9 +79,10 @@ class DistributedLockAspectTest {
                 });
             }
 
-            latch.await(10, TimeUnit.SECONDS);
+            boolean completed = latch.await(10, TimeUnit.SECONDS);
             executor.shutdown();
 
+            assertThat(completed).as("모든 작업이 제한 시간 내 완료되어야 함").isTrue();
             assertThat(successCount.get()).isEqualTo(1);
             assertThat(failCount.get()).isEqualTo(threadCount - 1);
         }
@@ -89,6 +94,7 @@ class DistributedLockAspectTest {
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
             CountDownLatch latch = new CountDownLatch(threadCount);
             AtomicInteger successCount = new AtomicInteger(0);
+            List<Throwable> failures = Collections.synchronizedList(new ArrayList<>());
 
             for (int i = 0; i < threadCount; i++) {
                 long id = i + 1;
@@ -96,15 +102,19 @@ class DistributedLockAspectTest {
                     try {
                         testLockService.doSlowWork(id);
                         successCount.incrementAndGet();
+                    } catch (Throwable t) {
+                        failures.add(t);
                     } finally {
                         latch.countDown();
                     }
                 });
             }
 
-            latch.await(10, TimeUnit.SECONDS);
+            boolean completed = latch.await(10, TimeUnit.SECONDS);
             executor.shutdown();
 
+            assertThat(completed).as("모든 작업이 제한 시간 내 완료되어야 함").isTrue();
+            assertThat(failures).as("예상치 못한 예외가 발생하지 않아야 함").isEmpty();
             assertThat(successCount.get()).isEqualTo(threadCount);
         }
     }
@@ -128,7 +138,8 @@ class DistributedLockAspectTest {
             });
             holder.start();
 
-            lockAcquired.await(5, TimeUnit.SECONDS);
+            boolean acquired = lockAcquired.await(5, TimeUnit.SECONDS);
+            assertThat(acquired).as("락 획득이 제한 시간 내 완료되어야 함").isTrue();
 
             assertThatThrownBy(() -> testLockService.doSlowWork(99L))
                     .isInstanceOf(BusinessException.class)
@@ -140,7 +151,15 @@ class DistributedLockAspectTest {
         }
     }
 
-    @Service
+    @TestConfiguration
+    static class TestLockConfig {
+
+        @Bean
+        public TestLockService testLockService() {
+            return new TestLockService();
+        }
+    }
+
     static class TestLockService {
 
         @DistributedLock(key = "test:work", lockParam = "id")
