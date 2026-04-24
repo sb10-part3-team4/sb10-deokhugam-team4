@@ -217,6 +217,28 @@ class ReviewRepositoryTest {
     }
 
     @Nested
+    @DisplayName("댓글 수 감소")
+    class DecreaseCommentCount {
+        @Test
+        @DisplayName("댓글 수 감소 성공")
+        void decreaseCommentCount_Decreases_ActualDBValue() {
+            // given
+            Review review = reviewRepository.saveAndFlush(new Review(book, user, "리뷰 내용", 5));
+            reviewRepository.increaseCommentCount(review.getId());
+            reviewRepository.increaseCommentCount(review.getId());
+
+            // when
+            reviewRepository.decreaseCommentCount(review.getId());
+
+            // then
+            entityManager.clear();
+            Review updatedReview = reviewRepository.findById(review.getId()).get();
+
+            assertThat(updatedReview.getCommentCount()).isEqualTo(1);
+        }
+    }
+
+    @Nested
     @DisplayName("리뷰 물리 삭제 시 연관 객체 CASCADE 삭제")
     class HardDeleteCascade {
         @Test

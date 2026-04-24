@@ -116,6 +116,36 @@ class CommentQueryServiceTest {
     class GetCommentsPagination {
 
         @Test
+        @DisplayName("댓글 논리 삭제 시 목록에서도 제외 성공")
+        void getComments_Success_ExcludeSoftDeleted() {
+            // given
+            Comment comment1 = commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
+            Comment comment2 = commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
+            Comment comment3 = commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
+
+            comment2.softDelete();
+            commentRepository.saveAndFlush(comment2);
+
+            CommentSearchRequestParam param = new CommentSearchRequestParam(
+                    review.getId(), SortDirection.DESC, null, null, 10
+            );
+
+            // when
+            PageResponse<CommentResponse> result = commentQueryService.getComments(param);
+
+            // then
+            assertThat(result.content()).hasSize(2);
+
+            List<UUID> resultIds = result.content().stream()
+                    .map(CommentResponse::id)
+                    .toList();
+
+            assertThat(resultIds)
+                    .contains(comment1.getId(), comment3.getId())
+                    .doesNotContain(comment2.getId());
+        }
+
+        @Test
         @DisplayName("리뷰 ID 기준 첫 페이지 조회 성공")
         void getComments_FirstPage_Success() {
             // given: 댓글 3개 생성, 사이즈 2로 조회
@@ -190,40 +220,6 @@ class CommentQueryServiceTest {
 
             // then
             assertThat(result.content().get(0).content()).isEqualTo("가장 오래된 댓글");
-        }
-
-        @Test
-        @DisplayName("totalElements에서 논리 삭제된 댓글을 제외한 진짜 개수만 반환 성공")
-        void getComments_Success_TotalElementsExcludesSoftDeleted() {
-            // given
-            commentRepository.saveAndFlush(new Comment(user, review, "정상 댓글 1"));
-            reviewRepository.increaseCommentCount(review.getId());
-            commentRepository.saveAndFlush(new Comment(user, review, "정상 댓글 2"));
-            reviewRepository.increaseCommentCount(review.getId());
-
-            Comment deletedComment1 = commentRepository.saveAndFlush(
-                    new Comment(user, review, "삭제 1"));
-            reviewRepository.increaseCommentCount(review.getId());
-            Comment deletedComment2 = commentRepository.saveAndFlush(
-                    new Comment(user, review, "삭제 2"));
-            reviewRepository.increaseCommentCount(review.getId());
-
-            deletedComment1.softDelete();
-            deletedComment2.softDelete();
-            commentRepository.saveAndFlush(deletedComment1);
-            reviewRepository.decreaseCommentCount(review.getId());
-            commentRepository.saveAndFlush(deletedComment2);
-            reviewRepository.decreaseCommentCount(review.getId());
-
-            CommentSearchRequestParam param = new CommentSearchRequestParam(
-                    review.getId(), SortDirection.DESC, null, null, 10
-            );
-
-            // when
-            PageResponse<CommentResponse> result = commentQueryService.getComments(param);
-
-            // then
-            assertThat(result.totalElements()).isEqualTo(2L);
         }
 
         @Test
