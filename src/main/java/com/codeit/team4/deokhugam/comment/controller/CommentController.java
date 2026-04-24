@@ -3,17 +3,22 @@ package com.codeit.team4.deokhugam.comment.controller;
 import com.codeit.team4.deokhugam.comment.controller.api.CommentApi;
 import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
+import com.codeit.team4.deokhugam.comment.dto.CommentSearchRequestParam;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
+import com.codeit.team4.deokhugam.comment.service.CommentQueryService;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController implements CommentApi {
 
     private final CommentService commentService;
+    private final CommentQueryService commentQueryService;
 
     @PostMapping
     public ResponseEntity<CommentResponse> createComment(
@@ -75,5 +81,20 @@ public class CommentController implements CommentApi {
         commentService.hardDeleteComment(commentId, loginUser.userId());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{commentId}")
+    public ResponseEntity<CommentResponse> getComment(
+            @PathVariable UUID commentId) {
+        log.info("댓글 단건 조회 요청: commentId={}", commentId);
+        return ResponseEntity.ok(commentQueryService.getComment(commentId));
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<CommentResponse>> getComments(
+            @Valid @ParameterObject CommentSearchRequestParam param) {
+        log.info("댓글 목록 조회 요청: reviewId={}, direction={}, limit={}",
+                param.reviewId(), param.direction(), param.limit());
+        return ResponseEntity.ok(commentQueryService.getComments(param));
     }
 }
