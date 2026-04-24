@@ -88,7 +88,7 @@ public class CommentQueryService {
         Instant nextAfter = null;
         if (hasNext && !content.isEmpty()) {
             CommentModel last = content.get(content.size() - 1);
-            nextCursor = last.createdAt().toString();
+            nextCursor = last.id().toString();
             nextAfter = last.createdAt();
         }
 

@@ -20,6 +20,7 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -100,7 +101,7 @@ class CommentQueryServiceTest {
         void getComment_Fail_AlreadyDeleted() {
             // given
             Comment comment = commentRepository.saveAndFlush(new Comment(user, review, "삭제될 댓글"));
-            comment.softDelete(); // 논리 삭제 처리
+            comment.softDelete();
             commentRepository.saveAndFlush(comment);
 
             // when & then
@@ -119,8 +120,11 @@ class CommentQueryServiceTest {
         void getComments_FirstPage_Success() {
             // given: 댓글 3개 생성, 사이즈 2로 조회
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
+            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
+            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
+            reviewRepository.increaseCommentCount(review.getId());
 
             CommentSearchRequestParam param = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
@@ -140,18 +144,20 @@ class CommentQueryServiceTest {
         @Test
         @DisplayName("커서를 이용한 다음 페이지 연계 조회 성공")
         void getComments_CursorPagination_Success() {
-            // given: 댓글 3개 생성
+            // given
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
+            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
+            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
+            reviewRepository.increaseCommentCount(review.getId());
 
-            // 1페이지 조회 (size 2)
             CommentSearchRequestParam firstReq = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
             );
             PageResponse<CommentResponse> firstRes = commentQueryService.getComments(firstReq);
 
-            // when: 1페이지의 커서를 이용해 2페이지 조회
+            // when
             CommentSearchRequestParam secondReq = new CommentSearchRequestParam(
                     review.getId(),
                     SortDirection.DESC,
@@ -187,6 +193,58 @@ class CommentQueryServiceTest {
         }
 
         @Test
+        @DisplayName("totalElements에서 논리 삭제된 댓글을 제외한 진짜 개수만 반환 성공")
+        void getComments_Success_TotalElementsExcludesSoftDeleted() {
+            // given
+            commentRepository.saveAndFlush(new Comment(user, review, "정상 댓글 1"));
+            reviewRepository.increaseCommentCount(review.getId());
+            commentRepository.saveAndFlush(new Comment(user, review, "정상 댓글 2"));
+            reviewRepository.increaseCommentCount(review.getId());
+
+            Comment deletedComment1 = commentRepository.saveAndFlush(
+                    new Comment(user, review, "삭제 1"));
+            reviewRepository.increaseCommentCount(review.getId());
+            Comment deletedComment2 = commentRepository.saveAndFlush(
+                    new Comment(user, review, "삭제 2"));
+            reviewRepository.increaseCommentCount(review.getId());
+
+            deletedComment1.softDelete();
+            deletedComment2.softDelete();
+            commentRepository.saveAndFlush(deletedComment1);
+            reviewRepository.decreaseCommentCount(review.getId());
+            commentRepository.saveAndFlush(deletedComment2);
+            reviewRepository.decreaseCommentCount(review.getId());
+
+            CommentSearchRequestParam param = new CommentSearchRequestParam(
+                    review.getId(), SortDirection.DESC, null, null, 10
+            );
+
+            // when
+            PageResponse<CommentResponse> result = commentQueryService.getComments(param);
+
+            // then
+            assertThat(result.totalElements()).isEqualTo(2L);
+        }
+
+        @Test
+        @DisplayName("cursor와 after가 모두 null일 때 첫 페이지 조회 성공")
+        void getComments_Success_FirstPage_BothCursorParamsNull() {
+            // given: 초기 진입(첫 페이지) 상태
+            commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
+
+            CommentSearchRequestParam param = new CommentSearchRequestParam(
+                    review.getId(), SortDirection.DESC, null, null, 10
+            );
+
+            // when
+            PageResponse<CommentResponse> result = commentQueryService.getComments(param);
+
+            // then
+            assertThat(result.content()).hasSize(1);
+            assertThat(result.content().get(0).content()).isEqualTo("댓글 1");
+        }
+
+        @Test
         @DisplayName("커서 파라미터 불일치 시 예외 발생 실패")
         void getComments_Fail_InvalidCursorParams() {
             // given
@@ -198,6 +256,36 @@ class CommentQueryServiceTest {
             assertThatThrownBy(() -> commentQueryService.getComments(param))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
+        }
+
+        @Test
+        @DisplayName("논리 삭제된 댓글은 목록 조회 실패")
+        void getComments_Fail_SoftDeletedComment() {
+            // given
+            Comment comment1 = commentRepository.saveAndFlush(
+                    new Comment(user, review, "살아있는 댓글 1"));
+            Comment comment2 = commentRepository.saveAndFlush(
+                    new Comment(user, review, "삭제될 댓글 2"));
+            Comment comment3 = commentRepository.saveAndFlush(
+                    new Comment(user, review, "살아있는 댓글 3"));
+
+            comment2.softDelete();
+            commentRepository.saveAndFlush(comment2);
+
+            CommentSearchRequestParam param = new CommentSearchRequestParam(
+                    review.getId(), SortDirection.DESC, null, null, 10
+            );
+
+            // when
+            PageResponse<CommentResponse> result = commentQueryService.getComments(param);
+
+            // then
+            assertThat(result.content()).hasSize(2);
+
+            List<UUID> resultIds = result.content().stream().map(CommentResponse::id).toList();
+            assertThat(resultIds)
+                    .contains(comment1.getId(), comment3.getId())
+                    .doesNotContain(comment2.getId());
         }
     }
 }

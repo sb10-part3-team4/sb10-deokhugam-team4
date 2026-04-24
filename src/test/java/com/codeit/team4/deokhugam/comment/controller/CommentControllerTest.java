@@ -573,7 +573,8 @@ class CommentControllerTest {
         // when & then
         mockMvc.perform(get("/api/comments"))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").exists());
     }
 
     @Test
