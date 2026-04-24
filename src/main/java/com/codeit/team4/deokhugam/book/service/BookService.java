@@ -10,10 +10,13 @@ import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.naver.NaverBookClient;
 import com.codeit.team4.deokhugam.naver.NaverBookResponse;
+import com.codeit.team4.deokhugam.ocr.OcrSpaceClient;
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,6 +35,9 @@ public class BookService {
     private final BookMapper bookMapper;
     private final NaverBookClient naverBookClient;
     private final S3Service s3Service;
+    private final OcrSpaceClient ocrSpaceClient;
+    private static final Pattern ISBN_PATTERN = Pattern.compile(
+            "(?:ISBN[:\\s-]*)?(97[89][\\d-]{10,17})|(\\d{9}[\\dXx])");
 
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
@@ -179,5 +185,29 @@ public class BookService {
         log.info("ISBN으로 도서 검색 완료: isbn={}", isbn);
 
         return bookMapper.toBookResponse(item);
+    }
+
+    public String extractIsbnFromImage(MultipartFile image) {
+        // OCR Client를 통해 전체 텍스트 추출
+        String text = ocrSpaceClient.extractText(image);
+
+        Matcher matcher = ISBN_PATTERN.matcher(text);
+
+        // 정규식 매칭 확인
+        if (!matcher.find()) {
+            throw new BusinessException(ErrorCode.OCR_ISBN_NOT_FOUND,
+                    "textLength=" + text.length());
+        }
+
+        // 추출된 그룹 확인 및 공백/하이픈 제거
+        String isbn = (matcher.group(1) != null ? matcher.group(1) : matcher.group(2))
+                .replaceAll("[-\\s]", "");
+
+        // 정규화 후 자릿수 재검증 (ISBN-10=10, ISBN-13=13)
+        if (isbn.length() != 10 && isbn.length() != 13) {
+            throw new BusinessException(ErrorCode.OCR_ISBN_NOT_FOUND, "isbn=" + isbn);
+        }
+        log.info("이미지에서 ISBN 추출 완료: isbn={}", isbn);
+        return isbn;
     }
 }

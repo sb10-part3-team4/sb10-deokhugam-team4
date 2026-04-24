@@ -164,4 +164,18 @@ public interface BookApi {
             @Pattern(regexp = "^(?:\\d{10}|\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
             String isbn
     );
+
+    @Operation(summary = "OCR 기반 ISBN 인식", description = "OCR을 통해 ISBN을 인식합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "ISBN 인식 성공",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(type = "string", example = "9788935213573"))),
+            @ApiResponse(responseCode = "400", description = "잘못된 이미지 형식 또는 OCR 인식 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    })
+    ResponseEntity<String> extractIsbnFromImage(
+            @Parameter(description = "도서 이미지", required = true)
+            @RequestPart(value = "image") MultipartFile image);
 }
