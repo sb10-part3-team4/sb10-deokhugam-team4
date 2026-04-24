@@ -25,7 +25,9 @@
         {"name": "AWS_REGION", "value": "${AWS_REGION}"},
         {"name": "NAVER_CLIENT_ID", "value": "${NAVER_CLIENT_ID}"},
         {"name": "NAVER_CLIENT_SECRET", "value": "${NAVER_CLIENT_SECRET}"},
-        {"name": "OCR_API_KEY", "value": "${OCR_API_KEY}"}
+        {"name": "OCR_API_KEY", "value": "${OCR_API_KEY}"},
+        {"name": "REDIS_HOST", "value": "${REDIS_HOST}"},
+        {"name": "REDIS_PORT", "value": "6379"}
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
