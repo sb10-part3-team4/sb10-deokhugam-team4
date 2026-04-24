@@ -1,0 +1,40 @@
+{
+  "family": "deokhugam-task",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "deokhugam",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {"name": "SPRING_PROFILES_ACTIVE", "value": "prod"},
+        {"name": "DB_URL", "value": "${DB_URL}"},
+        {"name": "DB_USERNAME", "value": "${DB_USERNAME}"},
+        {"name": "DB_PASSWORD", "value": "${DB_PASSWORD}"},
+        {"name": "AWS_S3_BUCKET_NAME", "value": "${AWS_S3_BUCKET_NAME}"},
+        {"name": "AWS_REGION", "value": "${AWS_REGION}"},
+        {"name": "NAVER_CLIENT_ID", "value": "${NAVER_CLIENT_ID}"},
+        {"name": "NAVER_CLIENT_SECRET", "value": "${NAVER_CLIENT_SECRET}"},
+        {"name": "OCR_API_KEY", "value": "${OCR_API_KEY}"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/deokhugam",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

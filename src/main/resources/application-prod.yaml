@@ -1,12 +1,13 @@
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  h2:
-    console:
-      enabled: false
   jpa:
     hibernate:
       ddl-auto: validate
@@ -16,3 +17,18 @@ logging:
   level:
     root: WARN
     com.codeit.team4: INFO
+
+user:
+  cleanup:
+    cron: "0 0 4 * * *"
+    zone: "Asia/Seoul"
+
+dashboard:
+  batch:
+    cron: "0 0 3 * * *"
+    zone: "Asia/Seoul"
+
+notification:
+  batch:
+    cron: "0 0 2 * * *"
+    zone: "Asia/Seoul"

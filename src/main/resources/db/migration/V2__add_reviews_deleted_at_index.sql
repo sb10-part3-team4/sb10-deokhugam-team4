@@ -1,0 +1,1 @@
+CREATE INDEX idx_reviews_deleted_at ON reviews (deleted_at) WHERE deleted_at IS NOT NULL;

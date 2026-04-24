@@ -1,21 +1,57 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   datasource:
-    url: jdbc:h2:file:./data/deokhugam
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:5433/deokhugam
+    username: deokhugam
+    password: deokhugam
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
-
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 logging:
   level:
     root: INFO
     com.codeit.team4: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+user:
+  cleanup:
+    cron: "0 */5 * * * *"
+    zone: "Asia/Seoul"
+
+dashboard:
+  batch:
+    cron: "0 0 3 * * *"
+    zone: "Asia/Seoul"
+
+notification:
+  batch:
+    cron: "0 0 2 * * *"
+    zone: "Asia/Seoul"
+
+naver:
+  api:
+    client-id: ${NAVER_CLIENT_ID:dummy}
+    client-secret: ${NAVER_CLIENT_SECRET:dummy}
+    book-search-url: https://openapi.naver.com/v1/search/book_adv.json
+
+ocr:
+  api:
+    key: ${OCR_API_KEY:dummy}
+    url: https://api.ocr.space/parse/image
+
+aws:
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME:dummy-bucket}
+    region: ${AWS_REGION:ap-northeast-2}
+    access-key: ${AWS_ACCESS_KEY_ID:dummy-key}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:dummy-secret}

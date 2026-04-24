@@ -1,7 +1,7 @@
 language: "ko-KR"
 reviews:
   profile: "assertive"
-  request_changes_workflow: true
+  request_changes_workflow: false
   high_level_summary: true
   sequence_diagrams: true
   auto_review:
@@ -27,7 +27,7 @@ reviews:
       instructions: |
         - 컨트롤러 구현체는 반드시 인터페이스(Api)를 구현해야 함
         - @RestController, @RequestMapping, @RequiredArgsConstructor 어노테이션 확인
-        - @Slf4j 로그 선언 및 요청/응답 로그가 있는지 확인 (log.info, log.debug)
+        - API 호출 시점에 로깅이 되어 있는지 확인 (예: log.info("Request API: ..."))
         - @RequestBody에 @Valid 어노테이션 누락 시 반드시 지적
         - REST 네이밍 규칙 준수 (명사 기반 URL, 적절한 HTTP 메서드)
         - 올바른 HTTP 상태코드 반환 확인 (ResponseEntity 사용)
@@ -41,6 +41,8 @@ reviews:
         - 비즈니스 로직이 Controller 또는 Repository로 누출되면 지적
         - 예외 처리 누락 시 반드시 지적
         - 도메인별 exception 패키지의 커스텀 예외 사용 권장
+        - 데이터 영속화(DB 저장/수정/삭제) 성공 시점에 로깅이 되어 있는지 확인
+        - BusinessException 발생 시, 두 번째 파라미터에 식별자 정보를 포함하는지 확인
 
     - path: "src/main/java/**/repository/**"
       instructions: |
@@ -67,7 +69,7 @@ reviews:
     - path: "src/main/java/**/global/**"
       instructions: |
         - 공통 예외 처리(@RestControllerAdvice) 누락 시 지적
-        - 도메인별 예외가 global에 위치하면 각 도메인 exception 패키지로 이동 권장
+        - GlobalExceptionHandler가 모든 도메인 예외를 일괄 처리하고 있는지 확인
         - 유틸 클래스는 인스턴스화 방지(private 생성자) 확인
 
     - path: "src/test/java/**"
