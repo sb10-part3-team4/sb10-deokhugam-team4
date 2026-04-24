@@ -25,7 +25,7 @@ public class OcrSpaceClientImpl implements OcrSpaceClient {
 
     private final OcrProperties ocrProperties;  // yaml에서 API KEY, URL 관리
     private final RestClient restClient;    // 동기식 API 호출 도구
-
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     // OCR 처리가 가능한 파일 확장자 목록
     private static final Set<String> ALLOWED_TYPES = Set.of(
             "image/jpeg", "image/png", "image/gif", "application/pdf"
@@ -34,6 +34,10 @@ public class OcrSpaceClientImpl implements OcrSpaceClient {
     // 이미지 파일을 받아 OCR API를 호출하고 추출된 텍스트 전체를 반환
     @Override
     public String extractText(MultipartFile image) {
+        if (image.getSize() > MAX_FILE_SIZE) {
+            throw new BusinessException(ErrorCode.OCR_ERROR,
+                    "파일 크기 초과: " + image.getSize());
+        }
         // 파일 형식 검증 (지원하지 않는 형식 방지)
         String contentType = image.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
@@ -56,12 +60,17 @@ public class OcrSpaceClientImpl implements OcrSpaceClient {
                 throw new BusinessException(ErrorCode.OCR_ERROR, "response=" + response);
             }
 
+            // 공백, 빈 값 검증
+            String parsedText = response.parsedResults().get(0).parsedText();
+            if (parsedText == null || parsedText.isBlank()) {
+                throw new BusinessException(ErrorCode.OCR_ERROR, "OCR 텍스트 추출 결과 없음");
+            }
             log.info("OCR 텍스트 추출 완료");
-            return response.parsedResults().get(0).parsedText();    // 추출된 전체 텍스트 반환
-
+            return parsedText;
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
+            log.error("OCR API 호출 실패: url={}", ocrProperties.getUrl(), e);
             throw new BusinessException(ErrorCode.OCR_ERROR,
                     "url=" + ocrProperties.getUrl() + ", cause=" + e.getClass().getSimpleName()
                             + ":" + e.getMessage());
