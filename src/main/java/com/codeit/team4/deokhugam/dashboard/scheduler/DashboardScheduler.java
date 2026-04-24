@@ -26,6 +26,7 @@ public class DashboardScheduler {
     public void runDashboardBatch() {
         LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
         log.info("대시보드 배치 스케줄러 시작: snapshotDate={}", snapshotDate);
+
         try {
             dashboardBatchService.updatePopularBooks(snapshotDate);
         } catch (Exception e) {
@@ -36,6 +37,12 @@ public class DashboardScheduler {
             dashboardBatchService.updatePopularReviews(snapshotDate);
         } catch (Exception e) {
             log.error("인기 리뷰 배치 실패", e);
+        }
+
+        try {
+            dashboardBatchService.updatePowerUsers(snapshotDate);
+        } catch (Exception e) {
+            log.error("파워 유저 배치 실패", e);
         }
 
         log.info("대시보드 배치 스케줄러 종료");

@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 import lombok.AccessLevel;
@@ -31,6 +32,10 @@ import lombok.NoArgsConstructor;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PowerUser extends BaseEntity {
+
+    public static final BigDecimal REVIEW_SCORE_SUM_WEIGHT = new BigDecimal("0.5");
+    public static final BigDecimal LIKE_COUNT_WEIGHT = new BigDecimal("0.2");
+    public static final BigDecimal COMMENT_COUNT_WEIGHT = new BigDecimal("0.3");
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -66,7 +71,6 @@ public class PowerUser extends BaseEntity {
             String nickname,
             PeriodType period,
             int rank,
-            BigDecimal score,
             BigDecimal reviewScoreSum,
             int likeCount,
             int commentCount,
@@ -76,11 +80,22 @@ public class PowerUser extends BaseEntity {
         this.nickname = nickname;
         this.period = period;
         this.rank = rank;
-        this.score = score;
+        this.score = calculateScore(reviewScoreSum, likeCount, commentCount);
         this.reviewScoreSum = reviewScoreSum;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
         this.snapshotDate = snapshotDate;
+    }
+
+    private BigDecimal calculateScore(
+            BigDecimal reviewScoreSum,
+            int likeCount,
+            int commentCount
+    ) {
+        return reviewScoreSum.multiply(REVIEW_SCORE_SUM_WEIGHT)
+                .add(new BigDecimal(likeCount).multiply(LIKE_COUNT_WEIGHT))
+                .add(new BigDecimal(commentCount).multiply(COMMENT_COUNT_WEIGHT))
+                .setScale(4, RoundingMode.HALF_UP);
     }
 
     @Override
