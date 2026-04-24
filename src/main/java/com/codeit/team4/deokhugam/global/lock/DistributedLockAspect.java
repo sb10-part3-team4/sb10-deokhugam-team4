@@ -1,0 +1,78 @@
+package com.codeit.team4.deokhugam.global.lock;
+
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import java.lang.reflect.Parameter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Aspect
+@Component
+@RequiredArgsConstructor
+public class DistributedLockAspect {
+
+    private final RedissonClient redissonClient;
+
+    @Around("@annotation(distributedLock)")
+    public Object around(
+            ProceedingJoinPoint joinPoint,
+            DistributedLock distributedLock
+    ) throws Throwable {
+        String lockKey = buildLockKey(distributedLock, joinPoint);
+        RLock lock = redissonClient.getLock(lockKey);
+
+        log.debug("락 획득 시도: {}", lockKey);
+
+        boolean acquired = lock.tryLock(
+                distributedLock.waitTime(),
+                distributedLock.leaseTime(),
+                distributedLock.timeUnit()
+        );
+
+        if (!acquired) {
+            log.debug("락 획득 실패: {}", lockKey);
+            throw new BusinessException(ErrorCode.LOCK_ACQUISITION_FAILED, "락 획득 실패: " + lockKey);
+        }
+
+        log.debug("락 획득 성공: {}", lockKey);
+
+        try {
+            return joinPoint.proceed();
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+                log.debug("락 해제: {}", lockKey);
+            }
+        }
+    }
+
+    private String buildLockKey(DistributedLock distributedLock, ProceedingJoinPoint joinPoint) {
+        String key = distributedLock.key();
+        String lockParam = distributedLock.lockParam();
+
+        if (lockParam.isEmpty()) {
+            return key;
+        }
+
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Parameter[] parameters = signature.getMethod().getParameters();
+        Object[] args = joinPoint.getArgs();
+
+        for (int i = 0; i < parameters.length; i++) {
+            if (parameters[i].getName().equals(lockParam)) {
+                return key + ":" + args[i];
+            }
+        }
+
+        //개발자가 어노테이션을 잘못 작성했을 때 에러 발생
+        throw new IllegalArgumentException("lockParam '" + lockParam + "'에 해당하는 파라미터를 찾을 수 없습니다");
+    }
+}

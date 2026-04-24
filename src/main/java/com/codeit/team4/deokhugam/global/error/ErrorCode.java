@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     // Common
+    LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "현재 다른 요청이 처리 중입니다. 잠시 후 다시 시도해주세요"),
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력입니다"),
     MISSING_HEADER(HttpStatus.BAD_REQUEST, "필수 헤더가 누락되었습니다"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다"),
