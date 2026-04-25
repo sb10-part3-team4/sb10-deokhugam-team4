@@ -52,6 +52,10 @@ public class NotificationEventListener {
     public void handleReviewRanked(ReviewRankedEvent event) {
         log.info("ReviewRankedEvent 수신: {}", event);
 
+        if (event.receiverId() == null) {
+            log.warn("알림 생성 스킵 - receiverId가 null입니다. event={}", event);
+            return;
+        }
         notificationService.createRankNotification(
                 event.receiverId(),
                 event.reviewId(),
