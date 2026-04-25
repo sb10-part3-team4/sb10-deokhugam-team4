@@ -17,7 +17,7 @@ public class NotificationEventListener {
 
     private final NotificationService notificationService;
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleLikeCreated(LikeEvent event) {
         log.debug("LikeEvent 수신: {}", event);
 
@@ -25,14 +25,18 @@ public class NotificationEventListener {
             return;
         }
 
-        notificationService.createLikeNotification(
-                event.receiverId(),
-                event.reviewId(),
-                event.actorId()
-        );
+        try {
+            notificationService.createLikeNotification(
+                    event.receiverId(),
+                    event.reviewId(),
+                    event.actorId()
+            );
+        } catch (Exception e) {
+            log.error("좋아요 알림 생성 실패: event={}", event, e);
+        }
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentCreated(CommentEvent event) {
         log.debug("CommentEvent 수신: {}", event);
 
@@ -40,11 +44,15 @@ public class NotificationEventListener {
             return;
         }
 
-        notificationService.createCommentNotification(
-                event.receiverId(),
-                event.reviewId(),
-                event.actorId()
-        );
+        try {
+            notificationService.createCommentNotification(
+                    event.receiverId(),
+                    event.reviewId(),
+                    event.actorId()
+            );
+        } catch (Exception e) {
+            log.error("댓글 알림 생성 실패 - event={}", event, e);
+        }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -55,11 +63,15 @@ public class NotificationEventListener {
             log.warn("알림 생성 스킵 - receiverId가 null입니다. event={}", event);
             return;
         }
-        notificationService.createRankNotification(
-                event.receiverId(),
-                event.reviewId(),
-                event.period(),
-                event.rank()
-        );
+        try {
+            notificationService.createRankNotification(
+                    event.receiverId(),
+                    event.reviewId(),
+                    event.period(),
+                    event.rank()
+            );
+        } catch (Exception e) {
+            log.error("랭크 알림 생성 실패: event={}", event, e);
+        }
     }
 }
