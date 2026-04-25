@@ -144,13 +144,15 @@ public class ReviewService {
         reviewLikeRepository.save(reviewLike);
         reviewRepository.increaseLikeCount(review.getId());
 
-        eventPublisher.publishEvent(
-                new LikeEvent(
-                        review.getId(),
-                        review.getUser().getId(),
-                        userId
-                )
-        );
+        if (!review.getUser().getId().equals(userId)) {
+            eventPublisher.publishEvent(
+                    new LikeEvent(
+                            review.getId(),
+                            review.getUser().getId(),
+                            userId
+                    )
+            );
+        }
 
         log.info("리뷰 좋아요 추가: reviewId={}, userId={}", review.getId(), userId);
     }
