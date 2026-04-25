@@ -129,6 +129,29 @@ class NotificationServiceTest {
     }
 
     @Test
+    @DisplayName("리뷰가 존재하지 않으면 예외 발생")
+    void createLikeNotification_whenReviewNotFound_thenThrow() {
+        // given
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        User actor = mock(User.class);
+        given(actor.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(actor);
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+                notificationService.createLikeNotification(receiverId, reviewId, actorId)
+        )
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("reviewId=" + reviewId);
+    }
+
+    @Test
     @DisplayName("알림 저장 실패 시 예외 발생")
     void createLikeNotification_whenSaveFails_thenThrow() {
         // given

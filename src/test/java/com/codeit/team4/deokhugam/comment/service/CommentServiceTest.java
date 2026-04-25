@@ -71,6 +71,7 @@ class CommentServiceTest {
         given(reviewOwner.getId()).willReturn(UUID.randomUUID());
 
         User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
 
         Review mockReview = mock(Review.class);
         given(mockReview.getId()).willReturn(reviewId);
@@ -98,7 +99,13 @@ class CommentServiceTest {
         assertThat(response).isEqualTo(mockResponse);
         then(reviewRepository).should(times(1)).increaseCommentCount(reviewId);
 
-        then(eventPublisher).should().publishEvent(any(CommentEvent.class));
+        ArgumentCaptor<CommentEvent> eventCaptor = ArgumentCaptor.forClass(CommentEvent.class);
+        then(eventPublisher).should().publishEvent(eventCaptor.capture());
+
+        CommentEvent publishedEvent = eventCaptor.getValue();
+        assertThat(publishedEvent.reviewId()).isEqualTo(reviewId);
+        assertThat(publishedEvent.receiverId()).isEqualTo(reviewOwner.getId());
+        assertThat(publishedEvent.actorId()).isEqualTo(userId);
 
         // ArgumentCaptor로 mapper나 repository에 전달된 객체를 잡아서 확인
         ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
