@@ -35,6 +35,8 @@ public class NotificationService {
     @Transactional
     public void createLikeNotification(UUID receiverId, UUID reviewId, UUID actorId) {
 
+        if (receiverId == null || receiverId.equals(actorId)) return;
+
         String actorName = getActorNickname(actorId);
         Review review = findActiveReview(reviewId);
 
@@ -48,6 +50,8 @@ public class NotificationService {
 
     @Transactional
     public void createCommentNotification(UUID receiverId, UUID reviewId, UUID actorId) {
+
+        if (receiverId == null || receiverId.equals(actorId)) return;
 
         String actorName = getActorNickname(actorId);
         Review review = findActiveReview(reviewId);
@@ -219,5 +223,7 @@ public class NotificationService {
         );
 
         notificationRepository.save(notification);
+
+        log.info("알림 저장 완료: receiverId={}, reviewId={}", receiverId, reviewId);
     }
 }
