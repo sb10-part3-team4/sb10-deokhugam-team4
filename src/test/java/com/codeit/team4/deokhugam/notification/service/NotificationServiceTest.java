@@ -60,6 +60,8 @@ class NotificationServiceTest {
         UUID reviewId = UUID.randomUUID();
         UUID actorId = UUID.randomUUID();
 
+        assertThat(receiverId).isNotEqualTo(actorId);
+
         Review review = mock(Review.class);
         given(review.getContent()).willReturn("review content");
 
@@ -75,8 +77,7 @@ class NotificationServiceTest {
         notificationService.createLikeNotification(receiverId, reviewId, actorId);
 
         // then
-        then(notificationRepository).should().saveAndFlush(any(Notification.class));
-    }
+        then(notificationRepository).should().save(any(Notification.class));    }
 
     @Test
     @DisplayName("댓글 알림 생성 성공")
@@ -85,6 +86,8 @@ class NotificationServiceTest {
         UUID receiverId = UUID.randomUUID();
         UUID reviewId = UUID.randomUUID();
         UUID actorId = UUID.randomUUID();
+
+        assertThat(receiverId).isNotEqualTo(actorId);
 
         Review review = mock(Review.class);
         given(review.getContent()).willReturn("review content");
@@ -100,8 +103,7 @@ class NotificationServiceTest {
         notificationService.createCommentNotification(receiverId, reviewId, actorId);
 
         // then
-        then(notificationRepository).should().saveAndFlush(any(Notification.class));
-    }
+        then(notificationRepository).should().save(any(Notification.class));    }
 
     @Test
     @DisplayName("랭크 알림 생성 성공")
@@ -125,8 +127,7 @@ class NotificationServiceTest {
         );
 
         // then
-        then(notificationRepository).should().saveAndFlush(any(Notification.class));
-    }
+        then(notificationRepository).should().save(any(Notification.class));    }
 
     @Test
     @DisplayName("리뷰가 존재하지 않으면 예외 발생")
@@ -135,6 +136,8 @@ class NotificationServiceTest {
         UUID receiverId = UUID.randomUUID();
         UUID reviewId = UUID.randomUUID();
         UUID actorId = UUID.randomUUID();
+
+        assertThat(receiverId).isNotEqualTo(actorId);
 
         User actor = mock(User.class);
         given(actor.getNickname()).willReturn("kim");
@@ -171,7 +174,7 @@ class NotificationServiceTest {
 
         willThrow(new RuntimeException("DB error"))
                 .given(notificationRepository)
-                .saveAndFlush(any());
+                .save(any());
 
         // when & then
         assertThatThrownBy(() ->
