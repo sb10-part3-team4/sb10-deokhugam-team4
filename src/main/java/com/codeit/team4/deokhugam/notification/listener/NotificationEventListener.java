@@ -48,7 +48,7 @@ public class NotificationEventListener {
         );
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleReviewRanked(ReviewRankedEvent event) {
         log.info("ReviewRankedEvent 수신: {}", event);
 

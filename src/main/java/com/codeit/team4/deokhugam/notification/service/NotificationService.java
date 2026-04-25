@@ -18,6 +18,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -59,7 +60,7 @@ public class NotificationService {
         );
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createRankNotification(UUID receiverId, UUID reviewId, PeriodType period, int rank) {
         String periodText = switch (period) {
             case DAILY -> "일간";
@@ -217,6 +218,6 @@ public class NotificationService {
                 receiverId, reviewId, review.getContent(), message
         );
 
-        notificationRepository.saveAndFlush(notification);
+        notificationRepository.save(notification);
     }
 }

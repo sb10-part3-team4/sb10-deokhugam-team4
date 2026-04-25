@@ -155,6 +155,11 @@ public class DashboardBatchService {
 
         if (shouldPublish(period, snapshotDate)) {
             for (PopularReview p : popularReviews) {
+
+                if (p.getReview() == null || p.getUser() == null) {
+                    continue;
+                }
+
                 eventPublisher.publishEvent(
                         new ReviewRankedEvent(
                                 p.getReview().getId(),
