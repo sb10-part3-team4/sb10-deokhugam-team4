@@ -91,29 +91,28 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public String uploadFile(File file, String dirName) {
+    public String uploadFile(File file, String dirName, String s3FileName) {
         if (file == null || !file.exists() || !file.isFile()) {
             throw new BusinessException(ErrorCode.S3_EMPTY_FILE_ERROR, "업로드할 파일이 존재하지 않습니다.");
         }
 
-        String key = dirName + "/" + file.getName();
+        String key = dirName + "/" + s3FileName;
 
         try {
-            // 로그 파일이므로 text/plain 설정
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(s3Properties.getBucketName())
                     .key(key)
                     .contentType("text/plain")
+                    .contentLength(file.length()) // 일관성 유지
                     .build();
 
-            // File 객체 직접 업로드
             s3Client.putObject(request, RequestBody.fromFile(file));
 
             log.info("S3 파일 업로드 완료: key={}", key);
             return generateUrl(key);
 
         } catch (S3Exception e) {
-            log.error("S3 파일 업로드 중 AWS 예외 발생: key={}", key, e);
+            log.error("S3 파일 업로드 실패: key={}", key, e);
             throw new BusinessException(ErrorCode.S3_UPLOAD_ERROR, "key=" + key);
         }
     }

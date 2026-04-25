@@ -32,3 +32,10 @@ notification:
   batch:
     cron: "0 0 2 * * *"
     zone: "Asia/Seoul"
+    dir: "/app/logs"
+    s3-dir: "logs"
+
+log:
+  backup:
+    cron: "0 0 2 * * *"
+    zone: "Asia/Seoul"

@@ -9,5 +9,5 @@ public interface S3Service {
 
     void delete(String fileUrl);
 
-    String uploadFile(File file, String dirName);
+    String uploadFile(File file, String dirName, String s3FileName);
 }
