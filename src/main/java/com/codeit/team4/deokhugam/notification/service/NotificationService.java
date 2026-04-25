@@ -66,6 +66,8 @@ public class NotificationService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createRankNotification(UUID receiverId, UUID reviewId, PeriodType period, int rank) {
+        if (receiverId == null return;
+
         String periodText = switch (period) {
             case DAILY -> "일간";
             case WEEKLY -> "주간";
