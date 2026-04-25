@@ -155,6 +155,62 @@ class NotificationServiceTest {
     }
 
     @Test
+    @DisplayName("댓글 알림 저장 실패 시 예외 발생")
+    void createCommentNotification_whenSaveFails_thenThrow() {
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("content");
+
+        User actor = mock(User.class);
+        given(actor.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(actor);
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        willThrow(new RuntimeException("DB error"))
+                .given(notificationRepository)
+                .save(any());
+
+        assertThatThrownBy(() ->
+                notificationService.createCommentNotification(receiverId, reviewId, actorId)
+        )
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB error");
+    }
+
+    @Test
+    @DisplayName("랭크 알림 저장 실패 시 예외 발생")
+    void createRankNotification_whenSaveFails_thenThrow() {
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("content");
+
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        willThrow(new RuntimeException("DB error"))
+                .given(notificationRepository)
+                .save(any());
+
+        assertThatThrownBy(() ->
+                notificationService.createRankNotification(
+                        receiverId,
+                        reviewId,
+                        PeriodType.DAILY,
+                        1
+                )
+        )
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB error");
+    }
+
+    @Test
     @DisplayName("알림 저장 실패 시 예외 발생")
     void createLikeNotification_whenSaveFails_thenThrow() {
         // given
