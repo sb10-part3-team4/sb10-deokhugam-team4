@@ -4,6 +4,7 @@ import com.codeit.team4.deokhugam.notification.service.NotificationService;
 import com.codeit.team4.deokhugam.notification.event.CommentEvent;
 import com.codeit.team4.deokhugam.notification.event.LikeEvent;
 import com.codeit.team4.deokhugam.notification.event.ReviewRankedEvent;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ public class NotificationEventListener {
     public void handleLikeCreated(LikeEvent event) {
         log.debug("LikeEvent 수신: {}", event);
 
-        if (event.receiverId().equals(event.actorId())) {
+        if (event.receiverId() == null || Objects.equals(event.receiverId(), event.actorId())) {
             return;
         }
 
@@ -40,7 +41,7 @@ public class NotificationEventListener {
     public void handleCommentCreated(CommentEvent event) {
         log.debug("CommentEvent 수신: {}", event);
 
-        if (event.receiverId().equals(event.actorId())) {
+        if (event.receiverId() == null || Objects.equals(event.receiverId(), event.actorId())) {
             return;
         }
 
