@@ -41,7 +41,9 @@ notification:
 log:
   backup:
     cron: "0 0 2 * * *"
-    timezone: "Asia/Seoul"
+    zone: "Asia/Seoul"
+    dir: "/app/logs"
+    s3-dir: "logs"
 
 naver:
   api:
