@@ -6,7 +6,6 @@ import com.codeit.team4.deokhugam.notification.event.LikeEvent;
 import com.codeit.team4.deokhugam.notification.event.ReviewRankedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
