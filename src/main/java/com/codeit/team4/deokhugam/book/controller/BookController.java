@@ -111,7 +111,7 @@ public class BookController implements BookApi {
     }
 
     // ISBN으로 도서 정보 조회
-    @GetMapping("/search")
+    @GetMapping("/info")
     public ResponseEntity<BookResponse> searchByIsbn(
             @RequestParam
             @NotBlank
