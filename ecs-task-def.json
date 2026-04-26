@@ -3,7 +3,7 @@
   "networkMode": "bridge",
   "requiresCompatibilities": ["EC2"],
   "cpu": "256",
-  "memory": "400",
+  "memory": "1024",
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
@@ -18,7 +18,7 @@
         }
       ],
       "environment": [
-        {"name": "JAVA_OPTS", "value": "-Xmx256m -Xms128m"},
+        {"name": "JAVA_OPTS", "value": "-Xmx512m -Xms256m"},
         {"name": "SPRING_PROFILES_ACTIVE", "value": "prod"},
         {"name": "DB_URL", "value": "${DB_URL}"},
         {"name": "DB_USERNAME", "value": "${DB_USERNAME}"},
