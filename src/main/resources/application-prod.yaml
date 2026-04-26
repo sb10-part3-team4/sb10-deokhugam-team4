@@ -32,3 +32,21 @@ notification:
   batch:
     cron: "0 0 2 * * *"
     zone: "Asia/Seoul"
+
+naver:
+  api:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+    book-search-url: https://openapi.naver.com/v1/search/book_adv.json
+
+ocr:
+  api:
+    key: ${OCR_API_KEY}
+    url: https://api.ocr.space/parse/image
+
+aws:
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    region: ${AWS_REGION}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
