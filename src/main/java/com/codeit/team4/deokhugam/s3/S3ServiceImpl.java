@@ -49,7 +49,7 @@ public class S3ServiceImpl implements S3Service {
         }
 
         // 원본 파일명 대신 서버 측 확장자 매핑값 사용
-        String key = "thumbnails/" + UUID.randomUUID() + ext;
+        String key = "thumbnails/" + UUID.randomUUID() + "." + ext;
 
         try {
             // S3에 객체를 저장하기 위한 요청 객체 빌드
