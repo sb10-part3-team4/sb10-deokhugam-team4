@@ -15,7 +15,7 @@ COPY --chown=appuser:appuser ${JAR_FILE} app.jar
 USER appuser
 
 # 6. 컨테이너 시작 시 실행할 명령어
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
 
 # 7. 서비스 포트 노출 (Spring Boot 기본 8080)
 EXPOSE 8080
