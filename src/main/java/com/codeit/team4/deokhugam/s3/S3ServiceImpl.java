@@ -97,7 +97,7 @@ public class S3ServiceImpl implements S3Service {
         }
 
         if (dirName == null || dirName.isBlank() || s3FileName == null || s3FileName.isBlank()) {
-            throw new BusinessException(ErrorCode.S3_EMPTY_FILE_ERROR, "경로/파일 이름이 비어 있습니다.");
+            throw new BusinessException(ErrorCode.S3_INVALID_PATH_ERROR, "경로/파일 이름이 비어 있습니다.");
         }
 
         String key = dirName + "/" + s3FileName;

@@ -101,6 +101,7 @@ class LogBackupServiceTest {
         logBackupService.backupAndCleanUpYesterdayLog();
 
         // then
+        verify(s3Service).upload(eq(mockLogFile), eq("logs"), anyString());
         assertThat(mockLogFile.exists()).isTrue();
     }
 
