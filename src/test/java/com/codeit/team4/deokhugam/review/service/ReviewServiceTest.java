@@ -34,6 +34,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceTest {
 
@@ -57,6 +59,9 @@ class ReviewServiceTest {
 
     @Mock
     private ReviewMapper reviewMapper;
+
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @Nested
     @DisplayName("리뷰 생성")
@@ -385,13 +390,17 @@ class ReviewServiceTest {
         void toggleLike_like_success() {
             UUID reviewId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
+            UUID ownerId = UUID.randomUUID();
             Review review = mock(Review.class);
             User user = mock(User.class);
+            User reviewOwner = mock(User.class);
 
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
             given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(false);
             given(userService.findById(userId)).willReturn(user);
             given(review.getId()).willReturn(reviewId);
+            given(review.getUser()).willReturn(reviewOwner);
+            given(reviewOwner.getId()).willReturn(ownerId);
 
             ReviewLikeResponse response = reviewService.toggleLike(reviewId, userId);
 

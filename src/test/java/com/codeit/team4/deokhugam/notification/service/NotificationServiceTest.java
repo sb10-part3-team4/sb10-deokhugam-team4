@@ -1,24 +1,5 @@
 package com.codeit.team4.deokhugam.notification.service;
 
-import com.codeit.team4.deokhugam.global.error.BusinessException;
-import com.codeit.team4.deokhugam.global.error.ErrorCode;
-import com.codeit.team4.deokhugam.global.response.PageResponse;
-import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
-import com.codeit.team4.deokhugam.notification.entity.Notification;
-import com.codeit.team4.deokhugam.notification.model.NotificationModel;
-import com.codeit.team4.deokhugam.notification.repository.NotificationRepository;
-import java.util.Optional;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +9,29 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.global.error.BusinessException;
+import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.response.PageResponse;
+import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
+import com.codeit.team4.deokhugam.notification.entity.Notification;
+import com.codeit.team4.deokhugam.notification.model.NotificationModel;
+import com.codeit.team4.deokhugam.notification.repository.NotificationRepository;
+import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.user.entity.User;
+import com.codeit.team4.deokhugam.user.service.UserService;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
@@ -40,6 +44,203 @@ class NotificationServiceTest {
 
     @Mock
     NotificationRepository notificationRepository;
+
+    @Mock
+    ReviewRepository reviewRepository;
+
+    @Mock
+    UserService userService;
+
+    @Test
+    @DisplayName("좋아요 알림 생성 성공")
+    void createLikeNotification_success() {
+        // given
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        assertThat(receiverId).isNotEqualTo(actorId);
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("review content");
+
+        User user = mock(User.class);
+        given(user.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(user);
+
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        // when
+        notificationService.createLikeNotification(receiverId, reviewId, actorId);
+
+        // then
+        then(notificationRepository).should().save(any(Notification.class));
+    }
+
+    @Test
+    @DisplayName("댓글 알림 생성 성공")
+    void createCommentNotification_success() {
+        // given
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        assertThat(receiverId).isNotEqualTo(actorId);
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("review content");
+
+        User actor = mock(User.class);
+        given(actor.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(actor);
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        // when
+        notificationService.createCommentNotification(receiverId, reviewId, actorId);
+
+        // then
+        then(notificationRepository).should().save(any(Notification.class));
+    }
+
+    @Test
+    @DisplayName("랭크 알림 생성 성공")
+    void createRankNotification_success() {
+        // given
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("content");
+
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        // when
+        notificationService.createRankNotification(
+                receiverId,
+                reviewId,
+                PeriodType.DAILY,
+                1
+        );
+
+        // then
+        then(notificationRepository).should().save(any(Notification.class));
+    }
+
+    @Test
+    @DisplayName("리뷰가 존재하지 않으면 좋아요 알림 생성 실패")
+    void createLikeNotification_whenReviewNotFound_thenThrow() {
+        // given
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        assertThat(receiverId).isNotEqualTo(actorId);
+
+        User actor = mock(User.class);
+        given(actor.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(actor);
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+                notificationService.createLikeNotification(receiverId, reviewId, actorId)
+        )
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("reviewId=" + reviewId);
+    }
+
+    @Test
+    @DisplayName("댓글 알림 저장 실패 시 예외 발생")
+    void createCommentNotification_whenSaveFails_thenThrow() {
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("content");
+
+        User actor = mock(User.class);
+        given(actor.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(actor);
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        willThrow(new RuntimeException("DB error"))
+                .given(notificationRepository)
+                .save(any());
+
+        assertThatThrownBy(() ->
+                notificationService.createCommentNotification(receiverId, reviewId, actorId)
+        )
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB error");
+    }
+
+    @Test
+    @DisplayName("랭크 알림 저장 실패 시 예외 발생")
+    void createRankNotification_whenSaveFails_thenThrow() {
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("content");
+
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        willThrow(new RuntimeException("DB error"))
+                .given(notificationRepository)
+                .save(any());
+
+        assertThatThrownBy(() ->
+                notificationService.createRankNotification(
+                        receiverId,
+                        reviewId,
+                        PeriodType.DAILY,
+                        1
+                )
+        )
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB error");
+    }
+
+    @Test
+    @DisplayName("알림 저장 중 DB 오류 발생 시 좋아요 알림 생성 실패")
+    void createLikeNotification_whenSaveFails_thenThrow() {
+        // given
+        UUID receiverId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        Review review = mock(Review.class);
+        given(review.getContent()).willReturn("content");
+
+        User actor = mock(User.class);
+        given(actor.getNickname()).willReturn("kim");
+
+        given(userService.findById(actorId)).willReturn(actor);
+        given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId))
+                .willReturn(Optional.of(review));
+
+        willThrow(new RuntimeException("DB error"))
+                .given(notificationRepository)
+                .save(any());
+
+        // when & then
+        assertThatThrownBy(() ->
+                notificationService.createLikeNotification(receiverId, reviewId, actorId)
+        )
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB error");
+    }
 
     @Test
     @DisplayName("읽지 않은 알림을 읽음 처리하여 성공")
