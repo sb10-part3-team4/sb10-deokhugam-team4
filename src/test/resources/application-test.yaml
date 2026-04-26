@@ -19,3 +19,10 @@ notification:
   batch:
     cron: "-"
     zone: "Asia/Seoul"
+
+log:
+  backup:
+    cron: "-"
+    zone: "Asia/Seoul"
+    dir: "logs"
+    s3-dir: "logs"

@@ -33,6 +33,13 @@ notification:
     cron: "0 0 2 * * *"
     zone: "Asia/Seoul"
 
+log:
+  backup:
+    cron: "0 0 2 * * *"
+    zone: "Asia/Seoul"
+    dir: "/app/logs"
+    s3-dir: "logs"
+
 naver:
   api:
     client-id: ${NAVER_CLIENT_ID}
@@ -50,3 +57,4 @@ aws:
     region: ${AWS_REGION}
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+

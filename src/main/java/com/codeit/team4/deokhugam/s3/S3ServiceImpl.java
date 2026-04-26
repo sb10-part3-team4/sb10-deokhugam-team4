@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.s3;
 import com.codeit.team4.deokhugam.global.config.S3Properties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -86,6 +87,37 @@ public class S3ServiceImpl implements S3Service {
             log.info("S3 삭제 완료: key={}", key);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.S3_DELETE_ERROR, "fileUrl=" + fileUrl);
+        }
+    }
+
+    @Override
+    public String upload(File file, String dirName, String s3FileName) {
+        if (file == null || !file.exists() || !file.isFile()) {
+            throw new BusinessException(ErrorCode.S3_EMPTY_FILE_ERROR, "업로드할 파일이 존재하지 않습니다.");
+        }
+
+        if (dirName == null || dirName.isBlank() || s3FileName == null || s3FileName.isBlank()) {
+            throw new BusinessException(ErrorCode.S3_INVALID_PATH_ERROR, "경로/파일 이름이 비어 있습니다.");
+        }
+
+        String key = dirName + "/" + s3FileName;
+
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(s3Properties.getBucketName())
+                    .key(key)
+                    .contentType("text/plain")
+                    .contentLength(file.length()) // 일관성 유지
+                    .build();
+
+            s3Client.putObject(request, RequestBody.fromFile(file));
+
+            log.info("S3 파일 업로드 완료: key={}", key);
+            return generateUrl(key);
+
+        } catch (S3Exception e) {
+            log.error("S3 파일 업로드 실패: key={}", key, e);
+            throw new BusinessException(ErrorCode.S3_UPLOAD_ERROR, "key=" + key);
         }
     }
 
