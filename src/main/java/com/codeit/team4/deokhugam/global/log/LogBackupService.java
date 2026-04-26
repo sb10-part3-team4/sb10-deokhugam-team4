@@ -4,7 +4,9 @@ import static java.net.InetAddress.getLocalHost;
 
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.io.File;
+import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -19,21 +21,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LogBackupService {
 
-    private final S3Service s3Service;
-
-    @Value("${log.backup.dir}")
-    private String logDirectory;
-
-    @Value("${log.backup.s3-dir}")
-    private String s3UploadDirectory;
-
-    @Value("${log.backup.zone}")
-    private String timeZone;
-
     private static final String FILE_PREFIX = "app-";
     private static final String FILE_EXTENSION = ".log";
-    private static final String FALLBACK_HOST_ID = "unknown-host-" + UUID.randomUUID().toString().substring(0, 8);
-
+    private static final String FALLBACK_HOST_ID =
+            "unknown-host-" + UUID.randomUUID().toString().substring(0, 8);
+    private final S3Service s3Service;
+    @Value("${log.backup.dir}")
+    private String logDirectory;
+    @Value("${log.backup.s3-dir}")
+    private String s3UploadDirectory;
+    @Value("${log.backup.zone}")
+    private String timeZone;
 
     public void backupAndCleanUpYesterdayLog() {
         try {
@@ -59,13 +57,13 @@ public class LogBackupService {
 
             log.info("로그 파일 S3 백업 완료: {}", fileName);
 
-            // 업로드 완료 후 로컬 원본 삭제
-            boolean isDeleted = logFile.delete();
-            if (isDeleted) {
+            try {
+                Files.delete(logFile.toPath());
                 log.info("로컬 로그 파일 삭제 완료: {}", fileName);
-            } else {
-                log.error("로컬 로그 파일 삭제 실패: {}", fileName);
+            } catch (IOException ioe) {
+                log.error("로컬 로그 파일 삭제 실패: {} ({})", fileName, ioe.getMessage(), ioe);
             }
+
 
         } catch (Exception e) {
             log.error("로그 파일 백업 및 삭제 중 예기치 않은 오류가 발생했습니다.", e);

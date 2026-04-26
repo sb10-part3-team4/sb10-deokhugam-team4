@@ -96,6 +96,10 @@ public class S3ServiceImpl implements S3Service {
             throw new BusinessException(ErrorCode.S3_EMPTY_FILE_ERROR, "업로드할 파일이 존재하지 않습니다.");
         }
 
+        if (dirName == null || dirName.isBlank() || s3FileName == null || s3FileName.isBlank()) {
+            throw new BusinessException(ErrorCode.S3_EMPTY_FILE_ERROR, "경로/파일 이름이 비어 있습니다.");
+        }
+
         String key = dirName + "/" + s3FileName;
 
         try {

@@ -5,12 +5,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -24,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -66,7 +70,7 @@ class LogBackupServiceTest {
 
         // then
         verify(s3Service).upload(eq(mockLogFile), eq("logs"), captor.capture());
-        assertThat(captor.getValue()).endsWith(fileName);
+        assertThat(captor.getValue()).endsWith("_" + fileName);
         assertThat(mockLogFile.exists()).isFalse();
     }
 
@@ -98,5 +102,32 @@ class LogBackupServiceTest {
 
         // then
         assertThat(mockLogFile.exists()).isTrue();
+    }
+
+    @Test
+    @DisplayName("호스트명 조회 실패 시 정적 Fallback ID 사용 성공")
+    void backupAndCleanUp_UnknownHost_UsesFallbackId() throws IOException {
+        // given
+        String yesterdayDate = LocalDate.now(ZoneId.of(TEST_TIMEZONE)).minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String fileName = "app-" + yesterdayDate + ".log";
+        File mockLogFile = new File(tempDir.toFile(), fileName);
+        assertThat(mockLogFile.createNewFile()).isTrue();
+
+        String expectedFallbackId = (String) ReflectionTestUtils.getField(logBackupService, "FALLBACK_HOST_ID");
+
+        try (MockedStatic<InetAddress> inetAddressMock = mockStatic(InetAddress.class)) {
+            inetAddressMock.when(InetAddress::getLocalHost)
+                    .thenThrow(new UnknownHostException("고의적인 호스트 조회 실패 예외"));
+
+            // when
+            logBackupService.backupAndCleanUpYesterdayLog();
+
+        }
+
+        // then
+        verify(s3Service).upload(eq(mockLogFile), eq("logs"), captor.capture());
+        String capturedS3FileName = captor.getValue();
+
+        assertThat(capturedS3FileName).isEqualTo(expectedFallbackId + "_" + fileName);
     }
 }
