@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+  <springProperty scope="context" name="LOG_BACKUP_DIR" source="log.backup.dir" defaultValue="logs"/>
   <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{request_id:-SYSTEM}] [%X{client_ip:-NONE}] %msg%n" />
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -9,7 +10,7 @@
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>logs/app-%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_BACKUP_DIR}/app-%d{yyyy-MM-dd, Asia/Seoul}.log</fileNamePattern>
       <maxHistory>7</maxHistory>
     </rollingPolicy>
     <encoder>

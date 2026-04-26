@@ -19,7 +19,7 @@ public class S3ServiceStub implements S3Service {
     }
 
     @Override
-    public String uploadFile(File file, String dirName, String s3FileName) {
+    public String upload(File file, String dirName, String s3FileName) {
         return "https://test-bucket.s3.ap-northeast-2.amazonaws.com/" + dirName + "/" + s3FileName;
     }
 }

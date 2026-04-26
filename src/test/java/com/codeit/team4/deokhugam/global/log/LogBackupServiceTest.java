@@ -56,7 +56,7 @@ class LogBackupServiceTest {
         logBackupService.backupAndCleanUpYesterdayLog();
 
         // then
-        verify(s3Service).uploadFile(eq(mockLogFile), eq("logs"), anyString());
+        verify(s3Service).upload(eq(mockLogFile), eq("logs"), anyString());
         assertThat(mockLogFile.exists()).isFalse();
     }
 
@@ -69,7 +69,7 @@ class LogBackupServiceTest {
         logBackupService.backupAndCleanUpYesterdayLog();
 
         // then
-        verify(s3Service, never()).uploadFile(any(), any(), any());
+        verify(s3Service, never()).upload(any(), any(), any());
     }
 
     @Test
@@ -81,7 +81,7 @@ class LogBackupServiceTest {
         mockLogFile.createNewFile();
 
         doThrow(new RuntimeException("AWS S3 통신 에러"))
-                .when(s3Service).uploadFile(any(), any(), any());
+                .when(s3Service).upload(any(), any(), any());
 
         // when
         logBackupService.backupAndCleanUpYesterdayLog();

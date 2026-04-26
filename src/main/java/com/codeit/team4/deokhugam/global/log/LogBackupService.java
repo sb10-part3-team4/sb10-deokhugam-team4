@@ -1,13 +1,12 @@
 package com.codeit.team4.deokhugam.global.log;
 
 import static java.net.InetAddress.getLocalHost;
-import static java.time.LocalDate.now;
-import static java.util.UUID.randomUUID;
 
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.io.File;
 import java.net.UnknownHostException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -28,14 +27,18 @@ public class LogBackupService {
     @Value("${log.backup.s3-dir}")
     private String s3UploadDirectory;
 
+    @Value("${log.backup.zone}")
+    private String timeZone;
+
     private static final String FILE_PREFIX = "app-";
     private static final String FILE_EXTENSION = ".log";
+    private static final String FALLBACK_HOST_ID = "unknown-host-" + UUID.randomUUID().toString().substring(0, 8);
 
 
     public void backupAndCleanUpYesterdayLog() {
         try {
             // 어제 날짜 계산 및 파일명 도출
-            LocalDate yesterday = now().minusDays(1);
+            LocalDate yesterday = LocalDate.now(ZoneId.of(timeZone)).minusDays(1);
             String dateString = yesterday.format(DateTimeFormatter.ISO_LOCAL_DATE);
             String fileName = FILE_PREFIX + dateString + FILE_EXTENSION;
 
@@ -52,7 +55,7 @@ public class LogBackupService {
             log.info("로그 파일 S3 백업을 시작합니다: {} → {}/{}", fileName, s3UploadDirectory, s3FileName);
 
             // S3 업로드
-            s3Service.uploadFile(logFile, s3UploadDirectory, s3FileName);
+            s3Service.upload(logFile, s3UploadDirectory, s3FileName);
 
             log.info("로그 파일 S3 백업 완료: {}", fileName);
 
@@ -73,8 +76,8 @@ public class LogBackupService {
         try {
             return getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            log.warn("호스트명 조회 실패, UUID로 대체합니다.", e);
-            return randomUUID().toString();
+            log.warn("호스트명 조회 실패, 대체 ID 사용: {}", FALLBACK_HOST_ID);
+            return FALLBACK_HOST_ID;
         }
     }
 }

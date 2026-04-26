@@ -12,7 +12,7 @@ public class LogBackupScheduler {
 
     private final LogBackupService logBackupService;
 
-    @Scheduled(cron = "${log.backup.cron}")
+    @Scheduled(cron = "${log.backup.cron}", zone = "${log.backup.zone}")
     public void scheduleLogBackup() {
         log.info("로그 파일 백업 스케줄러 실행");
 

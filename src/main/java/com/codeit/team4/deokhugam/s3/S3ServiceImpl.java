@@ -91,7 +91,7 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public String uploadFile(File file, String dirName, String s3FileName) {
+    public String upload(File file, String dirName, String s3FileName) {
         if (file == null || !file.exists() || !file.isFile()) {
             throw new BusinessException(ErrorCode.S3_EMPTY_FILE_ERROR, "업로드할 파일이 존재하지 않습니다.");
         }
