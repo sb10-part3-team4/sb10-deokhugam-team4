@@ -22,7 +22,7 @@ notification:
 
 log:
   backup:
-    cron: "0 0 2 * * *"
+    cron: "-"
     zone: "Asia/Seoul"
-    dir: "/app/logs"
+    dir: "logs"
     s3-dir: "logs"

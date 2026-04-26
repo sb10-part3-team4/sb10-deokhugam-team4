@@ -10,7 +10,8 @@
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_BACKUP_DIR}/app-%d{yyyy-MM-dd, Asia/Seoul}.log</fileNamePattern>
+      <fileNamePattern>${LOG_BACKUP_DIR:-logs}/app-%d{yyyy-MM-dd}.log</fileNamePattern>
+      <timeZone>Asia/Seoul</timeZone>
       <maxHistory>7</maxHistory>
     </rollingPolicy>
     <encoder>
