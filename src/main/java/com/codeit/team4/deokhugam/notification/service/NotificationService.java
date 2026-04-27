@@ -32,7 +32,7 @@ public class NotificationService {
     private final ReviewRepository reviewRepository;
     private final UserService userService;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createLikeNotification(UUID receiverId, UUID reviewId, UUID actorId) {
 
         if (receiverId == null || receiverId.equals(actorId)) return;
@@ -48,7 +48,7 @@ public class NotificationService {
         );
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createCommentNotification(UUID receiverId, UUID reviewId, UUID actorId) {
 
         if (receiverId == null || receiverId.equals(actorId)) return;
