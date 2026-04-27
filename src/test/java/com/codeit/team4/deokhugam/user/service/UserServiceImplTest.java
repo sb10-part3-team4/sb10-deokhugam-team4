@@ -395,7 +395,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("JOOQ 저장소 예외 발생 시 배치 물리 삭제 실패")
+    @DisplayName("UserQueryService 예외 발생 시 배치 물리 삭제 실패")
     void deleteExpiredSoftDeletedUsers_fail_repository_exception() {
         // given
         doThrow(new RuntimeException("DB error"))
