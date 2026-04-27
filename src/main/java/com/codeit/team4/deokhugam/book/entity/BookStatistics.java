@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -39,10 +40,11 @@ public class BookStatistics {
     }
 
     public void onReviewDeleted(int rating) {
-        if (this.reviewCount > 0) {
-            this.reviewCount--;
-            this.ratingSum -= rating;
+        if (this.reviewCount <= 0) {
+            return;
         }
+        this.reviewCount--;
+        this.ratingSum = Math.max(0, this.ratingSum - rating);
     }
 
     public void onReviewUpdated(
@@ -50,6 +52,22 @@ public class BookStatistics {
             int newRating
     ) {
         this.ratingSum += (newRating - oldRating);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BookStatistics other)) {
+            return false;
+        }
+        return Objects.equals(bookId, other.bookId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(bookId);
     }
 
     public BigDecimal getAverageRating() {

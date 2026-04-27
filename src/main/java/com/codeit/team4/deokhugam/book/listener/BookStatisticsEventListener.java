@@ -6,8 +6,11 @@ import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.review.event.ReviewCreatedEvent;
 import com.codeit.team4.deokhugam.review.event.ReviewDeletedEvent;
 import com.codeit.team4.deokhugam.review.event.ReviewUpdatedEvent;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -26,39 +29,66 @@ public class BookStatisticsEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @DistributedLock(key = "deokhugam:book-statistics", lockParam = {"event.bookId"})
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500))
+    @Retryable(
+            retryFor = PessimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleReviewCreated(ReviewCreatedEvent event) {
         log.debug("ReviewCreatedEvent 수신: {}", event);
 
         BookStatistics statistics = bookStatisticsRepository.findById(event.bookId())
-                .orElseGet(() -> bookStatisticsRepository.save(
-                        new BookStatistics(event.bookId())));
-
+                .orElseGet(() -> new BookStatistics(event.bookId()));
         statistics.onReviewCreated(event.rating());
+        bookStatisticsRepository.save(statistics);
+
+        log.info("BookStatistics 갱신 완료 (ReviewCreated): bookId={}, count={}, sum={}",
+                event.bookId(), statistics.getReviewCount(), statistics.getRatingSum());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @DistributedLock(key = "deokhugam:book-statistics", lockParam = {"event.bookId"})
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500))
+    @Retryable(
+            retryFor = PessimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleReviewUpdated(ReviewUpdatedEvent event) {
         log.debug("ReviewUpdatedEvent 수신: {}", event);
 
-        bookStatisticsRepository.findById(event.bookId())
-                .ifPresent(statistics ->
-                        statistics.onReviewUpdated(event.oldRating(), event.newRating()));
+        findStatistics(event.bookId(), "업데이트").ifPresent(statistics -> {
+            statistics.onReviewUpdated(event.oldRating(), event.newRating());
+            log.info("BookStatistics 갱신 완료 (ReviewUpdated): bookId={}, count={}, sum={}",
+                    event.bookId(), statistics.getReviewCount(), statistics.getRatingSum());
+        });
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @DistributedLock(key = "deokhugam:book-statistics", lockParam = {"event.bookId"})
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 500))
+    @Retryable(
+            retryFor = PessimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleReviewDeleted(ReviewDeletedEvent event) {
         log.debug("ReviewDeletedEvent 수신: {}", event);
 
-        bookStatisticsRepository.findById(event.bookId())
-                .ifPresent(statistics -> statistics.onReviewDeleted(event.rating()));
+        findStatistics(event.bookId(), "삭제").ifPresent(statistics -> {
+            statistics.onReviewDeleted(event.rating());
+            log.info("BookStatistics 갱신 완료 (ReviewDeleted): bookId={}, count={}, sum={}",
+                    event.bookId(), statistics.getReviewCount(), statistics.getRatingSum());
+        });
+    }
+
+    private Optional<BookStatistics> findStatistics(UUID bookId, String eventType) {
+        Optional<BookStatistics> statistics = bookStatisticsRepository.findById(bookId);
+        if (statistics.isEmpty()) {
+            log.warn("BookStatistics 미존재로 {} 누락: bookId={}", eventType, bookId);
+        }
+        return statistics;
     }
 
     @Recover

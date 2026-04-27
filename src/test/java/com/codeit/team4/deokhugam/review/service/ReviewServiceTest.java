@@ -102,7 +102,7 @@ class ReviewServiceTest {
             assertThat(response.content()).isEqualTo("좋은 책입니다");
             assertThat(response.rating()).isEqualTo(5);
             verify(reviewRepository).save(any(Review.class));
-            verify(eventPublisher).publishEvent(any(ReviewCreatedEvent.class));
+            verify(eventPublisher).publishEvent(new ReviewCreatedEvent(bookId, 5));
         }
 
         @Test
@@ -348,7 +348,7 @@ class ReviewServiceTest {
             reviewService.softDeleteReview(reviewId, userId);
 
             verify(review).softDelete();
-            verify(eventPublisher).publishEvent(any(ReviewDeletedEvent.class));
+            verify(eventPublisher).publishEvent(new ReviewDeletedEvent(bookId, 4));
         }
 
         @Test
@@ -472,7 +472,7 @@ class ReviewServiceTest {
 
             reviewService.hardDeleteReview(reviewId, userId);
 
-            verify(eventPublisher).publishEvent(any(ReviewDeletedEvent.class));
+            verify(eventPublisher).publishEvent(new ReviewDeletedEvent(bookId, 4));
             verify(reviewRepository).delete(review);
         }
 

@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.book.listener;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -48,7 +49,9 @@ class BookStatisticsEventListenerTest {
             listener.handleReviewCreated(event);
 
             verify(bookStatisticsRepository).findById(bookId);
-            verify(bookStatisticsRepository, never()).save(any());
+            verify(bookStatisticsRepository).save(statistics);
+            assertThat(statistics.getReviewCount()).isEqualTo(1);
+            assertThat(statistics.getRatingSum()).isEqualTo(5);
         }
 
         @Test
@@ -87,6 +90,8 @@ class BookStatisticsEventListenerTest {
             listener.handleReviewUpdated(event);
 
             verify(bookStatisticsRepository).findById(bookId);
+            assertThat(statistics.getReviewCount()).isEqualTo(1);
+            assertThat(statistics.getRatingSum()).isEqualTo(5);
         }
 
         @Test
@@ -122,6 +127,8 @@ class BookStatisticsEventListenerTest {
             listener.handleReviewDeleted(event);
 
             verify(bookStatisticsRepository).findById(bookId);
+            assertThat(statistics.getReviewCount()).isEqualTo(0);
+            assertThat(statistics.getRatingSum()).isEqualTo(0);
         }
 
         @Test
