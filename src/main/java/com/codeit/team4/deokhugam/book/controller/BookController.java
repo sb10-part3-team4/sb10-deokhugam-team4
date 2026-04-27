@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.book.controller;
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.book.service.BookQueryService;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
@@ -112,13 +113,13 @@ public class BookController implements BookApi {
 
     // ISBN으로 도서 정보 조회
     @GetMapping("/info")
-    public ResponseEntity<BookResponse> searchByIsbn(
+    public ResponseEntity<NaverBookSearchResponse> searchByIsbn(
             @RequestParam
             @NotBlank
             @Pattern(regexp = "^(?:\\d{10}|\\d{13})$", message = "ISBN은 10자리 또는 13자리 숫자여야 합니다.")
             String isbn) {
         log.info("ISBN으로 도서 검색 요청: isbn={}", isbn);
-        BookResponse result = bookService.searchByIsbn(isbn);
+        NaverBookSearchResponse result = bookService.searchByIsbn(isbn);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 

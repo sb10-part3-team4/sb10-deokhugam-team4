@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
@@ -238,7 +239,7 @@ class BookServiceTest {
         given(naverBookClient.searchByIsbn(isbn)).willReturn(response);
 
         // when
-        BookResponse result = bookService.searchByIsbn(isbn);
+        NaverBookSearchResponse result = bookService.searchByIsbn(isbn);
 
         // then
         assertThat(result.title()).isEqualTo("달선이의 하루");
