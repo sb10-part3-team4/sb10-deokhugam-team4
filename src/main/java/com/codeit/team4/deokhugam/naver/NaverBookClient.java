@@ -47,4 +47,16 @@ public class NaverBookClient {
             throw new BusinessException(ErrorCode.NAVER_API_ERROR, "isbn=" + isbn);
         }
     }
+
+    public byte[] fetchImageAsBytes(String imageUrl) {
+        try {
+            return restClient.get()
+                    .uri(imageUrl)
+                    .retrieve()
+                    .body(byte[].class);
+        } catch (RestClientException e) {
+            log.warn("이미지 다운로드 실패: url={}", imageUrl);
+            return null;
+        }
+    }
 }

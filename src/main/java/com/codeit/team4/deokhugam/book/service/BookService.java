@@ -13,6 +13,7 @@ import com.codeit.team4.deokhugam.naver.NaverBookResponse;
 import com.codeit.team4.deokhugam.ocr.OcrSpaceClient;
 import com.codeit.team4.deokhugam.s3.S3Service;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -184,7 +185,15 @@ public class BookService {
 
         log.info("ISBN으로 도서 검색 완료: isbn={}", isbn);
 
-        return bookMapper.toBookResponse(item);
+        String thumbnailBase64 = null;
+        if (item.image() != null && !item.image().isEmpty()) {
+            byte[] imageBytes = naverBookClient.fetchImageAsBytes(item.image());
+            if (imageBytes != null) {
+                thumbnailBase64 = Base64.getEncoder().encodeToString(imageBytes);
+            }
+        }
+
+        return bookMapper.toBookResponse(item, thumbnailBase64);
     }
 
     public String extractIsbnFromImage(MultipartFile image) {
