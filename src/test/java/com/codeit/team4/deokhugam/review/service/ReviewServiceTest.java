@@ -10,10 +10,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
-import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.review.event.ReviewCreatedEvent;
+import com.codeit.team4.deokhugam.review.event.ReviewDeletedEvent;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
@@ -53,9 +54,6 @@ class ReviewServiceTest {
 
     @Mock
     private BookService bookService;
-
-    @Mock
-    private BookRepository bookRepository;
 
     @Mock
     private ReviewMapper reviewMapper;
@@ -104,7 +102,7 @@ class ReviewServiceTest {
             assertThat(response.content()).isEqualTo("좋은 책입니다");
             assertThat(response.rating()).isEqualTo(5);
             verify(reviewRepository).save(any(Review.class));
-            verify(bookRepository).increaseReviewCount(bookId);
+            verify(eventPublisher).publishEvent(any(ReviewCreatedEvent.class));
         }
 
         @Test
@@ -126,7 +124,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.DUPLICATE_REVIEW));
-            verify(bookRepository, never()).increaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewCreatedEvent.class));
         }
 
         @Test
@@ -143,7 +141,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.USER_NOT_FOUND));
-            verify(bookRepository, never()).increaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewCreatedEvent.class));
         }
 
         @Test
@@ -162,7 +160,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.BOOK_NOT_FOUND));
-            verify(bookRepository, never()).increaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewCreatedEvent.class));
         }
 
     }
@@ -258,11 +256,13 @@ class ReviewServiceTest {
         void updateReview_success() {
             UUID reviewId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
+            UUID bookId = UUID.randomUUID();
             Review review = mock(Review.class);
+            Book book = mock(Book.class);
             ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 내용", 3);
             ReviewResponse expectedResponse = new ReviewResponse(
                     reviewId,
-                    UUID.randomUUID(),
+                    bookId,
                     "클린 코드",
                     null,
                     userId,
@@ -278,6 +278,9 @@ class ReviewServiceTest {
 
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
             given(review.isOwner(userId)).willReturn(true);
+            given(review.getRating()).willReturn(5);
+            given(review.getBook()).willReturn(book);
+            given(book.getId()).willReturn(bookId);
             given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
             given(reviewMapper.toResponse(review, true)).willReturn(expectedResponse);
 
@@ -340,11 +343,12 @@ class ReviewServiceTest {
             given(review.isOwner(userId)).willReturn(true);
             given(review.getBook()).willReturn(book);
             given(book.getId()).willReturn(bookId);
+            given(review.getRating()).willReturn(4);
 
             reviewService.softDeleteReview(reviewId, userId);
 
             verify(review).softDelete();
-            verify(bookRepository).decreaseReviewCount(bookId);
+            verify(eventPublisher).publishEvent(any(ReviewDeletedEvent.class));
         }
 
         @Test
@@ -362,7 +366,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
-            verify(bookRepository, never()).decreaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewDeletedEvent.class));
         }
 
         @Test
@@ -377,7 +381,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
-            verify(bookRepository, never()).decreaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewDeletedEvent.class));
         }
     }
 
@@ -464,10 +468,11 @@ class ReviewServiceTest {
             given(review.getDeletedAt()).willReturn(null);
             given(review.getBook()).willReturn(book);
             given(book.getId()).willReturn(bookId);
+            given(review.getRating()).willReturn(4);
 
             reviewService.hardDeleteReview(reviewId, userId);
 
-            verify(bookRepository).decreaseReviewCount(bookId);
+            verify(eventPublisher).publishEvent(any(ReviewDeletedEvent.class));
             verify(reviewRepository).delete(review);
         }
 
@@ -484,7 +489,7 @@ class ReviewServiceTest {
 
             reviewService.hardDeleteReview(reviewId, userId);
 
-            verify(bookRepository, never()).decreaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewDeletedEvent.class));
             verify(reviewRepository).delete(review);
         }
 
@@ -503,7 +508,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_OWNER));
-            verify(bookRepository, never()).decreaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewDeletedEvent.class));
         }
 
         @Test
@@ -518,7 +523,7 @@ class ReviewServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                             .isEqualTo(ErrorCode.REVIEW_NOT_FOUND));
-            verify(bookRepository, never()).decreaseReviewCount(any());
+            verify(eventPublisher, never()).publishEvent(any(ReviewDeletedEvent.class));
         }
     }
 }
