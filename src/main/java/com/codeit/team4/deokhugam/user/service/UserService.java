@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.user.service;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.user.dto.UserLoginRequest;
 import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
@@ -39,6 +40,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user:email", lockParam = {"request.email.toLowerCase()"})
     public UserResponse registerUser(UserRegisterRequest request) {
 
         validateEmailNotExists(request.email());
@@ -78,6 +80,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user", lockParam = {"userId"})
     public UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request) {
 
         User user = findById(userId);
@@ -91,6 +94,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user", lockParam = {"userId"})
     public void softDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
@@ -102,6 +106,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user", lockParam = {"userId"})
     public void hardDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
