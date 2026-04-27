@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.book.controller;
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.global.error.ErrorResponse;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -157,7 +158,7 @@ public interface BookApi {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<BookResponse> searchByIsbn(
+    ResponseEntity<NaverBookSearchResponse> searchByIsbn(
             @Parameter(description = "ISBN 번호", example = "9788965402602")
             @RequestParam
             @NotBlank

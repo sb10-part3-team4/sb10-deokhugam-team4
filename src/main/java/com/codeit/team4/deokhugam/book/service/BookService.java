@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.book.service;
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
+import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
@@ -177,7 +178,7 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public BookResponse searchByIsbn(String isbn) {
+    public NaverBookSearchResponse searchByIsbn(String isbn) {
         NaverBookResponse response = naverBookClient.searchByIsbn(isbn);
 
         if (response == null || response.items() == null || response.items().isEmpty()) {
@@ -196,7 +197,7 @@ public class BookService {
             }
         }
 
-        return bookMapper.toBookResponse(item, thumbnailBase64);
+        return bookMapper.toNaverBookSearchResponse(item, thumbnailBase64);
     }
 
     public String extractIsbnFromImage(MultipartFile image) {
