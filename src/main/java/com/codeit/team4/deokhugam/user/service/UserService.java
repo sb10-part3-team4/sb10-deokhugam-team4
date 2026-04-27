@@ -56,7 +56,8 @@ public class UserService {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_EMAIL, "email=" + request.email()
             );
-
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
             log.error("회원가입 처리 중 예상치 못한 예외 발생: email={}", request.email(), e);
             throw new BusinessException(
