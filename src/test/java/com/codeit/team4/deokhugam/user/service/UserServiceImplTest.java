@@ -126,7 +126,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("회원가입 중 예상치 못한 예외 발생")
+    @DisplayName("예상치 못한 예외 발생으로 회원가입 실패")
     void registerUser_fail_internalServerError() {
         // given
         UserRegisterRequest request = new UserRegisterRequest(
