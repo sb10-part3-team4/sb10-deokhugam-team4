@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -40,7 +41,7 @@ public class BookService {
     private static final Pattern ISBN_PATTERN = Pattern.compile(
             "(?:ISBN[:\\s-]*)?(97[89][\\d-]{10,17})|(\\d{9}[\\dXx])");
 
-    @DistributedLock(key = "deokhugam:book:isbn", lockParam = "isbn")
+    @DistributedLock(key = "deokhugam:book:isbn", lockParam = "request.isbn")
     @Transactional
     public BookResponse createBook(BookCreateRequest request, MultipartFile thumbnailImage) {
 
@@ -61,9 +62,11 @@ public class BookService {
         Book book = new Book(request.title(), request.author(), request.description(),
                 request.publisher(), request.publishedDate(), isbn, thumbnailUrl);
 
-        // db 저장, 동시 요청 대비 save 시 catch
-        bookRepository.save(book);
-
+        try {
+            bookRepository.save(book);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.DUPLICATE_ISBN, "isbn=" + isbn);
+        }
         log.info("도서 등록 완료: bookId={}", book.getId());
 
         // dto 변환
