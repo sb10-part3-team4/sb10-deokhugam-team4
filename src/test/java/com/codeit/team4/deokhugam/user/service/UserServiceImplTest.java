@@ -126,6 +126,31 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("회원가입 중 예상치 못한 예외 발생")
+    void registerUser_fail_internalServerError() {
+        // given
+        UserRegisterRequest request = new UserRegisterRequest(
+                "test@test.com",
+                "user1",
+                "password1!"
+        );
+
+        when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(false);
+
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new RuntimeException("DB crash"));
+
+        // when & then
+        assertThatThrownBy(() -> userService.registerUser(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR);
+
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
     @DisplayName("로그인 성공")
     void loginUser_success() {
         // given
