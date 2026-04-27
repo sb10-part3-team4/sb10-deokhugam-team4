@@ -39,7 +39,7 @@ public class UserService {
     }
 
     @Transactional
-    @DistributedLock(key = "deokhugam:user:email", lockParam = {"request.email.toLowerCase()"})
+    @DistributedLock(key = "deokhugam:user:email", lockParam = {"request.email"})
     public UserResponse registerUser(UserRegisterRequest request) {
 
         validateEmailNotExists(request.email());
