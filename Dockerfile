@@ -11,6 +11,9 @@ ARG JAR_FILE=build/libs/*.jar
 # 4. JAR 파일을 컨테이너 내부로 복사
 COPY --chown=appuser:appuser ${JAR_FILE} app.jar
 
+# root 권한일 때 로그 폴더를 만들고, appuser에게 소유권을 넘겨줌
+RUN mkdir -p /app/logs && chown appuser:appuser /app/logs
+
 # 5. 비루트 사용자로 전환
 USER appuser
 
