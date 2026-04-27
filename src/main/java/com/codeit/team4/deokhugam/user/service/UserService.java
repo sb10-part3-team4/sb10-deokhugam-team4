@@ -51,10 +51,18 @@ public class UserService {
             log.info("회원가입 성공: userId={}", savedUser.getId());
 
             return userMapper.toResponse(savedUser);
+
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(
                     ErrorCode.DUPLICATE_EMAIL,
-                    "email=" + request.email());
+                    "이미 사용 중인 이메일입니다."
+            );
+
+        } catch (Exception e) {
+            throw new BusinessException(
+                    ErrorCode.INTERNAL_SERVER_ERROR,
+                    "회원가입 처리 중 오류가 발생했습니다."
+            );
         }
     }
 
