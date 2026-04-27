@@ -29,7 +29,7 @@ public record BookResponse(
         @Schema(description = "ISBN", example = "9788991995001")
         String isbn,
 
-        @Schema(description = "썸네일 이미지 URL")
+        @Schema(description = "썸네일 이미지 (Base64 인코딩)")
         String thumbnailUrl,
 
         @Schema(description = "리뷰 수")

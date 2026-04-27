@@ -55,7 +55,7 @@ public class NaverBookClient {
                     .retrieve()
                     .body(byte[].class);
         } catch (RestClientException e) {
-            log.warn("이미지 다운로드 실패: url={}", imageUrl);
+            log.warn("이미지 다운로드 실패: url={}", imageUrl, e);
             return null;
         }
     }
