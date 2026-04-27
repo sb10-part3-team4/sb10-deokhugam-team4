@@ -6,8 +6,6 @@ import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.config.JpaAuditingConfig;
 import com.codeit.team4.deokhugam.user.entity.User;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -17,7 +17,6 @@ import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
-import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -39,7 +38,7 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private UserJooqRepository userJooqRepository;
+    private UserQueryService userQueryService;
 
     @Mock
     private UserMapper userMapper;
@@ -371,7 +370,7 @@ class UserServiceImplTest {
         // then
         ArgumentCaptor<Instant> captor = ArgumentCaptor.forClass(Instant.class);
 
-        verify(userJooqRepository).deleteExpiredUsers(captor.capture());
+        verify(userQueryService).deleteExpiredUsers(captor.capture());
 
         Instant threshold = captor.getValue();
         Instant now = Instant.now();
@@ -385,14 +384,14 @@ class UserServiceImplTest {
     @DisplayName("삭제 대상 사용자가 없어도 배치 물리 삭제 성공")
     void deleteExpiredSoftDeletedUsers_no_target_success() {
         // given
-        when(userJooqRepository.deleteExpiredUsers(any())).thenReturn(0);
+        when(userQueryService.deleteExpiredUsers(any())).thenReturn(0);
 
         // when
         userService.deleteExpiredSoftDeletedUsers();
 
         // then
-        verify(userJooqRepository).deleteExpiredUsers(any(Instant.class));
-        verifyNoMoreInteractions(userJooqRepository);
+        verify(userQueryService).deleteExpiredUsers(any(Instant.class));
+        verifyNoMoreInteractions(userQueryService);
     }
 
     @Test
@@ -400,12 +399,12 @@ class UserServiceImplTest {
     void deleteExpiredSoftDeletedUsers_fail_repository_exception() {
         // given
         doThrow(new RuntimeException("DB error"))
-                .when(userJooqRepository).deleteExpiredUsers(any());
+                .when(userQueryService).deleteExpiredUsers(any());
 
         // when & then
         assertThatThrownBy(() -> userService.deleteExpiredSoftDeletedUsers())
                 .isInstanceOf(RuntimeException.class);
 
-        verify(userJooqRepository).deleteExpiredUsers(any());
+        verify(userQueryService).deleteExpiredUsers(any());
     }
 }
