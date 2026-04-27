@@ -47,6 +47,7 @@ public enum ErrorCode {
     S3_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3 삭제에 실패했습니다."),
     S3_EMPTY_FILE_ERROR(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
     S3_INVALID_FILE_TYPE_ERROR(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드 가능합니다."),
+    S3_INVALID_PATH_ERROR(HttpStatus.BAD_REQUEST, "경로가 비어있거나 존재하지 않습니다."),
 
     // OCR
     OCR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "OCR 처리에 실패했습니다."),

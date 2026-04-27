@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.user.repository;
+package com.codeit.team4.deokhugam.user.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class UserJooqRepository {
+public class UserQueryService {
 
     private final DSLContext dsl;
 

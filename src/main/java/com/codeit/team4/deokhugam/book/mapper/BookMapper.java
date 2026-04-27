@@ -16,12 +16,12 @@ public interface BookMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publishedDate", expression = "java(parsePubdate(item.pubdate()))")
-    @Mapping(source = "image", target = "thumbnailUrl")
+    @Mapping(target = "thumbnailUrl", source = "thumbnailBase64")
     @Mapping(target = "reviewCount", constant = "0")
     @Mapping(target = "rating", expression = "java(java.math.BigDecimal.ZERO)")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    BookResponse toBookResponse(NaverBookResponse.NaverBookItem item);
+    BookResponse toBookResponse(NaverBookResponse.NaverBookItem item, String thumbnailBase64);
 
     default LocalDate parsePubdate(String pubdate) {
         if (pubdate == null || pubdate.isBlank()) {

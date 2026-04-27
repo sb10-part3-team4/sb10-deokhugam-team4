@@ -2,13 +2,13 @@ package com.codeit.team4.deokhugam.user.service;
 
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
+import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.user.dto.UserLoginRequest;
 import com.codeit.team4.deokhugam.user.dto.UserRegisterRequest;
 import com.codeit.team4.deokhugam.user.dto.UserResponse;
 import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
-import com.codeit.team4.deokhugam.user.repository.UserJooqRepository;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserJooqRepository userJooqRepository;
+    private final UserQueryService userQueryService;
     private final UserMapper userMapper;
 
     public UserResponse getUser(UUID userId) {
@@ -39,6 +39,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user:email", lockParam = {"request.email.toLowerCase()"})
     public UserResponse registerUser(UserRegisterRequest request) {
 
         validateEmailNotExists(request.email());
@@ -78,6 +79,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user", lockParam = {"userId"})
     public UserResponse updateUser(UUID userId, UUID loginUserId, UserUpdateRequest request) {
 
         User user = findById(userId);
@@ -91,6 +93,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user", lockParam = {"userId"})
     public void softDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
@@ -102,6 +105,7 @@ public class UserService {
     }
 
     @Transactional
+    @DistributedLock(key = "deokhugam:user", lockParam = {"userId"})
     public void hardDeleteUser(UUID userId, UUID loginUserId) {
 
         User user = findById(userId);
@@ -117,7 +121,7 @@ public class UserService {
 
         Instant threshold = Instant.now().minus(1, ChronoUnit.DAYS);
 
-        int deletedCount = userJooqRepository.deleteExpiredUsers(threshold);
+        int deletedCount = userQueryService.deleteExpiredUsers(threshold);
 
         log.info("유저 물리 삭제 완료: count={}, threshold={}", deletedCount, threshold);
     }

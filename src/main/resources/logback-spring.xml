@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+  <springProperty scope="context" name="LOG_BACKUP_DIR" source="log.backup.dir" defaultValue="logs"/>
+  <springProperty scope="context" name="LOG_BACKUP_ZONE" source="log.backup.zone" defaultValue="Asia/Seoul"/>
   <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{request_id:-SYSTEM}] [%X{client_ip:-NONE}] %msg%n" />
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_BACKUP_DIR:-logs}/app-%d{yyyy-MM-dd,${LOG_BACKUP_ZONE}}.log</fileNamePattern>
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
     <encoder>
       <pattern>${LOG_PATTERN}</pattern>
     </encoder>
@@ -10,6 +22,7 @@
   <springProfile name="!prod">
     <root level="INFO">
       <appender-ref ref="CONSOLE" />
+      <appender-ref ref="FILE"/>
     </root>
     <logger name="com.codeit.team4.deokhugam" level="DEBUG" />
   </springProfile>
@@ -17,6 +30,7 @@
   <springProfile name="prod">
     <root level="INFO">
       <appender-ref ref="CONSOLE" />
+      <appender-ref ref="FILE"/>
     </root>
     <logger name="com.codeit.team4.deokhugam" level="INFO" />
   </springProfile>
