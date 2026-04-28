@@ -328,6 +328,31 @@ class CommentServiceTest {
     }
 
     @Test
+    @DisplayName("경합 등으로 물리 삭제 조건부 삭제 결과가 0이면 물리 삭제 실패")
+    void hardDeleteComment_Fail_AlreadyProcessed_WhenNotSoftDeleted() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+        given(mockComment.getDeletedAt()).willReturn(null);
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.hardDeleteWithCondition(commentId)).willReturn(0);
+
+        // when & then
+        assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+
+        verify(reviewRepository, never()).decreaseCommentCount(any());
+    }
+
+    @Test
     @DisplayName("존재하지 않는 댓글 식별자로는 물리 삭제 실패")
     void hardDeleteComment_Fail_NotFound() {
         // given
@@ -365,6 +390,31 @@ class CommentServiceTest {
         // then
         verify(commentRepository).hardDeleteForce(commentId);
         // 카운트 감소 메서드는 호출되지 않아야 함
+        verify(reviewRepository, never()).decreaseCommentCount(any());
+    }
+
+    @Test
+    @DisplayName("논리 삭제된 댓글 물리 삭제에서 삭제 결과가 0이면 물리 삭제 실패")
+    void hardDeleteComment_Fail_AlreadyProcessed_WhenSoftDeleted() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+        given(mockComment.getDeletedAt()).willReturn(Instant.now());
+
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.hardDeleteForce(commentId)).willReturn(0);
+
+        // when & then
+        assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+
         verify(reviewRepository, never()).decreaseCommentCount(any());
     }
 
