@@ -111,8 +111,10 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     implementation platform('software.amazon.awssdk:bom:2.42.38')
     implementation 'software.amazon.awssdk:s3'
-    runtimeOnly 'io.micrometer:micrometer-registry-cloudwatch2'
+    implementation 'software.amazon.awssdk:cloudwatch'
+    implementation 'io.micrometer:micrometer-registry-cloudwatch2'
 }
+
 
 tasks.register('generateJooq') {
     description = 'Testcontainers로 PostgreSQL을 띄우고 Flyway 마이그레이션 후 jOOQ 코드를 생성합니다.'
