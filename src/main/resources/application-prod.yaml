@@ -13,6 +13,17 @@ spring:
       ddl-auto: validate
     show-sql: false
 
+management:
+  cloudwatch:
+    metrics:
+      export:
+        namespace: deokhugam
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
 logging:
   level:
     root: WARN
