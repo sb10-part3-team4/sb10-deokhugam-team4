@@ -16,7 +16,7 @@ public class RedissonProdConfig {
     public RedissonClient redissonClient(RedisConnectionProperties redisProps) {
         Config config = new Config();
         config.useSingleServer()
-                .setAddress("redis://" + redisProps.getHost() + ":" + redisProps.getPort());
+                .setAddress("redis://" + redisProps.getHost().trim() + ":" + redisProps.getPort());
         return Redisson.create(config);
     }
 }
