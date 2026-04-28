@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.dashboard.model;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 
 public record PopularReviewSearchModel(
         UUID reviewId,
@@ -33,7 +35,7 @@ public record PopularReviewSearchModel(
                 REVIEWS.CONTENT,
                 REVIEWS.RATING,
                 REVIEWS.LIKE_COUNT,
-                REVIEWS.COMMENT_COUNT
+                DSL.coalesce(REVIEW_STATISTICS.COMMENT_COUNT, 0).as("comment_count")
         );
     }
 
@@ -48,7 +50,7 @@ public record PopularReviewSearchModel(
                 rec.get(REVIEWS.CONTENT),
                 rec.get(REVIEWS.RATING),
                 rec.get(REVIEWS.LIKE_COUNT),
-                rec.get(REVIEWS.COMMENT_COUNT)
+                rec.get("comment_count", Integer.class)
         );
     }
 }
