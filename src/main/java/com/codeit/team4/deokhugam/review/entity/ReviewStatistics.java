@@ -1,6 +1,5 @@
 package com.codeit.team4.deokhugam.review.entity;
 
-import com.codeit.team4.deokhugam.book.entity.BookStatistics;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
