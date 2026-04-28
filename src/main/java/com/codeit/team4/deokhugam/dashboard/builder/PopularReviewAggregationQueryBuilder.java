@@ -37,8 +37,8 @@ public class PopularReviewAggregationQueryBuilder {
     public List<SortField<?>> buildOrderBy() {
         SortField<?> scoreDesc = REVIEWS.LIKE_COUNT.cast(BigDecimal.class)
                 .mul(PopularReview.LIKE_COUNT_WEIGHT)
-                .add(REVIEW_STATISTICS.COMMENT_COUNT.cast(BigDecimal.class)
-                        .mul(PopularReview.COMMENT_COUNT_WEIGHT))
+                .add(DSL.coalesce(REVIEW_STATISTICS.COMMENT_COUNT, 0).cast(BigDecimal.class)
+                        .mul(PopularReview.COMMENT_COUNT_WEIGHT)) // NULL값이 있는 경우 0으로 처리
                 .desc();
 
         return List.of(scoreDesc, REVIEWS.CREATED_AT.asc(), REVIEWS.ID.asc());
