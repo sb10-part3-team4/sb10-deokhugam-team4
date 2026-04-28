@@ -16,6 +16,12 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+management:
+  cloudwatch:
+    metrics:
+      export:
+        enabled: false
+
 logging:
   level:
     root: INFO

@@ -111,6 +111,7 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     implementation platform('software.amazon.awssdk:bom:2.42.38')
     implementation 'software.amazon.awssdk:s3'
+    runtimeOnly 'io.micrometer:micrometer-registry-cloudwatch2'
 }
 
 tasks.register('generateJooq') {
