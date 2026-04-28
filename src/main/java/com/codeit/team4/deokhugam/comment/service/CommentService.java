@@ -4,6 +4,8 @@ import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.comment.entity.Comment;
+import com.codeit.team4.deokhugam.comment.event.CommentCreatedEvent;
+import com.codeit.team4.deokhugam.comment.event.CommentDeletedEvent;
 import com.codeit.team4.deokhugam.comment.mapper.CommentMapper;
 import com.codeit.team4.deokhugam.comment.repository.CommentRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -44,7 +46,7 @@ public class CommentService {
         Comment comment = new Comment(user, review, request.content());
         Comment savedComment = commentRepository.save(comment);
 
-        reviewRepository.increaseCommentCount(review.getId());
+        eventPublisher.publishEvent(new CommentCreatedEvent(review.getId()));
 
         eventPublisher.publishEvent(
                 new CommentEvent(
@@ -80,10 +82,12 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
         validateCommentOwner(comment, userId, "논리 삭제");
 
+        UUID reviewId = comment.getReview().getId();
+
         int updatedRows = commentRepository.softDeleteWithCondition(commentId, Instant.now());
 
         if (updatedRows == 1) {
-            reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            eventPublisher.publishEvent(new CommentDeletedEvent(reviewId));
             log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
         } else {
             throwAlreadyProcessedException(commentId, userId);
@@ -100,6 +104,7 @@ public class CommentService {
 
         validateCommentOwner(comment, userId, "물리 삭제");
 
+        UUID reviewId = comment.getReview().getId();
         int updatedRows;
 
         // 논리 삭제 여부에 따른 분기 처리
@@ -107,7 +112,7 @@ public class CommentService {
             updatedRows = commentRepository.hardDeleteWithCondition(commentId);
             // 물리 삭제가 성공했을 때만 리뷰의 댓글 카운트 감소
             if (updatedRows == 1) {
-                reviewRepository.decreaseCommentCount(comment.getReview().getId());
+                eventPublisher.publishEvent(new CommentDeletedEvent(reviewId));
             }
         } else {
             updatedRows = commentRepository.hardDeleteForce(commentId);

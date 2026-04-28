@@ -1,6 +1,6 @@
--- book_statistics (도서 집계)
-CREATE TABLE book_statistics (
-    book_id       UUID PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
-    rating_sum    INT NOT NULL DEFAULT 0,
-    review_count  INT NOT NULL DEFAULT 0
+-- review_statistics (리뷰별 집계: 댓글 수)
+CREATE TABLE review_statistics
+(
+    review_id     UUID PRIMARY KEY REFERENCES reviews (id) ON DELETE CASCADE,
+    comment_count INT NOT NULL DEFAULT 0
 );

@@ -1,4 +1,7 @@
 package com.codeit.team4.deokhugam.comment.event;
 
-public record CommentDeletedEvent() {
+import java.util.UUID;
+
+public record CommentDeletedEvent(UUID reviewId) {
+
 }
