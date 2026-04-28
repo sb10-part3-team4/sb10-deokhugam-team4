@@ -147,13 +147,9 @@ public class ReviewService {
         reviewLikeRepository.save(reviewLike);
         reviewRepository.increaseLikeCount(review.getId());
 
-        if (!review.getUser().getId().equals(userId)) {
+        if (!review.isOwner(userId)) {
             eventPublisher.publishEvent(
-                    new LikeEvent(
-                            review.getId(),
-                            review.getUser().getId(),
-                            userId
-                    )
+                    new LikeEvent(review.getId(), review.getUser().getId(), userId)
             );
         }
 

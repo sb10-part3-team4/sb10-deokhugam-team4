@@ -10,7 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
-    boolean existsByBookIdAndUserIdAndDeletedAtIsNull(UUID bookId, UUID userId);
+    @Query(value = "SELECT EXISTS (SELECT 1 FROM reviews r WHERE r.book_id = :bookId AND r.user_id = :userId AND r.deleted_at IS NULL)", nativeQuery = true)
+    boolean existsByBookIdAndUserIdAndDeletedAtIsNull(@Param("bookId") UUID bookId, @Param("userId") UUID userId);
 
     @Query("SELECT r FROM Review r JOIN FETCH r.book JOIN FETCH r.user WHERE r.id = :id AND r.deletedAt IS NULL")
     Optional<Review> findByIdAndDeletedAtIsNull(@Param("id") UUID id);

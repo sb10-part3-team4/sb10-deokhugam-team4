@@ -54,6 +54,15 @@ public class BookStatistics {
         this.ratingSum += (newRating - oldRating);
     }
 
+    public BigDecimal getAverageRating() {
+        if (reviewCount == 0) {
+            return BigDecimal.ZERO;
+        }
+        //소수점 2자리까지 반올림
+        return BigDecimal.valueOf(ratingSum)
+                .divide(BigDecimal.valueOf(reviewCount), 2, RoundingMode.HALF_UP);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -68,14 +77,5 @@ public class BookStatistics {
     @Override
     public int hashCode() {
         return Objects.hashCode(bookId);
-    }
-
-    public BigDecimal getAverageRating() {
-        if (reviewCount == 0) {
-            return BigDecimal.ZERO;
-        }
-        //소수점 2자리까지 반올림
-        return BigDecimal.valueOf(ratingSum)
-                .divide(BigDecimal.valueOf(reviewCount), 2, RoundingMode.HALF_UP);
     }
 }
