@@ -34,6 +34,21 @@ public class BookQueryService {
 
     private final DSLContext dsl;
 
+    private Field<BigDecimal> ratingField() {
+        return DSL.field(
+                "CAST({0} AS DECIMAL(10,2))",
+                BigDecimal.class,
+                DSL.coalesce(
+                        DSL.when(BOOK_STATISTICS.REVIEW_COUNT.eq(0), BigDecimal.ZERO)
+                                .otherwise(
+                                        BOOK_STATISTICS.RATING_SUM.cast(BigDecimal.class)
+                                                .divide(BOOK_STATISTICS.REVIEW_COUNT)
+                                ),
+                        BigDecimal.ZERO
+                )
+        );
+    }
+
     public PageResponse<BookResponse> getBooks(
             String keyword,
             String orderBy,
@@ -145,17 +160,7 @@ public class BookQueryService {
                         BOOKS.CREATED_AT,
                         BOOKS.UPDATED_AT,
                         DSL.coalesce(BOOK_STATISTICS.REVIEW_COUNT, 0).as("review_count"),
-                        DSL.coalesce(
-                                DSL.when(BOOK_STATISTICS.REVIEW_COUNT.eq(0), BigDecimal.ZERO)
-                                        .otherwise(
-                                                DSL.field("CAST({0} AS DECIMAL(10,2))",
-                                                        BigDecimal.class,
-                                                        BOOK_STATISTICS.RATING_SUM.cast(BigDecimal.class)
-                                                                .divide(BOOK_STATISTICS.REVIEW_COUNT)
-                                                )
-                                        ),
-                                BigDecimal.ZERO
-                        ).as("rating")
+                        ratingField().as("rating")
                 )
                 .from(BOOKS)
                 .leftJoin(BOOK_STATISTICS).on(BOOKS.ID.eq(BOOK_STATISTICS.BOOK_ID))
@@ -200,10 +205,7 @@ public class BookQueryService {
     private Field<? extends Comparable<?>> getSortField(String orderBy) {
         return switch (orderBy) {
             case "publishedDate" -> BOOKS.PUBLISHED_DATE;
-            case "rating" -> DSL.coalesce(
-                    DSL.when(BOOK_STATISTICS.REVIEW_COUNT.eq(0), BigDecimal.ZERO)
-                            .otherwise(BOOK_STATISTICS.RATING_SUM.cast(BigDecimal.class)
-                                    .divide(BOOK_STATISTICS.REVIEW_COUNT)), BigDecimal.ZERO);
+            case "rating" -> ratingField();
             case "reviewCount" -> DSL.coalesce(BOOK_STATISTICS.REVIEW_COUNT, 0);
             case "title" -> BOOKS.TITLE;
             default -> throw new IllegalStateException("지원하지 않는 정렬 기준: " + orderBy);
@@ -220,7 +222,8 @@ public class BookQueryService {
     }
 
     private void validateSort(String orderBy, String direction) {
-        if (orderBy == null || !List.of("title", "publishedDate", "rating", "reviewCount").contains(orderBy)) {
+        if (orderBy == null || !List.of("title", "publishedDate", "rating", "reviewCount")
+                .contains(orderBy)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "orderBy=" + orderBy);
         }
         if (direction == null || !List.of("ASC", "DESC").contains(direction)) {
