@@ -64,7 +64,7 @@ class DashboardFacadeTest {
 
     private Book createBook(String title, String isbn) {
         return bookRepository.saveAndFlush(
-                new Book(title, "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), isbn)
+                new Book(title, "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), isbn, null)
         );
     }
 

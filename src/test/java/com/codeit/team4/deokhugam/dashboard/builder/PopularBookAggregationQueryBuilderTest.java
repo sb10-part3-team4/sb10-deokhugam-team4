@@ -61,7 +61,7 @@ class PopularBookAggregationQueryBuilderTest {
     @BeforeEach
     void setUp() {
         user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
-        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
+        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null));
     }
 
     private int countWithCondition(Condition condition) {
@@ -186,7 +186,7 @@ class PopularBookAggregationQueryBuilderTest {
         @DisplayName("동점 도서 정렬 순서 일관성 성공")
         void buildOrderBy_tieBreaker_success() {
             Book otherBook = bookRepository.saveAndFlush(
-                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
+                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891", null)
             );
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, user, "좋은 책입니다", 5));
@@ -219,7 +219,7 @@ class PopularBookAggregationQueryBuilderTest {
         void buildOrderBy_tieBreaker_earlierBookFirst_success() {
             // book은 setUp에서 publishedDate=2024-01-01로 먼저 생성됨
             Book laterBook = bookRepository.saveAndFlush(
-                    new Book("나중 책", "저자", "설명", "출판사", LocalDate.of(2024, 6, 1), "1234567891")
+                    new Book("나중 책", "저자", "설명", "출판사", LocalDate.of(2024, 6, 1), "1234567891", null)
             );
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(laterBook, user, "좋은 책입니다", 5));
