@@ -12,12 +12,4 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
 
     Optional<Book> findByIdAndDeletedAtIsNull(UUID uuid);
     boolean existsByIsbnAndDeletedAtIsNull(String isbn);
-
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("UPDATE Book b SET b.reviewCount = b.reviewCount + 1 WHERE b.id = :bookId")
-    void increaseReviewCount(@Param("bookId") UUID bookId);
-
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("UPDATE Book b SET b.reviewCount = b.reviewCount - 1 WHERE b.id = :bookId AND b.reviewCount > 0")
-    void decreaseReviewCount(@Param("bookId") UUID bookId);
 }
