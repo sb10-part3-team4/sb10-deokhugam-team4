@@ -3,11 +3,6 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
-  redis:
-    redisson:
-      config: |
-        singleServerConfig:
-          address: "redis://${REDIS_HOST}:6379"
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
