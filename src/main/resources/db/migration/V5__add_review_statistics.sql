@@ -5,10 +5,12 @@ CREATE TABLE review_statistics
     comment_count INT NOT NULL DEFAULT 0
 );
 
--- book_statistics 백필 (미배포 시 V3에, 배포 완료 시 새 버전으로)
+-- 기존 리뷰들의 댓글 개수를 세어서 review_statistics 테이블에 백필(초기 데이터 삽입)
+INSERT INTO review_statistics (review_id, comment_count)
+SELECT r.id, COUNT(c.id)
 FROM reviews r
-LEFT JOIN comments c
-  ON c.review_id = r.id
- AND c.deleted_at IS NULL
+         LEFT JOIN comments c
+                   ON c.review_id = r.id
+                       AND c.deleted_at IS NULL
 WHERE r.deleted_at IS NULL
 GROUP BY r.id;
