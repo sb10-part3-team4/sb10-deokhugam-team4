@@ -65,8 +65,8 @@ class NotificationEventListenerTest {
     }
 
     @Test
-    @DisplayName("좋아요 알림 생성 중 예외 발생")
-    void handleLikeCreated_exception() {
+    @DisplayName("좋아요 알림 생성 실패")
+    void handleLikeCreated_serviceThrowFailure() {
         UUID receiverId = UUID.randomUUID();
         UUID reviewId = UUID.randomUUID();
         UUID actorId = UUID.randomUUID();
