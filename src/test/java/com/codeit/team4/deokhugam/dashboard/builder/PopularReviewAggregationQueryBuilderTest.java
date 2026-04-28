@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.dashboard.builder;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -188,6 +189,7 @@ class PopularReviewAggregationQueryBuilderTest {
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                     .where(condition)
                     .orderBy(queryBuilder.buildOrderBy())
                     .fetch(REVIEWS.ID);
@@ -196,6 +198,7 @@ class PopularReviewAggregationQueryBuilderTest {
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                     .where(condition)
                     .orderBy(queryBuilder.buildOrderBy())
                     .fetch(REVIEWS.ID);
@@ -222,6 +225,7 @@ class PopularReviewAggregationQueryBuilderTest {
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                     .where(condition)
                     .orderBy(queryBuilder.buildOrderBy())
                     .fetch(REVIEWS.ID);

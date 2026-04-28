@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.dashboard.builder;
 
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -173,6 +174,7 @@ class PowerUserAggregationQueryBuilderTest {
             List<UUID> result = dsl.select(REVIEWS.USER_ID)
                     .from(REVIEWS)
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                     .where(condition)
                     .groupBy(PowerUserSearchModel.toGroupByFields())
                     .orderBy(queryBuilder.buildOrderBy())
