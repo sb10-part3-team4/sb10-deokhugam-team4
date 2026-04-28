@@ -1,12 +1,14 @@
 package com.codeit.team4.deokhugam.review.service;
 
 import com.codeit.team4.deokhugam.book.entity.Book;
-import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.notification.event.LikeEvent;
+import com.codeit.team4.deokhugam.review.event.ReviewCreatedEvent;
+import com.codeit.team4.deokhugam.review.event.ReviewDeletedEvent;
+import com.codeit.team4.deokhugam.review.event.ReviewUpdatedEvent;
 import com.codeit.team4.deokhugam.review.dto.ReviewCreateRequest;
 import com.codeit.team4.deokhugam.review.dto.ReviewLikeResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
@@ -36,7 +38,6 @@ public class ReviewService {
     private final ReviewLikeRepository reviewLikeRepository;
     private final UserService userService;
     private final BookService bookService;
-    private final BookRepository bookRepository;
     private final ReviewMapper reviewMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -56,7 +57,7 @@ public class ReviewService {
         Review review = new Review(book, user, request.content(), request.rating());
 
         reviewRepository.save(review);
-        bookRepository.increaseReviewCount(book.getId());
+        eventPublisher.publishEvent(new ReviewCreatedEvent(book.getId(), request.rating()));
         log.info("리뷰 생성 완료: reviewId={}", review.getId());
 
         return reviewMapper.toResponse(review, false);
@@ -72,12 +73,6 @@ public class ReviewService {
         return reviewRepository.findAllById(reviewIds);
     }
 
-    public Review findWithDeletedById(UUID reviewId) {
-        return reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.REVIEW_NOT_FOUND, "reviewId=" + reviewId));
-    }
-
     @Transactional
     @DistributedLock(key = "deokhugam:review", lockParam = {"reviewId"})
     public ReviewResponse updateReview(UUID reviewId, UUID userId, ReviewUpdateRequest request) {
@@ -85,7 +80,13 @@ public class ReviewService {
 
         validateReviewOwner(review, userId);
 
+        int oldRating = review.getRating();
         review.update(request.content(), request.rating());
+
+        if (oldRating != request.rating()) {
+            eventPublisher.publishEvent(
+                    new ReviewUpdatedEvent(review.getBook().getId(), oldRating, request.rating()));
+        }
         log.info("리뷰 수정 완료: reviewId={}", review.getId());
 
         return reviewMapper.toResponse(review, isLikedByUser(reviewId, userId));
@@ -98,7 +99,8 @@ public class ReviewService {
 
         validateReviewOwner(review, userId);
         review.softDelete();
-        bookRepository.decreaseReviewCount(review.getBook().getId());
+        eventPublisher.publishEvent(
+                new ReviewDeletedEvent(review.getBook().getId(), review.getRating()));
         log.info("리뷰 논리 삭제 완료: reviewId={}", review.getId());
     }
 
@@ -109,7 +111,8 @@ public class ReviewService {
 
         validateReviewOwner(review, userId);
         if (review.getDeletedAt() == null) {
-            bookRepository.decreaseReviewCount(review.getBook().getId());
+            eventPublisher.publishEvent(
+                    new ReviewDeletedEvent(review.getBook().getId(), review.getRating()));
         }
 
         reviewRepository.delete(review);
@@ -144,13 +147,9 @@ public class ReviewService {
         reviewLikeRepository.save(reviewLike);
         reviewRepository.increaseLikeCount(review.getId());
 
-        if (!review.getUser().getId().equals(userId)) {
+        if (!review.isOwner(userId)) {
             eventPublisher.publishEvent(
-                    new LikeEvent(
-                            review.getId(),
-                            review.getUser().getId(),
-                            userId
-                    )
+                    new LikeEvent(review.getId(), review.getUser().getId(), userId)
             );
         }
 
@@ -171,7 +170,13 @@ public class ReviewService {
         return reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
     }
 
-    private static void validateReviewOwner(Review review, UUID userId) {
+    private Review findWithDeletedById(UUID reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.REVIEW_NOT_FOUND, "reviewId=" + reviewId));
+    }
+
+    private void validateReviewOwner(Review review, UUID userId) {
         if (!review.isOwner(userId)) {
             throw new BusinessException(
                     ErrorCode.REVIEW_NOT_OWNER, "reviewId=" + review.getId() + ", userId=" + userId);

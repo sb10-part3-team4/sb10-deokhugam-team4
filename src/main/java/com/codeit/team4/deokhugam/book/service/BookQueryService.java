@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.book.service;
 
+import static com.codeit.team4.deokhugam.jooq.Tables.BOOK_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
@@ -32,6 +33,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookQueryService {
 
     private final DSLContext dsl;
+
+    private Field<BigDecimal> ratingField() {
+        return DSL.field(
+                "CAST({0} AS DECIMAL(10,2))",
+                BigDecimal.class,
+                DSL.coalesce(
+                        DSL.when(BOOK_STATISTICS.REVIEW_COUNT.eq(0), BigDecimal.ZERO)
+                                .otherwise(
+                                        BOOK_STATISTICS.RATING_SUM.cast(BigDecimal.class)
+                                                .divide(BOOK_STATISTICS.REVIEW_COUNT)
+                                ),
+                        BigDecimal.ZERO
+                )
+        );
+    }
 
     public PageResponse<BookResponse> getBooks(
             String keyword,
@@ -130,10 +146,24 @@ public class BookQueryService {
                     : DSL.row(primary, BOOKS.CREATED_AT)
                             .lt((Comparable<?>) cursorValue, afterOffset));
         }
-
         // 최종 쿼리 조립 및 실행
         return dsl
-                .selectFrom(BOOKS)
+                .select(
+                        BOOKS.ID,
+                        BOOKS.TITLE,
+                        BOOKS.AUTHOR,
+                        BOOKS.DESCRIPTION,
+                        BOOKS.PUBLISHER,
+                        BOOKS.PUBLISHED_DATE,
+                        BOOKS.ISBN,
+                        BOOKS.THUMBNAIL_URL,
+                        BOOKS.CREATED_AT,
+                        BOOKS.UPDATED_AT,
+                        DSL.coalesce(BOOK_STATISTICS.REVIEW_COUNT, 0).as("review_count"),
+                        ratingField().as("rating")
+                )
+                .from(BOOKS)
+                .leftJoin(BOOK_STATISTICS).on(BOOKS.ID.eq(BOOK_STATISTICS.BOOK_ID))
                 .where(condition)
                 .orderBy(primarySort, secondarySort)
                 .limit(limit + 1)
@@ -147,9 +177,9 @@ public class BookQueryService {
                         record.get(BOOKS.PUBLISHED_DATE),
                         record.get(BOOKS.ISBN),
                         record.get(BOOKS.THUMBNAIL_URL),
-                        record.get(BOOKS.REVIEW_COUNT),
-                        record.get(BOOKS.RATING),
-                        record.get(BOOKS.CREATED_AT).toInstant(),    // DB 시간을 Java 표준 Instant로 변환
+                        record.get("review_count", Integer.class),
+                        record.get("rating", BigDecimal.class),
+                        record.get(BOOKS.CREATED_AT).toInstant(),   // DB 시간을 Java 표준 Instant로 변환
                         record.get(BOOKS.UPDATED_AT).toInstant()
                 ));
     }
@@ -175,8 +205,8 @@ public class BookQueryService {
     private Field<? extends Comparable<?>> getSortField(String orderBy) {
         return switch (orderBy) {
             case "publishedDate" -> BOOKS.PUBLISHED_DATE;
-            case "rating" -> BOOKS.RATING;
-            case "reviewCount" -> BOOKS.REVIEW_COUNT;
+            case "rating" -> ratingField();
+            case "reviewCount" -> DSL.coalesce(BOOK_STATISTICS.REVIEW_COUNT, 0);
             case "title" -> BOOKS.TITLE;
             default -> throw new IllegalStateException("지원하지 않는 정렬 기준: " + orderBy);
         };
@@ -192,7 +222,8 @@ public class BookQueryService {
     }
 
     private void validateSort(String orderBy, String direction) {
-        if (orderBy == null || !List.of("title", "publishedDate", "rating", "reviewCount").contains(orderBy)) {
+        if (orderBy == null || !List.of("title", "publishedDate", "rating", "reviewCount")
+                .contains(orderBy)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "orderBy=" + orderBy);
         }
         if (direction == null || !List.of("ASC", "DESC").contains(direction)) {
