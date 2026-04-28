@@ -154,9 +154,8 @@ public class DashboardBatchService {
         if (shouldPublish(period, snapshotDate)) {
             for (PopularReview p : popularReviews) {
 
-                if (p.getReview() == null || p.getUser() == null) {
-                    continue;
-                }
+                if (p.getReview() == null || p.getUser() == null) continue;
+                if (p.getRank() > 10) continue;
 
                 eventPublisher.publishEvent(
                         new ReviewRankedEvent(
