@@ -49,12 +49,6 @@ public class Book extends BaseUpdatableEntity {
     @Column(length = 500)
     private String thumbnailUrl;
 
-    @Column(nullable = false)
-    private int reviewCount;
-
-    @Column(nullable = false)
-    private BigDecimal rating;
-
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
@@ -74,8 +68,6 @@ public class Book extends BaseUpdatableEntity {
         this.publishedDate = publishedDate;
         this.isbn = isbn;
         this.thumbnailUrl = thumbnailUrl;
-        this.reviewCount = 0;
-        this.rating = BigDecimal.ZERO;
     }
 
     // 기존 update 유지 (thumbnailUrl 없는 버전)
