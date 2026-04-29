@@ -29,8 +29,8 @@ logging:
   level:
     root: WARN
     com.codeit.team4: INFO
-    io.micrometer: DEBUG
-    software.amazon.awssdk: DEBUG
+    io.micrometer: WARN
+    software.amazon.awssdk: WARN
 
 user:
   cleanup:
