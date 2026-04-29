@@ -19,6 +19,7 @@ management:
       export:
         namespace: deokhugam
         enabled: true
+        step: 1m
   metrics:
     distribution:
       percentiles:
