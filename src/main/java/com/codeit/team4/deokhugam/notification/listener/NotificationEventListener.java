@@ -86,16 +86,19 @@ public class NotificationEventListener {
 
     @Recover
     public void recover(Exception e, LikeEvent event) {
-        log.error("좋아요 알림 최종 실패 (3회 재시도 후): event={}", event, e);
+        log.error("NotificationEvent 최종 실패 (Like): reviewId={}, receiverId={}, actorId={}",
+                event.reviewId(), event.receiverId(), event.actorId(), e);
     }
 
     @Recover
     public void recover(Exception e, CommentEvent event) {
-        log.error("댓글 알림 최종 실패 (3회 재시도 후): event={}", event, e);
+        log.error("NotificationEvent 최종 실패 (Comment): reviewId={}, receiverId={}, actorId={}",
+                event.reviewId(), event.receiverId(), event.actorId(), e);
     }
 
     @Recover
     public void recover(Exception e, ReviewRankedEvent event) {
-        log.error("랭크 알림 최종 실패 (3회 재시도 후): event={}", event, e);
+        log.error("NotificationEvent 최종 실패 (ReviewRanked): reviewId={}, userId={}, rank={}",
+                event.reviewId(), event.receiverId(), event.rank(), e);
     }
 }
