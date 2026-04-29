@@ -3,14 +3,14 @@ package com.codeit.team4.deokhugam.global.config;
 import io.micrometer.cloudwatch2.CloudWatchConfig;
 import io.micrometer.cloudwatch2.CloudWatchMeterRegistry;
 import io.micrometer.core.instrument.Clock;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
 
 @Configuration
-@ConditionalOnProperty(name = "management.cloudwatch.metrics.export.enabled", havingValue = "true")
+@Profile("prod")
 public class CloudWatchMetricsConfig {
 
     @Bean
