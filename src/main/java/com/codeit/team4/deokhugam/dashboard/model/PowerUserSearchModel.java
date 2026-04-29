@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.dashboard.model;
 
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -21,14 +22,15 @@ public record PowerUserSearchModel(
 
     private static final Field<BigDecimal> REVIEW_SCORE_SUM = DSL.sum(
             REVIEWS.LIKE_COUNT.cast(BigDecimal.class).mul(PopularReview.LIKE_COUNT_WEIGHT)
-                    .add(REVIEWS.COMMENT_COUNT.cast(BigDecimal.class).mul(PopularReview.COMMENT_COUNT_WEIGHT))
+                    .add(DSL.coalesce(REVIEW_STATISTICS.COMMENT_COUNT, 0)
+                            .cast(BigDecimal.class).mul(PopularReview.COMMENT_COUNT_WEIGHT))
     ).as("review_score_sum");
 
     private static final Field<BigDecimal> LIKE_COUNT_SUM =
             DSL.sum(REVIEWS.LIKE_COUNT).as("like_count_sum");
 
     private static final Field<BigDecimal> COMMENT_COUNT_SUM =
-            DSL.sum(REVIEWS.COMMENT_COUNT).as("comment_count_sum");
+            DSL.sum(DSL.coalesce(REVIEW_STATISTICS.COMMENT_COUNT, 0)).as("comment_count_sum");
 
     public static List<Field<?>> toSelectedFields() {
         return List.of(

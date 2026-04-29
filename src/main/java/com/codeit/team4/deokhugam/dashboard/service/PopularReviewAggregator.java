@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.dashboard.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -29,6 +30,7 @@ public class PopularReviewAggregator {
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                 .where(aggregationQueryBuilder.buildCondition(period, snapshotDate))
                 .orderBy(aggregationQueryBuilder.buildOrderBy())
                 .limit(POPULAR_REVIEW_LIMIT)

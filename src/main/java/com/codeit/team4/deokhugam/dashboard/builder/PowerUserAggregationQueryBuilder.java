@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.dashboard.builder;
 
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -36,10 +37,10 @@ public class PowerUserAggregationQueryBuilder {
     public List<SortField<?>> buildOrderBy() {
         SortField<?> scoreDesc = DSL.sum(
                 REVIEWS.LIKE_COUNT.cast(BigDecimal.class).mul(PopularReview.LIKE_COUNT_WEIGHT)
-                        .add(REVIEWS.COMMENT_COUNT.cast(BigDecimal.class).mul(PopularReview.COMMENT_COUNT_WEIGHT))
+                        .add(REVIEW_STATISTICS.COMMENT_COUNT.cast(BigDecimal.class).mul(PopularReview.COMMENT_COUNT_WEIGHT))
         ).cast(BigDecimal.class).mul(PowerUser.REVIEW_SCORE_SUM_WEIGHT)
                 .add(DSL.sum(REVIEWS.LIKE_COUNT).cast(BigDecimal.class).mul(PowerUser.LIKE_COUNT_WEIGHT))
-                .add(DSL.sum(REVIEWS.COMMENT_COUNT).cast(BigDecimal.class).mul(PowerUser.COMMENT_COUNT_WEIGHT))
+                .add(DSL.sum(REVIEW_STATISTICS.COMMENT_COUNT).cast(BigDecimal.class).mul(PowerUser.COMMENT_COUNT_WEIGHT))
                 .desc();
 
         return List.of(scoreDesc, USERS.CREATED_AT.asc(), REVIEWS.USER_ID.asc());
