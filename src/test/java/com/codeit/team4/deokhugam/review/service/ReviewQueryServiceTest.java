@@ -60,8 +60,8 @@ class ReviewQueryServiceTest {
     void setUp() {
         user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
         otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
-        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
-        otherBook = bookRepository.saveAndFlush(new Book("이펙티브 자바", "조슈아 블로크", "좋은 책2", "출판사", LocalDate.of(2024, 2, 1), "1234567891"));
+        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null));
+        otherBook = bookRepository.saveAndFlush(new Book("이펙티브 자바", "조슈아 블로크", "좋은 책2", "출판사", LocalDate.of(2024, 2, 1), "1234567891", null));
     }
 
     @Nested
@@ -97,7 +97,7 @@ class ReviewQueryServiceTest {
             reviewRepository.saveAndFlush(new Review(book, user, "리뷰1", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, user, "리뷰2", 4));
             reviewRepository.saveAndFlush(new Review(
-                    bookRepository.saveAndFlush(new Book("책3", "저자", "설명", "출판사", LocalDate.of(2024, 3, 1), "1234567892")),
+                    bookRepository.saveAndFlush(new Book("책3", "저자", "설명", "출판사", LocalDate.of(2024, 3, 1), "1234567892", null)),
                     user, "리뷰3", 3));
 
             ReviewSearchRequestParam param = new ReviewSearchRequestParam(
@@ -120,7 +120,7 @@ class ReviewQueryServiceTest {
             reviewRepository.saveAndFlush(new Review(book, user, "리뷰1", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, user, "리뷰2", 4));
             reviewRepository.saveAndFlush(new Review(
-                    bookRepository.saveAndFlush(new Book("책3", "저자", "설명", "출판사", LocalDate.of(2024, 3, 1), "1234567892")),
+                    bookRepository.saveAndFlush(new Book("책3", "저자", "설명", "출판사", LocalDate.of(2024, 3, 1), "1234567892", null)),
                     user, "리뷰3", 3));
 
             // 1페이지
@@ -152,7 +152,7 @@ class ReviewQueryServiceTest {
             reviewRepository.saveAndFlush(new Review(book, user, "리뷰1", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, user, "리뷰2", 3));
             reviewRepository.saveAndFlush(new Review(
-                    bookRepository.saveAndFlush(new Book("책3", "저자", "설명", "출판사", LocalDate.of(2024, 3, 1), "1234567892")),
+                    bookRepository.saveAndFlush(new Book("책3", "저자", "설명", "출판사", LocalDate.of(2024, 3, 1), "1234567892", null)),
                     user, "리뷰3", 1));
 
             // 1페이지 (rating DESC)

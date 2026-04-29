@@ -60,7 +60,7 @@ class CommentQueryServiceTest {
     void setUp() {
         user = userRepository.saveAndFlush(new User("tester@codeit.com", "테스트유저", "password123"));
         Book book = bookRepository.saveAndFlush(
-                new Book("테스트 도서", "작가", "설명", "출판사", LocalDate.now(), "ISBN-123"));
+                new Book("테스트 도서", "작가", "설명", "출판사", LocalDate.now(), "ISBN-123", null));
         review = reviewRepository.saveAndFlush(new Review(book, user, "리뷰 내용", 5));
     }
 

@@ -61,7 +61,7 @@ class PopularReviewAggregationQueryBuilderTest {
     @BeforeEach
     void setUp() {
         user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
-        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
+        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null));
     }
 
     private int countWithCondition(Condition condition) {
@@ -176,7 +176,7 @@ class PopularReviewAggregationQueryBuilderTest {
         @DisplayName("동점 리뷰 정렬 순서 일관성 성공")
         void buildOrderBy_tieBreaker_success() {
             Book otherBook = bookRepository.saveAndFlush(
-                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
+                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891", null)
             );
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, user, "좋은 책입니다", 5));
@@ -210,7 +210,7 @@ class PopularReviewAggregationQueryBuilderTest {
             Review earlierReview = reviewRepository.saveAndFlush(new Review(book, user, "먼저 쓴 리뷰", 5));
 
             Book otherBook = bookRepository.saveAndFlush(
-                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
+                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891", null)
             );
             User otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
             Review laterReview = reviewRepository.saveAndFlush(new Review(otherBook, otherUser, "나중에 쓴 리뷰", 5));

@@ -60,7 +60,7 @@ class PowerUserAggregationQueryBuilderTest {
     @BeforeEach
     void setUp() {
         user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
-        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
+        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null));
     }
 
     private int countWithCondition(Condition condition) {
@@ -162,7 +162,7 @@ class PowerUserAggregationQueryBuilderTest {
         void buildOrderBy_tieBreaker_earlierUserFirst_success() {
             User laterUser = userRepository.saveAndFlush(new User("later@test.com", "나중이", "password123"));
             Book otherBook = bookRepository.saveAndFlush(
-                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891")
+                    new Book("다른 책", "다른 저자", "설명", "출판사", LocalDate.of(2024, 2, 1), "1234567891", null)
             );
             reviewRepository.saveAndFlush(new Review(book, user, "좋은 책입니다", 5));
             reviewRepository.saveAndFlush(new Review(otherBook, laterUser, "좋은 책입니다", 5));

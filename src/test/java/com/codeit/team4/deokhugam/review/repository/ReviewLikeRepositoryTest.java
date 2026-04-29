@@ -47,7 +47,7 @@ class ReviewLikeRepositoryTest {
     @BeforeEach
     void setUp() {
         user = userRepository.save(new User("test@test.com", "테스터", "password123"));
-        Book book = bookRepository.save(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
+        Book book = bookRepository.save(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null));
         review = reviewRepository.save(new Review(book, user, "좋은 책입니다", 5));
     }
 

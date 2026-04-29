@@ -60,8 +60,8 @@ class ReviewSearchQueryBuilderTest {
     void setUp() {
         user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
         otherUser = userRepository.saveAndFlush(new User("other@test.com", "다른사람", "password123"));
-        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890"));
-        otherBook = bookRepository.saveAndFlush(new Book("이펙티브 자바", "조슈아 블로크", "좋은 책2", "출판사", LocalDate.of(2024, 2, 1), "1234567891"));
+        book = bookRepository.saveAndFlush(new Book("클린 코드", "로버트 마틴", "좋은 책", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null));
+        otherBook = bookRepository.saveAndFlush(new Book("이펙티브 자바", "조슈아 블로크", "좋은 책2", "출판사", LocalDate.of(2024, 2, 1), "1234567891", null));
     }
 
     private int countWithCondition(Condition condition) {
