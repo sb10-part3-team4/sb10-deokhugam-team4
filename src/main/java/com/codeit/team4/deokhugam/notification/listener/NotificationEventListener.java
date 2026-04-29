@@ -7,6 +7,10 @@ import com.codeit.team4.deokhugam.notification.event.ReviewRankedEvent;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -18,45 +22,53 @@ public class NotificationEventListener {
 
     private final NotificationService notificationService;
 
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Retryable(
+            retryFor = Exception.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     public void handleLikeCreated(LikeEvent event) {
         log.debug("LikeEvent 수신: {}", event);
 
         if (event.receiverId() == null || Objects.equals(event.receiverId(), event.actorId())) {
             return;
         }
-
-        try {
             notificationService.createLikeNotification(
                     event.receiverId(),
                     event.reviewId(),
                     event.actorId()
             );
-        } catch (Exception e) {
-            log.error("좋아요 알림 생성 실패: event={}", event, e);
-        }
     }
 
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Retryable(
+            retryFor = Exception.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     public void handleCommentCreated(CommentEvent event) {
         log.debug("CommentEvent 수신: {}", event);
 
         if (event.receiverId() == null || Objects.equals(event.receiverId(), event.actorId())) {
             return;
         }
-
-        try {
             notificationService.createCommentNotification(
                     event.receiverId(),
                     event.reviewId(),
                     event.actorId()
             );
-        } catch (Exception e) {
-            log.error("댓글 알림 생성 실패 - event={}", event, e);
-        }
     }
 
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Retryable(
+            retryFor = Exception.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     public void handleReviewRanked(ReviewRankedEvent event) {
         log.info("ReviewRankedEvent 수신: {}", event);
 
@@ -64,15 +76,29 @@ public class NotificationEventListener {
             log.warn("알림 생성 스킵 - receiverId가 null입니다. event={}", event);
             return;
         }
-        try {
             notificationService.createRankNotification(
                     event.receiverId(),
                     event.reviewId(),
                     event.period(),
                     event.rank()
             );
-        } catch (Exception e) {
-            log.error("랭크 알림 생성 실패: event={}", event, e);
-        }
+    }
+
+    @Recover
+    public void recover(Exception e, LikeEvent event) {
+        log.error("NotificationEvent 최종 실패 (Like): reviewId={}, receiverId={}, actorId={}",
+                event.reviewId(), event.receiverId(), event.actorId(), e);
+    }
+
+    @Recover
+    public void recover(Exception e, CommentEvent event) {
+        log.error("NotificationEvent 최종 실패 (Comment): reviewId={}, receiverId={}, actorId={}",
+                event.reviewId(), event.receiverId(), event.actorId(), e);
+    }
+
+    @Recover
+    public void recover(Exception e, ReviewRankedEvent event) {
+        log.error("NotificationEvent 최종 실패 (ReviewRanked): reviewId={}, userId={}, rank={}",
+                event.reviewId(), event.receiverId(), event.rank(), e);
     }
 }
