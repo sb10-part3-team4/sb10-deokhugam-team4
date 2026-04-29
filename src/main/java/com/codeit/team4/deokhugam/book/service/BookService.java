@@ -57,6 +57,7 @@ public class BookService {
         String thumbnailUrl = null;
         if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
             thumbnailUrl = s3Service.upload(thumbnailImage);
+            registerS3CleanUp(thumbnailUrl, null);
         }
 
         // 엔티티 생성
@@ -77,9 +78,8 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public Book findById(UUID bookId) {
-        return bookRepository.findByIdAndDeletedAtIsNull(bookId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
+        return bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow(
+                () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
     }
 
     @Transactional(readOnly = true)
@@ -92,63 +92,63 @@ public class BookService {
     public BookResponse updateBook(UUID bookId, BookUpdateRequest request,
             MultipartFile thumbnailImage) {
         // 해당 id의 도서 찾기
-        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
-                .orElseThrow(() -> {
-                    return new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId);
-                });
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow(
+                () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
-        // 썸네일 업로드
-        String thumbnailUrl = null;
         String oldThumbnailUrl = book.getThumbnailUrl();    // 기존에 등록되어 있던 썸네일 URL 보관
+        String newThumbnailUrl = null;
 
         // 새로운 이미지 파일이 넘어온 경우에만 S3 업로드 수행
         if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
-            thumbnailUrl = s3Service.upload(thumbnailImage);
+            newThumbnailUrl = s3Service.upload(thumbnailImage);
+            // 업로드 직후 바로 등록하여 이후 로직 실패 시에도 삭제 보장
+            registerS3CleanUp(newThumbnailUrl, oldThumbnailUrl);
         }
 
         // 도서 정보 업데이트 (Dirty Checking 활용)
         book.update(request.title(), request.author(), request.description(), request.publisher(),
                 request.publishedDate(),
-                thumbnailUrl != null ? thumbnailUrl : book.getThumbnailUrl());
+                newThumbnailUrl != null ? newThumbnailUrl : book.getThumbnailUrl());
+
         log.info("도서 수정 완료: bookId={}", bookId);
+        return bookMapper.toResponse(book);
+    }
 
-        // 3. 트랜잭션 상태에 따른 S3 파일 사후 관리
-        if (thumbnailUrl != null) {
-            String uploadedThumbnailUrl = thumbnailUrl;
+    private void registerS3CleanUp(String newUrl, String oldUrl) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 
-            // 현재 진행 중인 DB 트랜잭션에 사후 작업(Synchronization)을 등록
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
+            // DB 업데이트가 최종 성공했을 때
+            @Override
+            public void afterCommit() {
+                // DB 커밋 확정 후 기존 이미지 삭제 (실패해도 롤백 불가 → 로그만)
+                if (oldUrl != null) {
+                    try {
+                        s3Service.delete(oldUrl);
+                    } catch (Exception e) {
+                        log.error("기존 썸네일 S3 삭제 실패 (수동 정리 필요): url={}", oldUrl, e);
+                    }
+                }
+            }
 
-                        // DB 업데이트가 최종 성공했을 때
-                        @Override
-                        public void afterCommit() {
-                            // 새 이미지가 잘 올라갔으니, 더 이상 필요 없는 '기존 이미지'를 S3에서 삭제
-                            if (oldThumbnailUrl != null) {
-                                s3Service.delete(oldThumbnailUrl);
-                            }
-                        }
-
-                        // 트랜잭션이 종료되었을 때 (성공/실패 모두 포함)
-                        @Override
-                        public void afterCompletion(int status) {
-                            if (status == STATUS_ROLLED_BACK) {
-                                s3Service.delete(uploadedThumbnailUrl); // 롤백되면 새로 올린 것도 삭제
-                            }
-                        }
-                    });
-        }
-
-        BookResponse bookResponse = bookMapper.toResponse(book);
-        return bookResponse;
+            // 트랜잭션이 종료되었을 때 (성공/실패 모두 포함)
+            @Override
+            public void afterCompletion(int status) {
+                if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                    try {
+                        s3Service.delete(newUrl); // 롤백되면 새로 올린 것도 삭제
+                    } catch (Exception e) {
+                        log.error("롤백 후 신규 썸네일 S3 삭제 실패 (수동 정리 필요): url={}", newUrl, e);
+                    }
+                }
+            }
+        });
     }
 
     @DistributedLock(key = "deokhugam:book", lockParam = {"bookId"})
     @Transactional
     public void deleteBook(UUID bookId) {
-        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow(
+                () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         book.softDelete(Instant.now());
         log.info("도서 삭제 완료: bookId={}", bookId);
@@ -157,9 +157,8 @@ public class BookService {
     @DistributedLock(key = "deokhugam:book", lockParam = {"bookId"})
     @Transactional
     public void hardDeleteBook(UUID bookId) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
+        Book book = bookRepository.findById(bookId).orElseThrow(
+                () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         bookRepository.delete(book);
         log.info("도서 물리 삭제 완료: bookId={}", bookId);
@@ -167,17 +166,14 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public BookResponse getBook(UUID bookId) {
-        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId)
-                );
+        Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow(
+                () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
         BookResponse bookResponse = bookMapper.toResponse(book);
         log.info("도서 단건 조회 완료: bookId={}", bookId);
         return bookResponse;
     }
 
-    @Transactional(readOnly = true)
     public NaverBookSearchResponse searchByIsbn(String isbn) {
         NaverBookResponse response = naverBookClient.searchByIsbn(isbn);
 
@@ -213,8 +209,8 @@ public class BookService {
         }
 
         // 추출된 그룹 확인 및 공백/하이픈 제거
-        String isbn = (matcher.group(1) != null ? matcher.group(1) : matcher.group(2))
-                .replaceAll("[-\\s]", "");
+        String isbn = (matcher.group(1) != null ? matcher.group(1) : matcher.group(2)).replaceAll(
+                "[-\\s]", "");
 
         // 정규화 후 자릿수 재검증 (ISBN-10=10, ISBN-13=13)
         if (isbn.length() != 10 && isbn.length() != 13) {

@@ -284,7 +284,8 @@ class NotificationRepositoryTest {
                 "description",
                 "publisher",
                 LocalDate.now(),
-                "isbn-123"
+                "isbn-123",
+                null
         );
         return bookRepository.save(book);
     }
