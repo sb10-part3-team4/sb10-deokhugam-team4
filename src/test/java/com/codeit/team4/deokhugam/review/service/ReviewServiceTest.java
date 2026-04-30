@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.review.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -23,6 +24,7 @@ import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.review.repository.ReviewStatisticsRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.Instant;
@@ -45,6 +47,9 @@ class ReviewServiceTest {
 
     @Mock
     private ReviewRepository reviewRepository;
+
+    @Mock
+    private ReviewStatisticsRepository reviewStatisticsRepository;
 
     @Mock
     private ReviewLikeRepository reviewLikeRepository;
@@ -95,7 +100,7 @@ class ReviewServiceTest {
             given(user.getId()).willReturn(userId);
             given(reviewRepository.existsByBookIdAndUserIdAndDeletedAtIsNull(bookId, userId)).willReturn(false);
             given(reviewRepository.save(any(Review.class))).willAnswer(invocation -> invocation.getArgument(0));
-            given(reviewMapper.toResponse(any(Review.class), eq(false))).willReturn(expectedResponse);
+            given(reviewMapper.toResponse(any(Review.class))).willReturn(expectedResponse);
 
             ReviewResponse response = reviewService.createReview(request);
 
@@ -191,9 +196,10 @@ class ReviewServiceTest {
                     Instant.now()
             );
 
+            given(review.getId()).willReturn(reviewId);
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
             given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
-            given(reviewMapper.toResponse(review, true)).willReturn(expectedResponse);
+            given(reviewMapper.toResponse(eq(review), eq(true), anyInt())).willReturn(expectedResponse);
 
             ReviewResponse response = reviewService.getReview(reviewId, userId);
 
@@ -276,13 +282,14 @@ class ReviewServiceTest {
                     Instant.now()
             );
 
+            given(review.getId()).willReturn(reviewId);
             given(reviewRepository.findByIdAndDeletedAtIsNull(reviewId)).willReturn(Optional.of(review));
             given(review.isOwner(userId)).willReturn(true);
             given(review.getRating()).willReturn(5);
             given(review.getBook()).willReturn(book);
             given(book.getId()).willReturn(bookId);
             given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId)).willReturn(true);
-            given(reviewMapper.toResponse(review, true)).willReturn(expectedResponse);
+            given(reviewMapper.toResponse(eq(review), eq(true), anyInt())).willReturn(expectedResponse);
 
             ReviewResponse response = reviewService.updateReview(reviewId, userId, request);
 

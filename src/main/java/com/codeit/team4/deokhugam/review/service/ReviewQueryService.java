@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.review.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -30,6 +31,7 @@ public class ReviewQueryService {
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                 .where(queryBuilder.buildCondition(param))
                 .orderBy(queryBuilder.buildOrderBy(param))
                 .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
