@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.book.service;
+package com.codeit.team4.deokhugam.book.service.query;
 
 import static com.codeit.team4.deokhugam.jooq.Tables.BOOK_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;

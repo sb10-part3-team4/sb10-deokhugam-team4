@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.review.service;
+package com.codeit.team4.deokhugam.review.service.query;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
@@ -10,6 +10,7 @@ import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.model.ReviewSearchModel;
+import com.codeit.team4.deokhugam.review.service.ReviewSearchQueryBuilder;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.user.service;
 
+import com.codeit.team4.deokhugam.user.service.query.UserQueryService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;

@@ -1,11 +1,11 @@
-package com.codeit.team4.deokhugam.book.service;
-
+package com.codeit.team4.deokhugam.book.service.query;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.codeit.team4.deokhugam.book.dto.BookCreateRequest;
 import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
+import com.codeit.team4.deokhugam.book.service.BookService;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;

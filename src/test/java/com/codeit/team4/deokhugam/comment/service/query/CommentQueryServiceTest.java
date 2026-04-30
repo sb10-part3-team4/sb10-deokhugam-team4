@@ -1,5 +1,4 @@
-package com.codeit.team4.deokhugam.comment.service;
-
+package com.codeit.team4.deokhugam.comment.service.query;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

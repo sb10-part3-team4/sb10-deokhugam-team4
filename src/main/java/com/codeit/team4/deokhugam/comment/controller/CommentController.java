@@ -5,7 +5,7 @@ import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentSearchRequestParam;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
-import com.codeit.team4.deokhugam.comment.service.CommentQueryService;
+import com.codeit.team4.deokhugam.comment.service.query.CommentQueryService;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;

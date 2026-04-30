@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.service.aggregator;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
