@@ -53,9 +53,6 @@ public class Review extends BaseUpdatableEntity {
     @Column(nullable = false)
     private int likeCount;
 
-    @Column(nullable = false)
-    private int commentCount;
-
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
@@ -66,7 +63,6 @@ public class Review extends BaseUpdatableEntity {
         this.content = content;
         this.rating = rating;
         this.likeCount = 0;
-        this.commentCount = 0;
     }
 
     public void update(String content, int rating) {

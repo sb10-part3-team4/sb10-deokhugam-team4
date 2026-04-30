@@ -15,7 +15,9 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.entity.ReviewStatistics;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.review.repository.ReviewStatisticsRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
@@ -52,6 +54,9 @@ class CommentQueryServiceTest {
 
     @Autowired
     private BookRepository bookRepository;
+
+    @Autowired
+    private ReviewStatisticsRepository reviewStatisticsRepository;
 
     private User user;
     private Review review;
@@ -150,11 +155,13 @@ class CommentQueryServiceTest {
         void getComments_FirstPage_Success() {
             // given: 댓글 3개 생성, 사이즈 2로 조회
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
-            reviewRepository.increaseCommentCount(review.getId());
+            ReviewStatistics stats = new ReviewStatistics(review.getId());
+            stats.onCommentCreated();
+            stats.onCommentCreated();
+            stats.onCommentCreated();
+            reviewStatisticsRepository.saveAndFlush(stats);
 
             CommentSearchRequestParam param = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
@@ -176,11 +183,13 @@ class CommentQueryServiceTest {
         void getComments_CursorPagination_Success() {
             // given
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
-            reviewRepository.increaseCommentCount(review.getId());
+            ReviewStatistics stats = new ReviewStatistics(review.getId());
+            stats.onCommentCreated();
+            stats.onCommentCreated();
+            stats.onCommentCreated();
+            reviewStatisticsRepository.saveAndFlush(stats);
 
             CommentSearchRequestParam firstReq = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
