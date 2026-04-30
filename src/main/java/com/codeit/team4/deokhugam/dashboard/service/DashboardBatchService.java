@@ -28,8 +28,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_BOOKS;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_REVIEWS;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POWER_USERS;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +61,7 @@ public class DashboardBatchService {
 
     private final ApplicationEventPublisher eventPublisher;
 
+    @CacheEvict(value = POPULAR_BOOKS, allEntries = true)
     public void updatePopularBooks(LocalDate snapshotDate) {
         log.info("인기 도서 배치 시작: snapshotDate={}", snapshotDate);
 
@@ -65,6 +72,7 @@ public class DashboardBatchService {
         log.info("인기 도서 배치 완료: snapshotDate={}", snapshotDate);
     }
 
+    @CacheEvict(value = POPULAR_REVIEWS, allEntries = true)
     public void updatePopularReviews(LocalDate snapshotDate) {
         log.info("인기 리뷰 배치 시작: snapshotDate={}", snapshotDate);
 
@@ -75,6 +83,7 @@ public class DashboardBatchService {
         log.info("인기 리뷰 배치 완료: snapshotDate={}", snapshotDate);
     }
 
+    @CacheEvict(value = POWER_USERS, allEntries = true)
     public void updatePowerUsers(LocalDate snapshotDate) {
         log.info("파워 유저 배치 시작: snapshotDate={}", snapshotDate);
 
