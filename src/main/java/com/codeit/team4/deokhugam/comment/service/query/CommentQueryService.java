@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.comment.service;
+package com.codeit.team4.deokhugam.comment.service.query;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Comments.COMMENTS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;

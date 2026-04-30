@@ -1,5 +1,6 @@
 package com.codeit.team4.deokhugam.notification.service;
 
+import com.codeit.team4.deokhugam.notification.service.query.NotificationQueryService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;

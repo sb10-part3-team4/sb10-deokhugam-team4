@@ -8,6 +8,7 @@ import com.codeit.team4.deokhugam.notification.dto.NotificationResponse;
 import com.codeit.team4.deokhugam.notification.entity.Notification;
 import com.codeit.team4.deokhugam.notification.model.NotificationModel;
 import com.codeit.team4.deokhugam.notification.repository.NotificationRepository;
+import com.codeit.team4.deokhugam.notification.service.query.NotificationQueryService;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.service.UserService;

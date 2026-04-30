@@ -10,6 +10,7 @@ import com.codeit.team4.deokhugam.user.dto.UserUpdateRequest;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.mapper.UserMapper;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
+import com.codeit.team4.deokhugam.user.service.query.UserQueryService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
