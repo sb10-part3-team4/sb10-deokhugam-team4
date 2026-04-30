@@ -30,9 +30,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceImplTest {
+class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -46,6 +47,9 @@ class UserServiceImplTest {
     @InjectMocks
     private UserService userService;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @Test
     @DisplayName("회원가입 성공")
     void registerUser_success() {
@@ -55,10 +59,13 @@ class UserServiceImplTest {
                 "user1",
                 "password1!"
         );
-        User savedUser = new User("test@test.com", "user1", "password1!");
+        User savedUser = new User("test@test.com", "user1", "encodedPassword");
 
         when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(false);
+
+        when(passwordEncoder.encode("password1!"))
+                .thenReturn("encodedPassword");
 
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);
@@ -113,6 +120,9 @@ class UserServiceImplTest {
         when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(false);
 
+        when(passwordEncoder.encode("password1!"))
+                .thenReturn("encodedPassword");
+
         when(userRepository.save(any(User.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate"));
 
@@ -138,6 +148,9 @@ class UserServiceImplTest {
         when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(false);
 
+        when(passwordEncoder.encode("password1!"))
+                .thenReturn("encodedPassword");
+
         when(userRepository.save(any(User.class)))
                 .thenThrow(new RuntimeException("DB crash"));
 
@@ -155,10 +168,13 @@ class UserServiceImplTest {
     void loginUser_success() {
         // given
         UserLoginRequest request = new UserLoginRequest("test@test.com", "password1!");
-        User user = new User("test@test.com", "user1", "password1!");
+        User user = new User("test@test.com", "user1", "encodedPassword");
 
         when(userRepository.findByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches("password1!", "encodedPassword"))
+                .thenReturn(true);
 
         when(userMapper.toResponse(user))
                 .thenReturn(new UserResponse(user.getId(), user.getEmail(), user.getNickname(), null));
@@ -194,10 +210,13 @@ class UserServiceImplTest {
     void loginUser_fail_invalid_password() {
         // given
         UserLoginRequest request = new UserLoginRequest("test@test.com", "wrongPassword");
-        User user = new User("test@test.com", "user1", "password1!");
+        User user = new User("test@test.com", "user1", "encodedPassword");
 
         when(userRepository.findByEmailAndDeletedAtIsNull(request.email()))
                 .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches("wrongPassword", "encodedPassword"))
+                .thenReturn(false);
 
         // when & then
         assertThatThrownBy(() -> userService.loginUser(request))

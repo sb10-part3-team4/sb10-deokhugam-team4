@@ -18,6 +18,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserQueryService userQueryService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UserResponse getUser(UUID userId) {
 
@@ -45,7 +47,13 @@ public class UserService {
         validateEmailNotExists(request.email());
 
         try {
-            User user = new User(request.email(), request.nickname(), request.password());
+            String encodedPassword = passwordEncoder.encode(request.password());
+
+            User user = new User(
+                    request.email(),
+                    request.nickname(),
+                    encodedPassword
+            );
             User savedUser = userRepository.save(user);
 
             log.info("회원가입 성공: userId={}", savedUser.getId());
@@ -142,7 +150,7 @@ public class UserService {
     }
 
     private void validatePassword(User user, String password) {
-        if (!Objects.equals(user.getPassword(), password)) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD, "userId=" + user.getId());
         }
     }
