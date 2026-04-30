@@ -7,22 +7,18 @@ import com.codeit.team4.deokhugam.naver.NaverBookResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.math.BigDecimal;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface BookMapper {
 
-    BookResponse toResponse(Book book);
+    BookResponse toResponse(Book book, int reviewCount, BigDecimal rating);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "publishedDate", expression = "java(parsePubdate(item.pubdate()))")
-    @Mapping(target = "thumbnailUrl", source = "thumbnailBase64")
-    @Mapping(target = "reviewCount", constant = "0")
-    @Mapping(target = "rating", expression = "java(java.math.BigDecimal.ZERO)")
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    BookResponse toBookResponse(NaverBookResponse.NaverBookItem item, String thumbnailBase64);
+    default BookResponse toResponse(Book book) {
+        return toResponse(book, 0, BigDecimal.ZERO);
+    }
 
     @Mapping(target = "publishedDate", expression = "java(parsePubdate(item.pubdate()))")
     @Mapping(source = "item.isbn", target = "isbn")

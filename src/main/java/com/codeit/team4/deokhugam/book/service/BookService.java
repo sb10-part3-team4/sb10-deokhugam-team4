@@ -7,6 +7,7 @@ import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.mapper.BookMapper;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
+import com.codeit.team4.deokhugam.book.repository.BookStatisticsRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.lock.DistributedLock;
@@ -35,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final BookStatisticsRepository bookStatisticsRepository;
     private final BookMapper bookMapper;
     private final NaverBookClient naverBookClient;
     private final S3Service s3Service;
@@ -72,8 +74,7 @@ public class BookService {
         log.info("도서 등록 완료: bookId={}", book.getId());
 
         // dto 변환
-        BookResponse bookResponse = bookMapper.toResponse(book);
-        return bookResponse;
+        return bookMapper.toResponse(book);
     }
 
     @Transactional(readOnly = true)
@@ -111,7 +112,7 @@ public class BookService {
                 newThumbnailUrl != null ? newThumbnailUrl : book.getThumbnailUrl());
 
         log.info("도서 수정 완료: bookId={}", bookId);
-        return bookMapper.toResponse(book);
+        return toBookResponse(book);
     }
 
     private void registerS3CleanUp(String newUrl, String oldUrl) {
@@ -144,6 +145,12 @@ public class BookService {
         });
     }
 
+    private BookResponse toBookResponse(Book book) {
+        return bookStatisticsRepository.findById(book.getId())
+                .map(stats -> bookMapper.toResponse(book, stats.getReviewCount(), stats.getAverageRating()))
+                .orElseGet(() -> bookMapper.toResponse(book));
+    }
+
     @DistributedLock(key = "deokhugam:book", lockParam = {"bookId"})
     @Transactional
     public void deleteBook(UUID bookId) {
@@ -169,7 +176,7 @@ public class BookService {
         Book book = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow(
                 () -> new BusinessException(ErrorCode.BOOK_NOT_FOUND, "bookId=" + bookId));
 
-        BookResponse bookResponse = bookMapper.toResponse(book);
+        BookResponse bookResponse = toBookResponse(book);
         log.info("도서 단건 조회 완료: bookId={}", bookId);
         return bookResponse;
     }
