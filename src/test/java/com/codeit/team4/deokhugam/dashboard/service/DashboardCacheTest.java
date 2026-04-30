@@ -12,8 +12,12 @@ import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.dto.PopularBookResponse;
+import com.codeit.team4.deokhugam.dashboard.dto.PopularReviewResponse;
+import com.codeit.team4.deokhugam.dashboard.dto.PowerUserResponse;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.service.reader.PopularBookReader;
+import com.codeit.team4.deokhugam.dashboard.service.reader.PopularReviewReader;
+import com.codeit.team4.deokhugam.dashboard.service.reader.PowerUserReader;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import com.codeit.team4.deokhugam.review.entity.Review;
@@ -60,6 +64,12 @@ class DashboardCacheTest {
     @MockitoSpyBean
     private PopularBookReader popularBookReader;
 
+    @MockitoSpyBean
+    private PopularReviewReader popularReviewReader;
+
+    @MockitoSpyBean
+    private PowerUserReader powerUserReader;
+
     @Value("${dashboard.batch.zone}")
     private String zone;
 
@@ -81,9 +91,15 @@ class DashboardCacheTest {
 
     @AfterEach
     void tearDown() {
-        cacheManager.getCache(POPULAR_BOOKS).clear();
-        cacheManager.getCache(POPULAR_REVIEWS).clear();
-        cacheManager.getCache(POWER_USERS).clear();
+        if (cacheManager.getCache(POPULAR_BOOKS) != null) {
+            cacheManager.getCache(POPULAR_BOOKS).clear();
+        }
+        if (cacheManager.getCache(POPULAR_REVIEWS) != null) {
+            cacheManager.getCache(POPULAR_REVIEWS).clear();
+        }
+        if (cacheManager.getCache(POWER_USERS) != null) {
+            cacheManager.getCache(POWER_USERS).clear();
+        }
         reviewRepository.deleteAll();
         bookRepository.deleteAll();
         userRepository.deleteAll();
@@ -146,5 +162,72 @@ class DashboardCacheTest {
 
         verify(popularBookReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
         verify(popularBookReader, times(1)).findLatestSnapshotDate(PeriodType.ALL_TIME);
+    }
+
+    @Test
+    @DisplayName("인기 리뷰 캐시 히트 성공")
+    void popularReviewsCacheHit_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPopularReviews(param);
+        dashboardFacade.getPopularReviews(param);
+
+        verify(popularReviewReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    @Test
+    @DisplayName("인기 리뷰 배치 후 캐시 evict 성공")
+    void popularReviewsCacheEvict_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        PageResponse<PopularReviewResponse> first = dashboardFacade.getPopularReviews(param);
+        assertThat(first.content()).hasSize(1);
+
+        Book newBook = bookRepository.saveAndFlush(
+                new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "7777777777", null)
+        );
+        reviewRepository.saveAndFlush(new Review(newBook, user, "새 리뷰", 4));
+        dashboardBatchService.updatePopularReviews(LocalDate.now(ZoneId.of(zone)));
+
+        PageResponse<PopularReviewResponse> second = dashboardFacade.getPopularReviews(param);
+        assertThat(second.content()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("파워 유저 캐시 히트 성공")
+    void powerUsersCacheHit_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPowerUsers(param);
+        dashboardFacade.getPowerUsers(param);
+
+        verify(powerUserReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    @Test
+    @DisplayName("파워 유저 배치 후 캐시 evict 성공")
+    void powerUsersCacheEvict_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        PageResponse<PowerUserResponse> first = dashboardFacade.getPowerUsers(param);
+        assertThat(first.content()).hasSize(1);
+
+        User newUser = userRepository.saveAndFlush(new User("new@test.com", "새유저", "password123"));
+        Book newBook = bookRepository.saveAndFlush(
+                new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "6666666666", null)
+        );
+        reviewRepository.saveAndFlush(new Review(newBook, newUser, "새 리뷰", 4));
+        dashboardBatchService.updatePowerUsers(LocalDate.now(ZoneId.of(zone)));
+
+        PageResponse<PowerUserResponse> second = dashboardFacade.getPowerUsers(param);
+        assertThat(second.content()).hasSize(2);
     }
 }
