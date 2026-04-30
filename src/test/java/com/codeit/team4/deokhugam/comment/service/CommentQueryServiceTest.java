@@ -15,9 +15,7 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import com.codeit.team4.deokhugam.global.response.SortDirection;
 import com.codeit.team4.deokhugam.review.entity.Review;
-import com.codeit.team4.deokhugam.review.entity.ReviewStatistics;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
-import com.codeit.team4.deokhugam.review.repository.ReviewStatisticsRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.Instant;
@@ -54,9 +52,6 @@ class CommentQueryServiceTest {
 
     @Autowired
     private BookRepository bookRepository;
-
-    @Autowired
-    private ReviewStatisticsRepository reviewStatisticsRepository;
 
     private User user;
     private Review review;
@@ -157,11 +152,6 @@ class CommentQueryServiceTest {
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
-            ReviewStatistics stats = new ReviewStatistics(review.getId());
-            stats.onCommentCreated();
-            stats.onCommentCreated();
-            stats.onCommentCreated();
-            reviewStatisticsRepository.saveAndFlush(stats);
 
             CommentSearchRequestParam param = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
@@ -175,7 +165,7 @@ class CommentQueryServiceTest {
             assertThat(result.hasNext()).isTrue();
             assertThat(result.nextCursor()).isNotNull();
             assertThat(result.nextAfter()).isNotNull();
-            assertThat(result.totalElements()).isEqualTo(3L);
+            assertThat(result.totalElements()).isNull();
         }
 
         @Test
@@ -185,11 +175,6 @@ class CommentQueryServiceTest {
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
-            ReviewStatistics stats = new ReviewStatistics(review.getId());
-            stats.onCommentCreated();
-            stats.onCommentCreated();
-            stats.onCommentCreated();
-            reviewStatisticsRepository.saveAndFlush(stats);
 
             CommentSearchRequestParam firstReq = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
@@ -210,7 +195,7 @@ class CommentQueryServiceTest {
             assertThat(secondRes.content()).hasSize(1);
             assertThat(secondRes.content().get(0).content()).isEqualTo("댓글 1");
             assertThat(secondRes.hasNext()).isFalse();
-            assertThat(secondRes.totalElements()).isEqualTo(3L);
+            assertThat(secondRes.totalElements()).isNull();
         }
 
         @Test
