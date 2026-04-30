@@ -13,7 +13,7 @@ public class UserCleanupScheduler {
 
     private final UserService userService;
 
-    @Scheduled(cron = "${user.cleanup.cron}")
+    @Scheduled(cron = "${user.cleanup.cron}", zone = "${user.cleanup.zone}")
     public void runCleanup() {
         log.info("유저 물리 삭제 스케줄러 시작");
         try {
