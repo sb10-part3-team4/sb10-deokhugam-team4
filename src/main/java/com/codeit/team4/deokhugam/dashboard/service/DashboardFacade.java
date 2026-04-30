@@ -39,7 +39,7 @@ public class DashboardFacade {
 
     @Cacheable(
             value = POPULAR_BOOKS,
-            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.limit()"
+            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.after() + ':' + #param.limit()"
     )
     public PageResponse<PopularBookResponse> getPopularBooks(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularBookReader.findLatestSnapshotDate(param.period());
@@ -68,7 +68,7 @@ public class DashboardFacade {
 
     @Cacheable(
             value = POPULAR_REVIEWS,
-            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.limit()"
+            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.after() + ':' + #param.limit()"
     )
     public PageResponse<PopularReviewResponse> getPopularReviews(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularReviewReader.findLatestSnapshotDate(param.period());
@@ -97,7 +97,7 @@ public class DashboardFacade {
 
     @Cacheable(
             value = POWER_USERS,
-            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.limit()"
+            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.after() + ':' + #param.limit()"
     )
     public PageResponse<PowerUserResponse> getPowerUsers(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = powerUserReader.findLatestSnapshotDate(param.period());
