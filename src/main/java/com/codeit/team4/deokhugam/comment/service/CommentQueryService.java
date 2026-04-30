@@ -1,7 +1,6 @@
 package com.codeit.team4.deokhugam.comment.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Comments.COMMENTS;
-import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
@@ -16,7 +15,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,16 +90,13 @@ public class CommentQueryService {
             nextAfter = last.createdAt();
         }
 
-        long totalElements = fetchReviewCommentCount(param.reviewId());
-
         List<CommentResponse> responses = content.stream()
                 .map(commentMapper::toResponse)
                 .toList();
 
         log.info("댓글 목록 조회 완료: reviewId={}, size={}", param.reviewId(), responses.size());
 
-        return new PageResponse<>(responses, nextCursor, nextAfter, param.limit(), totalElements,
-                hasNext);
+        return new PageResponse<>(responses, nextCursor, nextAfter, param.limit(), null, hasNext);
     }
 
     // ===== private =====
@@ -135,14 +130,5 @@ public class CommentQueryService {
         return isAsc
                 ? DSL.row(COMMENTS.CREATED_AT, COMMENTS.ID).gt(afterOffset, cursorId)
                 : DSL.row(COMMENTS.CREATED_AT, COMMENTS.ID).lt(afterOffset, cursorId);
-    }
-
-    private long fetchReviewCommentCount(UUID reviewId) {
-        return Optional.ofNullable(
-                dsl.select(REVIEW_STATISTICS.COMMENT_COUNT)
-                        .from(REVIEW_STATISTICS)
-                        .where(REVIEW_STATISTICS.REVIEW_ID.eq(reviewId))
-                        .fetchOneInto(Long.class)
-        ).orElse(0L);
     }
 }
