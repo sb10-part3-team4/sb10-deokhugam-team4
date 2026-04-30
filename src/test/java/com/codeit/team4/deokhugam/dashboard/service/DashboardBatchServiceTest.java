@@ -99,6 +99,7 @@ class DashboardBatchServiceTest {
             dsl.insertInto(REVIEW_LIKES)
                     .set(REVIEW_LIKES.REVIEW_ID, reviewId)
                     .set(REVIEW_LIKES.USER_ID, likeUser.getId())
+                    .set(REVIEW_LIKES.CREATED_AT, todayTime())
                     .execute();
         }
     }
@@ -109,6 +110,8 @@ class DashboardBatchServiceTest {
                     .set(COMMENTS.REVIEW_ID, reviewId)
                     .set(COMMENTS.USER_ID, userId)
                     .set(COMMENTS.CONTENT, "댓글 " + i)
+                    .set(COMMENTS.CREATED_AT, todayTime())
+                    .set(COMMENTS.UPDATED_AT, todayTime())
                     .execute();
         }
     }
@@ -383,6 +386,56 @@ class DashboardBatchServiceTest {
 
             assertThat(allTimeReview.getLikeCount()).isEqualTo(13);
             assertThat(allTimeReview.getCommentCount()).isEqualTo(7);
+        }
+
+        @Test
+        @DisplayName("삭제된 댓글은 기간 내 댓글 수에 미포함 성공")
+        void updatePopularReviews_deletedCommentExcluded_success() {
+            Book book = createBook("삭제 댓글 테스트", "8888888888");
+            Review review = reviewRepository.saveAndFlush(new Review(book, user, "테스트 리뷰", 5));
+
+            // 오늘 댓글 3개 (정상 2개 + 삭제 1개)
+            insertCommentsAt(review.getId(), user.getId(), 2, todayTime());
+            dsl.insertInto(COMMENTS)
+                    .set(COMMENTS.REVIEW_ID, review.getId())
+                    .set(COMMENTS.USER_ID, user.getId())
+                    .set(COMMENTS.CONTENT, "삭제된 댓글")
+                    .set(COMMENTS.CREATED_AT, todayTime())
+                    .set(COMMENTS.UPDATED_AT, todayTime())
+                    .set(COMMENTS.DELETED_AT, todayTime())
+                    .execute();
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            dashboardBatchService.updatePopularReviews(today);
+
+            PopularReview dailyReview = popularReviewRepository.findAll().stream()
+                    .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
+                    .findFirst().orElseThrow();
+
+            assertThat(dailyReview.getCommentCount()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("DAILY 기간 경계 시각 직전 데이터는 미포함 성공")
+        void updatePopularReviews_boundaryTime_success() {
+            Book book = createBook("경계 테스트 책", "7777777777");
+            Review review = reviewRepository.saveAndFlush(new Review(book, user, "테스트 리뷰", 5));
+
+            LocalDate today = LocalDate.now(ZoneId.of(zone));
+            OffsetDateTime startOfToday = today.atStartOfDay(ZoneId.of(zone)).toOffsetDateTime();
+
+            // 오늘 시작 직전 (어제 23:59:59) → DAILY에서 제외
+            insertReviewLikesAt(review.getId(), 5, startOfToday.minusSeconds(1));
+            // 오늘 시작 시각 → DAILY에 포함
+            insertReviewLikesAt(review.getId(), 2, startOfToday);
+
+            dashboardBatchService.updatePopularReviews(today);
+
+            PopularReview dailyReview = popularReviewRepository.findAll().stream()
+                    .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
+                    .findFirst().orElseThrow();
+
+            assertThat(dailyReview.getLikeCount()).isEqualTo(2);
         }
 
         @Test
