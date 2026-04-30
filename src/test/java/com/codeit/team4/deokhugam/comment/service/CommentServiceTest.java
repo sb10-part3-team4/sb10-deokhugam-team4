@@ -275,7 +275,6 @@ class CommentServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
 
         verify(commentRepository, never()).softDeleteWithCondition(any(), any());
-        verify(reviewRepository, never()).decreaseCommentCount(any());
         verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 

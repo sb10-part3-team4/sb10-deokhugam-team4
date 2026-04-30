@@ -1,7 +1,7 @@
 package com.codeit.team4.deokhugam.comment.service;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Comments.COMMENTS;
-import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
@@ -139,9 +139,9 @@ public class CommentQueryService {
 
     private long fetchReviewCommentCount(UUID reviewId) {
         return Optional.ofNullable(
-                dsl.select(REVIEWS.COMMENT_COUNT)
-                        .from(REVIEWS)
-                        .where(REVIEWS.ID.eq(reviewId))
+                dsl.select(REVIEW_STATISTICS.COMMENT_COUNT)
+                        .from(REVIEW_STATISTICS)
+                        .where(REVIEW_STATISTICS.REVIEW_ID.eq(reviewId))
                         .fetchOneInto(Long.class)
         ).orElse(0L);
     }
