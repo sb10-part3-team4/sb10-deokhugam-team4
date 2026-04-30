@@ -1,6 +1,7 @@
 package com.codeit.team4.deokhugam.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import java.time.Duration;
 import org.springframework.cache.annotation.EnableCaching;
@@ -25,9 +26,13 @@ public class RedisCacheConfig {
         ObjectMapper cacheMapper = objectMapper.copy()
                 .activateDefaultTyping(
                         BasicPolymorphicTypeValidator.builder()
-                                .allowIfBaseType(Object.class)
+                                .allowIfSubType("com.codeit.team4.deokhugam")
+                                .allowIfSubType("java.util")
+                                .allowIfSubType("java.time")
+                                .allowIfSubType("java.math")
+                                .allowIfSubType("java.lang")
                                 .build(),
-                        ObjectMapper.DefaultTyping.EVERYTHING
+                        DefaultTyping.EVERYTHING
                 );
 
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
