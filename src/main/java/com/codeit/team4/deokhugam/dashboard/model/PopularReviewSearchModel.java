@@ -1,7 +1,6 @@
 package com.codeit.team4.deokhugam.dashboard.model;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
-import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -24,6 +23,12 @@ public record PopularReviewSearchModel(
         int commentCount
 ) {
 
+    public static final Field<Integer> PERIOD_LIKE_COUNT =
+            DSL.coalesce(DSL.field("period_likes.like_count", Integer.class), 0);
+
+    public static final Field<Integer> PERIOD_COMMENT_COUNT =
+            DSL.coalesce(DSL.field("period_comments.comment_count", Integer.class), 0);
+
     public static List<Field<?>> toSelectedFields() {
         return List.of(
                 REVIEWS.ID,
@@ -34,8 +39,8 @@ public record PopularReviewSearchModel(
                 USERS.NICKNAME,
                 REVIEWS.CONTENT,
                 REVIEWS.RATING,
-                REVIEWS.LIKE_COUNT,
-                DSL.coalesce(REVIEW_STATISTICS.COMMENT_COUNT, 0).as("comment_count")
+                PERIOD_LIKE_COUNT.as("period_like_count"),
+                PERIOD_COMMENT_COUNT.as("period_comment_count")
         );
     }
 
@@ -49,8 +54,8 @@ public record PopularReviewSearchModel(
                 rec.get(USERS.NICKNAME),
                 rec.get(REVIEWS.CONTENT),
                 rec.get(REVIEWS.RATING),
-                rec.get(REVIEWS.LIKE_COUNT),
-                rec.get("comment_count", Integer.class)
+                rec.get("period_like_count", Integer.class),
+                rec.get("period_comment_count", Integer.class)
         );
     }
 }

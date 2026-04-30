@@ -1,6 +1,5 @@
 package com.codeit.team4.deokhugam.dashboard.builder;
 
-import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Table;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -155,7 +155,10 @@ class PowerUserAggregationQueryBuilderTest {
         @Test
         @DisplayName("정렬 조건 3개 생성 성공")
         void buildOrderBy_hasThreeFields_success() {
-            assertThat(queryBuilder.buildOrderBy()).hasSize(3);
+            assertThat(queryBuilder.buildOrderBy(
+                    PowerUserSearchModel.PERIOD_LIKE_COUNT,
+                        PowerUserSearchModel.PERIOD_COMMENT_COUNT
+            )).hasSize(3);
         }
 
         @Test
@@ -170,14 +173,20 @@ class PowerUserAggregationQueryBuilderTest {
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
+            Table<?> periodLikes = queryBuilder.buildPeriodLikeCountTable(PeriodType.ALL_TIME, today);
+            Table<?> periodComments = queryBuilder.buildPeriodCommentCountTable(PeriodType.ALL_TIME, today);
 
             List<UUID> result = dsl.select(REVIEWS.USER_ID)
                     .from(REVIEWS)
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
-                    .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
+                    .leftJoin(periodLikes).on(periodLikes.field("review_id", UUID.class).eq(REVIEWS.ID))
+                    .leftJoin(periodComments).on(periodComments.field("review_id", UUID.class).eq(REVIEWS.ID))
                     .where(condition)
                     .groupBy(PowerUserSearchModel.toGroupByFields())
-                    .orderBy(queryBuilder.buildOrderBy())
+                    .orderBy(queryBuilder.buildOrderBy(
+                            PowerUserSearchModel.PERIOD_LIKE_COUNT,
+                            PowerUserSearchModel.PERIOD_COMMENT_COUNT
+                    ))
                     .fetch(REVIEWS.USER_ID);
 
             assertThat(result).hasSize(2);
