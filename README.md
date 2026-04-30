@@ -1,4 +1,126 @@
-# 덕후감 (Deokhugam)
+# 덕후감 - Chicken Squad
+팀 노션 : https://www.notion.so/sb10-part3-team4-e4147b8a4b99836aab2e81f37c1a51b6<br>
+팀 깃허브 : https://github.com/sb10-part3-team4/sb10-deokhugam-team4
+
+## 팀원 구성
+* 송시연(https://github.com/dstle)
+* 김진우(https://github.com/zinuzanu)
+* 임지호(https://github.com/jiho0420)
+* 정수현(https://github.com/JeongSooHyeon)
+***
+
+## 프로젝트 소개
+* 도서 OCR ISBN 인식부터 리뷰, 댓글, 알림, 인기 도서 대시보드까지 제공하는 도서 커뮤니티 플랫폼
+* 프로젝트 기간 : 2026.04.14 ~ 2026.05.08
+***
+
+## 기술 스택
+* Backend: Java 17, Spring Boot, Spring Data JPA, JOOQ, MapStruct, Flyway
+* Database: PostgreSQL
+* Cache & 분산락 : Redis(AWS ElastiCache Valkey, Redisson)
+* Infrastructure: AWS ECS, AWS ECR, AWS RDS, AWS S3
+* CI/CD: GitHub Actions
+* 공통 Tool: Git & GitHub, Discord, Notion, CodeRabbit
+***
+
+## 팀원별 구현 기능 상세
+
+### 송시연
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 리뷰
+  * 리뷰 관련 CRUD...
+
+### 김진우
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 사용자
+    * 사용자 관련 CRUD...
+
+### 임지호
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 댓글
+    * 댓글 관련 CRUD...
+
+### 정수현
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 도서
+    * 도서 관련 CRUD...
+***
+
+## 파일 구조
+```
+src
+ ┣ main
+ ┃ ┣ java
+ ┃ ┃ ┣ com
+ ┃ ┃ ┃ ┣ example
+ ┃ ┃ ┃ ┃ ┣ controller
+ ┃ ┃ ┃ ┃ ┃ ┣ AuthController.java
+ ┃ ┃ ┃ ┃ ┃ ┣ UserController.java
+ ┃ ┃ ┃ ┃ ┃ ┗ AdminController.java
+ ┃ ┃ ┃ ┃ ┣ model
+ ┃ ┃ ┃ ┃ ┃ ┣ User.java
+ ┃ ┃ ┃ ┃ ┃ ┗ Course.java
+ ┃ ┃ ┃ ┃ ┣ repository
+ ┃ ┃ ┃ ┃ ┃ ┣ UserRepository.java
+ ┃ ┃ ┃ ┃ ┃ ┗ CourseRepository.java
+ ┃ ┃ ┃ ┃ ┣ service
+ ┃ ┃ ┃ ┃ ┃ ┣ AuthService.java
+ ┃ ┃ ┃ ┃ ┃ ┣ UserService.java
+ ┃ ┃ ┃ ┃ ┃ ┗ AdminService.java
+ ┃ ┃ ┃ ┃ ┣ security
+ ┃ ┃ ┃ ┃ ┃ ┣ SecurityConfig.java
+ ┃ ┃ ┃ ┃ ┃ ┗ JwtAuthenticationEntryPoint.java
+ ┃ ┃ ┃ ┃ ┣ dto
+ ┃ ┃ ┃ ┃ ┃ ┣ LoginRequest.java
+ ┃ ┃ ┃ ┃ ┃ ┗ UserResponse.java
+ ┃ ┃ ┃ ┃ ┣ exception
+ ┃ ┃ ┃ ┃ ┃ ┣ GlobalExceptionHandler.java
+ ┃ ┃ ┃ ┃ ┃ ┗ ResourceNotFoundException.java
+ ┃ ┃ ┃ ┃ ┣ utils
+ ┃ ┃ ┃ ┃ ┃ ┣ JwtUtils.java
+ ┃ ┃ ┃ ┃ ┃ ┗ UserMapper.java
+ ┃ ┃ ┃ ┣ resources
+ ┃ ┃ ┃ ┃ ┣ application.properties
+ ┃ ┃ ┃ ┃ ┗ static
+ ┃ ┃ ┃ ┃ ┃ ┣ css
+ ┃ ┃ ┃ ┃ ┃ ┃ ┗ style.css
+ ┃ ┃ ┃ ┃ ┃ ┣ js
+ ┃ ┃ ┃ ┃ ┃ ┃ ┗ script.js
+ ┃ ┃ ┃ ┣ webapp
+ ┃ ┃ ┃ ┃ ┣ WEB-INF
+ ┃ ┃ ┃ ┃ ┃ ┗ web.xml
+ ┃ ┃ ┃ ┣ test
+ ┃ ┃ ┃ ┃ ┣ java
+ ┃ ┃ ┃ ┃ ┃ ┣ com
+ ┃ ┃ ┃ ┃ ┃ ┃ ┣ example
+ ┃ ┃ ┃ ┃ ┃ ┃ ┃ ┣ AuthServiceTest.java
+ ┃ ┃ ┃ ┃ ┃ ┃ ┃ ┗ UserControllerTest.java
+ ┃ ┃ ┃ ┃ ┃ ┃ ┗ ApplicationTests.java
+ ┃ ┃ ┃ ┣ resources
+ ┃ ┃ ┃ ┃ ┣ application.properties
+ ┃ ┃ ┃ ┃ ┗ static
+ ┃ ┃ ┃ ┃ ┃ ┣ css
+ ┃ ┃ ┃ ┃ ┃ ┃ ┗ style.css
+ ┃ ┃ ┃ ┃ ┃ ┣ js
+ ┃ ┃ ┃ ┃ ┃ ┃ ┗ script.js
+ ┣ pom.xml
+ ┣ Application.java
+ ┣ application.properties
+ ┣ .gitignore
+ ┗ README.md
+
+```
+***
+
+## 구현 홈페이지
+http://3.37.86.22:8080
+***
+
+## 프로젝트 회고록
+(제작한 발표자료 링크 혹은 첨부파일 첨부)
+***
+***
+
 
 ## 로컬 개발 환경 설정
 
