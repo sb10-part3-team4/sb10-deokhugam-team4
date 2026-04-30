@@ -1,5 +1,4 @@
-package com.codeit.team4.deokhugam.review.service;
-
+package com.codeit.team4.deokhugam.review.service.query;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.codeit.team4.deokhugam.book.entity.Book;

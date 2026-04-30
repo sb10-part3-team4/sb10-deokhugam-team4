@@ -15,9 +15,11 @@ import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewUpdateRequest;
 import com.codeit.team4.deokhugam.review.entity.ReviewLike;
 import com.codeit.team4.deokhugam.review.entity.Review;
+import com.codeit.team4.deokhugam.review.entity.ReviewStatistics;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.repository.ReviewLikeRepository;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
+import com.codeit.team4.deokhugam.review.repository.ReviewStatisticsRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.util.List;
@@ -35,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewStatisticsRepository reviewStatisticsRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final UserService userService;
     private final BookService bookService;
@@ -43,7 +46,7 @@ public class ReviewService {
 
     public ReviewResponse getReview(UUID reviewId, UUID userId) {
         Review review = findById(reviewId);
-        return reviewMapper.toResponse(review, isLikedByUser(reviewId, userId));
+        return toReviewResponse(review, userId);
     }
 
     @Transactional
@@ -60,7 +63,7 @@ public class ReviewService {
         eventPublisher.publishEvent(new ReviewCreatedEvent(book.getId(), request.rating()));
         log.info("리뷰 생성 완료: reviewId={}", review.getId());
 
-        return reviewMapper.toResponse(review, false);
+        return reviewMapper.toResponse(review);
     }
 
     public Review findById(UUID reviewId) {
@@ -89,7 +92,7 @@ public class ReviewService {
         }
         log.info("리뷰 수정 완료: reviewId={}", review.getId());
 
-        return reviewMapper.toResponse(review, isLikedByUser(reviewId, userId));
+        return toReviewResponse(review, userId);
     }
 
     @Transactional
@@ -166,8 +169,14 @@ public class ReviewService {
         log.info("리뷰 좋아요 취소: reviewId={}, userId={}", reviewId, userId);
     }
 
-    private boolean isLikedByUser(UUID reviewId, UUID userId) {
-        return reviewLikeRepository.existsByReviewIdAndUserId(reviewId, userId);
+    private ReviewResponse toReviewResponse(Review review, UUID userId) {
+        return reviewMapper.toResponse(
+                review,
+                reviewLikeRepository.existsByReviewIdAndUserId(review.getId(), userId),
+                reviewStatisticsRepository.findById(review.getId())
+                        .map(ReviewStatistics::getCommentCount)
+                        .orElse(0)
+        );
     }
 
     private Review findWithDeletedById(UUID reviewId) {

@@ -1,11 +1,11 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.service.reader;
 
-import static com.codeit.team4.deokhugam.jooq.tables.PowerUsers.POWER_USERS;
+import static com.codeit.team4.deokhugam.jooq.tables.PopularReviews.POPULAR_REVIEWS;
 
-import com.codeit.team4.deokhugam.dashboard.builder.PowerUserReadQueryBuilder;
+import com.codeit.team4.deokhugam.dashboard.builder.PopularReviewReadQueryBuilder;
 import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
-import com.codeit.team4.deokhugam.dashboard.model.PowerUserViewModel;
+import com.codeit.team4.deokhugam.dashboard.model.PopularReviewViewModel;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -17,27 +17,28 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class PowerUserReader {
+public class PopularReviewReader {
 
     private final DSLContext dsl;
-    private final PowerUserReadQueryBuilder readQueryBuilder;
+    private final PopularReviewReadQueryBuilder readQueryBuilder;
 
     public LocalDate findLatestSnapshotDate(PeriodType period) {
-        return dsl.select(DSL.max(POWER_USERS.SNAPSHOT_DATE))
-                .from(POWER_USERS)
-                .where(POWER_USERS.PERIOD.eq(period.name()))
+        return dsl.select(DSL.max(POPULAR_REVIEWS.SNAPSHOT_DATE))
+                .from(POPULAR_REVIEWS)
+                .where(POPULAR_REVIEWS.PERIOD.eq(period.name()))
                 .fetchOneInto(LocalDate.class);
     }
 
-    public List<PowerUserViewModel> findPowerUsers(
+    public List<PopularReviewViewModel> findPopularReviews(
             DashboardSearchRequestParam param,
             LocalDate snapshotDate
     ) {
-        return dsl.select(PowerUserViewModel.toSelectedFields())
-                .from(POWER_USERS)
+        return dsl.select(PopularReviewViewModel.toSelectedFields())
+                .from(POPULAR_REVIEWS)
                 .where(readQueryBuilder.buildCondition(param, snapshotDate))
                 .orderBy(readQueryBuilder.buildOrderBy(param.direction()))
                 .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
-                .fetch(PowerUserViewModel::fromRecord);
+                .fetch(PopularReviewViewModel::fromRecord);
     }
+
 }

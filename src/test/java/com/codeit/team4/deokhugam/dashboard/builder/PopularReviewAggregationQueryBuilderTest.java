@@ -9,6 +9,7 @@ import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
+import com.codeit.team4.deokhugam.dashboard.model.PopularReviewSearchModel;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Table;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -169,7 +171,10 @@ class PopularReviewAggregationQueryBuilderTest {
         @Test
         @DisplayName("정렬 조건 3개 생성 성공")
         void buildOrderBy_hasThreeFields_success() {
-            assertThat(queryBuilder.buildOrderBy()).hasSize(3);
+            assertThat(queryBuilder.buildOrderBy(
+                    PopularReviewSearchModel.PERIOD_LIKE_COUNT,
+                        PopularReviewSearchModel.PERIOD_COMMENT_COUNT
+            )).hasSize(3);
         }
 
         @Test
@@ -183,21 +188,36 @@ class PopularReviewAggregationQueryBuilderTest {
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
+            Table<?> periodLikes = queryBuilder.buildPeriodLikeCountTable(PeriodType.ALL_TIME, today);
+            Table<?> periodComments = queryBuilder.buildPeriodCommentCountTable(PeriodType.ALL_TIME, today);
 
             List<UUID> firstResult = dsl.select(REVIEWS.ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(periodLikes).on(periodLikes.field("review_id", UUID.class).eq(REVIEWS.ID))
+                    .leftJoin(periodComments).on(periodComments.field("review_id", UUID.class).eq(REVIEWS.ID))
                     .where(condition)
-                    .orderBy(queryBuilder.buildOrderBy())
+                    .orderBy(queryBuilder.buildOrderBy(
+                            PopularReviewSearchModel.PERIOD_LIKE_COUNT,
+                            PopularReviewSearchModel.PERIOD_COMMENT_COUNT
+                    ))
                     .fetch(REVIEWS.ID);
+
+            periodLikes = queryBuilder.buildPeriodLikeCountTable(PeriodType.ALL_TIME, today);
+            periodComments = queryBuilder.buildPeriodCommentCountTable(PeriodType.ALL_TIME, today);
 
             List<UUID> secondResult = dsl.select(REVIEWS.ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(periodLikes).on(periodLikes.field("review_id", UUID.class).eq(REVIEWS.ID))
+                    .leftJoin(periodComments).on(periodComments.field("review_id", UUID.class).eq(REVIEWS.ID))
                     .where(condition)
-                    .orderBy(queryBuilder.buildOrderBy())
+                    .orderBy(queryBuilder.buildOrderBy(
+                            PopularReviewSearchModel.PERIOD_LIKE_COUNT,
+                            PopularReviewSearchModel.PERIOD_COMMENT_COUNT
+                    ))
                     .fetch(REVIEWS.ID);
 
             assertThat(firstResult).hasSize(2);
@@ -217,13 +237,20 @@ class PopularReviewAggregationQueryBuilderTest {
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
             Condition condition = queryBuilder.buildCondition(PeriodType.ALL_TIME, today);
+            Table<?> periodLikes = queryBuilder.buildPeriodLikeCountTable(PeriodType.ALL_TIME, today);
+            Table<?> periodComments = queryBuilder.buildPeriodCommentCountTable(PeriodType.ALL_TIME, today);
 
             List<UUID> result = dsl.select(REVIEWS.ID)
                     .from(REVIEWS)
                     .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                     .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                    .leftJoin(periodLikes).on(periodLikes.field("review_id", UUID.class).eq(REVIEWS.ID))
+                    .leftJoin(periodComments).on(periodComments.field("review_id", UUID.class).eq(REVIEWS.ID))
                     .where(condition)
-                    .orderBy(queryBuilder.buildOrderBy())
+                    .orderBy(queryBuilder.buildOrderBy(
+                            PopularReviewSearchModel.PERIOD_LIKE_COUNT,
+                            PopularReviewSearchModel.PERIOD_COMMENT_COUNT
+                    ))
                     .fetch(REVIEWS.ID);
 
             assertThat(result).hasSize(2);

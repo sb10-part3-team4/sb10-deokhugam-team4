@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
+import com.codeit.team4.deokhugam.comment.event.CommentDeletedEvent;
 import com.codeit.team4.deokhugam.notification.event.CommentEvent;
 import com.codeit.team4.deokhugam.review.entity.Review;
 import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
@@ -97,7 +98,6 @@ class CommentServiceTest {
 
         // then
         assertThat(response).isEqualTo(mockResponse);
-        then(reviewRepository).should(times(1)).increaseCommentCount(reviewId);
 
         ArgumentCaptor<CommentEvent> eventCaptor = ArgumentCaptor.forClass(CommentEvent.class);
         then(eventPublisher).should().publishEvent(eventCaptor.capture());
@@ -250,7 +250,7 @@ class CommentServiceTest {
 
         // then
         verify(commentRepository).softDeleteWithCondition(eq(commentId), any(Instant.class));
-        verify(reviewRepository).decreaseCommentCount(reviewId);
+        verify(eventPublisher).publishEvent(new CommentDeletedEvent(reviewId));
     }
 
     @Test
@@ -275,7 +275,7 @@ class CommentServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_OWNER);
 
         verify(commentRepository, never()).softDeleteWithCondition(any(), any());
-        verify(reviewRepository, never()).decreaseCommentCount(any());
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 
     @Test
@@ -294,6 +294,8 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.softDeleteComment(commentId, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 
     @Test
@@ -324,7 +326,37 @@ class CommentServiceTest {
 
         // then
         verify(commentRepository).hardDeleteWithCondition(commentId);
-        verify(reviewRepository).decreaseCommentCount(reviewId);
+        verify(eventPublisher).publishEvent(new CommentDeletedEvent(reviewId));
+    }
+
+    @Test
+    @DisplayName("경합 등으로 물리 삭제 조건부 삭제 결과가 0이면 물리 삭제 실패")
+    void hardDeleteComment_Fail_AlreadyProcessed_WhenNotSoftDeleted() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Review mockReview = mock(Review.class);
+        given(mockReview.getId()).willReturn(reviewId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+        given(mockComment.getDeletedAt()).willReturn(null);
+
+        given(mockComment.getReview()).willReturn(mockReview);
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.hardDeleteWithCondition(commentId)).willReturn(0);
+
+        // when & then
+        assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 
     @Test
@@ -339,6 +371,8 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 
     @Test
@@ -347,15 +381,20 @@ class CommentServiceTest {
         // given
         UUID commentId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
 
         User mockUser = mock(User.class);
         given(mockUser.getId()).willReturn(userId);
+
+        Review mockReview = mock(Review.class);
+        given(mockReview.getId()).willReturn(reviewId);
 
         Comment mockComment = mock(Comment.class);
         given(mockComment.getUser()).willReturn(mockUser);
 
         given(mockComment.getDeletedAt()).willReturn(java.time.Instant.now());
 
+        given(mockComment.getReview()).willReturn(mockReview);
         given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
         given(commentRepository.hardDeleteForce(commentId)).willReturn(1);
 
@@ -364,8 +403,37 @@ class CommentServiceTest {
 
         // then
         verify(commentRepository).hardDeleteForce(commentId);
-        // 카운트 감소 메서드는 호출되지 않아야 함
-        verify(reviewRepository, never()).decreaseCommentCount(any());
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
+    }
+
+    @Test
+    @DisplayName("논리 삭제된 댓글 물리 삭제에서 삭제 결과가 0이면 물리 삭제 실패")
+    void hardDeleteComment_Fail_AlreadyProcessed_WhenSoftDeleted() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID reviewId = UUID.randomUUID();
+
+        User mockUser = mock(User.class);
+        given(mockUser.getId()).willReturn(userId);
+
+        Review mockReview = mock(Review.class);
+        given(mockReview.getId()).willReturn(reviewId);
+
+        Comment mockComment = mock(Comment.class);
+        given(mockComment.getUser()).willReturn(mockUser);
+        given(mockComment.getDeletedAt()).willReturn(Instant.now());
+
+        given(mockComment.getReview()).willReturn(mockReview);
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(mockComment));
+        given(commentRepository.hardDeleteForce(commentId)).willReturn(0);
+
+        // when & then
+        assertThatThrownBy(() -> commentService.hardDeleteComment(commentId, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 
     @Test
@@ -391,6 +459,6 @@ class CommentServiceTest {
 
         verify(commentRepository, never()).hardDeleteWithCondition(any());
         verify(commentRepository, never()).hardDeleteForce(any());
-        verify(reviewRepository, never()).decreaseCommentCount(any());
+        verify(eventPublisher, never()).publishEvent(any(CommentDeletedEvent.class));
     }
 }

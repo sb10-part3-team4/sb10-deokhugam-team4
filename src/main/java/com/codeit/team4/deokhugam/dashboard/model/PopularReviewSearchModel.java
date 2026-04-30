@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 
 public record PopularReviewSearchModel(
         UUID reviewId,
@@ -22,6 +23,12 @@ public record PopularReviewSearchModel(
         int commentCount
 ) {
 
+    public static final Field<Integer> PERIOD_LIKE_COUNT =
+            DSL.coalesce(DSL.field("period_likes.like_count", Integer.class), 0);
+
+    public static final Field<Integer> PERIOD_COMMENT_COUNT =
+            DSL.coalesce(DSL.field("period_comments.comment_count", Integer.class), 0);
+
     public static List<Field<?>> toSelectedFields() {
         return List.of(
                 REVIEWS.ID,
@@ -32,8 +39,8 @@ public record PopularReviewSearchModel(
                 USERS.NICKNAME,
                 REVIEWS.CONTENT,
                 REVIEWS.RATING,
-                REVIEWS.LIKE_COUNT,
-                REVIEWS.COMMENT_COUNT
+                PERIOD_LIKE_COUNT.as("period_like_count"),
+                PERIOD_COMMENT_COUNT.as("period_comment_count")
         );
     }
 
@@ -47,8 +54,8 @@ public record PopularReviewSearchModel(
                 rec.get(USERS.NICKNAME),
                 rec.get(REVIEWS.CONTENT),
                 rec.get(REVIEWS.RATING),
-                rec.get(REVIEWS.LIKE_COUNT),
-                rec.get(REVIEWS.COMMENT_COUNT)
+                rec.get("period_like_count", Integer.class),
+                rec.get("period_comment_count", Integer.class)
         );
     }
 }

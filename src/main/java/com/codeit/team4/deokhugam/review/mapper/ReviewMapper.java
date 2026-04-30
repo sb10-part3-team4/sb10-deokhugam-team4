@@ -14,7 +14,11 @@ public interface ReviewMapper {
     @Mapping(source = "review.book.thumbnailUrl", target = "bookThumbnailUrl")
     @Mapping(source = "review.user.id", target = "userId")
     @Mapping(source = "review.user.nickname", target = "userNickname")
-    ReviewResponse toResponse(Review review, boolean likedByMe);
+    ReviewResponse toResponse(Review review, boolean likedByMe, int commentCount);
+
+    default ReviewResponse toResponse(Review review) {
+        return toResponse(review, false, 0);
+    }
 
     ReviewResponse toResponse(ReviewSearchModel model);
 }

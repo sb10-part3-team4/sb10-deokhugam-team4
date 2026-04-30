@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.notification.service;
+package com.codeit.team4.deokhugam.notification.service.query;
 
 import com.codeit.team4.deokhugam.notification.model.NotificationModel;
 import java.time.Instant;

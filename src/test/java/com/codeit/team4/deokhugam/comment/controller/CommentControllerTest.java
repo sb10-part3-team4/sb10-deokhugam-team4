@@ -17,7 +17,7 @@ import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentSearchRequestParam;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
-import com.codeit.team4.deokhugam.comment.service.CommentQueryService;
+import com.codeit.team4.deokhugam.comment.service.query.CommentQueryService;
 import com.codeit.team4.deokhugam.comment.service.CommentService;
 import com.codeit.team4.deokhugam.global.config.AppProperties;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -504,7 +504,7 @@ class CommentControllerTest {
                 null,
                 null,
                 50,
-                1L,
+                null,
                 false
         );
 
@@ -522,7 +522,7 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.content[0].userNickname").value("테스트닉네임"))
                 .andExpect(jsonPath("$.content[0].content").value("좋은 리뷰입니다"))
                 .andExpect(jsonPath("$.hasNext").value(false))
-                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalElements").isEmpty())
                 .andExpect(jsonPath("$.size").value(50));
     }
 
@@ -544,7 +544,7 @@ class CommentControllerTest {
                 now.toString(),  // nextCursor
                 now,             // nextAfter
                 2,
-                5L,
+                null,
                 true
         );
 
@@ -562,7 +562,7 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.hasNext").value(true))
                 .andExpect(jsonPath("$.nextCursor").exists())
                 .andExpect(jsonPath("$.nextAfter").exists())
-                .andExpect(jsonPath("$.totalElements").value(5));
+                .andExpect(jsonPath("$.totalElements").isEmpty());
     }
 
     @Test

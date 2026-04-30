@@ -1,6 +1,7 @@
-package com.codeit.team4.deokhugam.review.service;
+package com.codeit.team4.deokhugam.review.service.query;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -9,6 +10,7 @@ import com.codeit.team4.deokhugam.review.dto.ReviewResponse;
 import com.codeit.team4.deokhugam.review.dto.ReviewSearchRequestParam;
 import com.codeit.team4.deokhugam.review.mapper.ReviewMapper;
 import com.codeit.team4.deokhugam.review.model.ReviewSearchModel;
+import com.codeit.team4.deokhugam.review.service.ReviewSearchQueryBuilder;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class ReviewQueryService {
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                .leftJoin(REVIEW_STATISTICS).on(REVIEW_STATISTICS.REVIEW_ID.eq(REVIEWS.ID))
                 .where(queryBuilder.buildCondition(param))
                 .orderBy(queryBuilder.buildOrderBy(param))
                 .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
