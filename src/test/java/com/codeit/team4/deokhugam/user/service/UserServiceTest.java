@@ -86,6 +86,40 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("비밀번호가 정상적으로 암호화되어 회원가입 성공")
+    void registerUser_passwordEncoded_success() {
+        // given
+        UserRegisterRequest request = new UserRegisterRequest(
+                "test@test.com",
+                "user1",
+                "password1!"
+        );
+
+        when(userRepository.existsByEmailAndDeletedAtIsNull(request.email()))
+                .thenReturn(false);
+
+        when(passwordEncoder.encode("password1!"))
+                .thenReturn("encodedPassword");
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        userService.registerUser(request);
+
+        // then
+        verify(userRepository).save(captor.capture());
+
+        User savedUser = captor.getValue();
+
+        assertThat(savedUser.getPassword()).isEqualTo("encodedPassword");
+
+        verify(passwordEncoder).encode("password1!");
+    }
+
+    @Test
     @DisplayName("이메일 중복으로 인한 회원가입 실패")
     void registerUser_fail_duplicate_email() {
         // given
