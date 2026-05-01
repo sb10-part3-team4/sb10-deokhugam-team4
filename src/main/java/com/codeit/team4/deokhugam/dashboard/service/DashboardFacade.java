@@ -9,6 +9,10 @@ import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
 import com.codeit.team4.deokhugam.dashboard.model.PopularReviewViewModel;
 import com.codeit.team4.deokhugam.dashboard.model.PowerUserViewModel;
 import com.codeit.team4.deokhugam.dashboard.model.RankedViewModel;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_BOOKS;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_REVIEWS;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POWER_USERS;
+
 import com.codeit.team4.deokhugam.dashboard.service.reader.PopularBookReader;
 import com.codeit.team4.deokhugam.dashboard.service.reader.PopularReviewReader;
 import com.codeit.team4.deokhugam.dashboard.service.reader.PowerUserReader;
@@ -18,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +37,10 @@ public class DashboardFacade {
     private final PowerUserReader powerUserReader;
     private final DashboardMapper dashboardMapper;
 
+    @Cacheable(
+            value = POPULAR_BOOKS,
+            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.after() + ':' + #param.limit()"
+    )
     public PageResponse<PopularBookResponse> getPopularBooks(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularBookReader.findLatestSnapshotDate(param.period());
         if (latestSnapshotDate == null) {
@@ -57,6 +66,10 @@ public class DashboardFacade {
         );
     }
 
+    @Cacheable(
+            value = POPULAR_REVIEWS,
+            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.after() + ':' + #param.limit()"
+    )
     public PageResponse<PopularReviewResponse> getPopularReviews(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = popularReviewReader.findLatestSnapshotDate(param.period());
         if (latestSnapshotDate == null) {
@@ -82,6 +95,10 @@ public class DashboardFacade {
         );
     }
 
+    @Cacheable(
+            value = POWER_USERS,
+            key = "#param.period() + ':' + #param.direction() + ':' + #param.cursor() + ':' + #param.after() + ':' + #param.limit()"
+    )
     public PageResponse<PowerUserResponse> getPowerUsers(DashboardSearchRequestParam param) {
         LocalDate latestSnapshotDate = powerUserReader.findLatestSnapshotDate(param.period());
         if (latestSnapshotDate == null) {
