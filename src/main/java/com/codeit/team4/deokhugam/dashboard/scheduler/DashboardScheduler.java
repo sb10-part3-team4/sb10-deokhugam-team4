@@ -24,7 +24,7 @@ public class DashboardScheduler {
     //TODO: Lock 추가 후 개선 예정
     @Scheduled(cron = "${dashboard.batch.cron}", zone = "${dashboard.batch.zone}")
     public void runDashboardBatch() {
-        LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
+        LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone)).minusDays(1);
         log.info("대시보드 배치 스케줄러 시작: snapshotDate={}", snapshotDate);
 
         try {
