@@ -25,7 +25,7 @@ public class DashboardAdminController implements DashboardAdminApi {
 
     @PostMapping("/batch")
     public ResponseEntity<Void> runBatch() {
-        LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
+        LocalDate snapshotDate = DashboardBatchService.defaultSnapshotDate(zone);
         log.info("수동 배치 실행 요청: snapshotDate={}", snapshotDate);
         dashboardBatchService.updatePopularBooks(snapshotDate);
         dashboardBatchService.updatePopularReviews(snapshotDate);

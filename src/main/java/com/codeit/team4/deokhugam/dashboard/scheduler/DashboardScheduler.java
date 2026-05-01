@@ -2,7 +2,6 @@ package com.codeit.team4.deokhugam.dashboard.scheduler;
 
 import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,7 @@ public class DashboardScheduler {
     //TODO: Lock 추가 후 개선 예정
     @Scheduled(cron = "${dashboard.batch.cron}", zone = "${dashboard.batch.zone}")
     public void runDashboardBatch() {
-        LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone)).minusDays(1);
+        LocalDate snapshotDate = DashboardBatchService.defaultSnapshotDate(zone);
         log.info("대시보드 배치 스케줄러 시작: snapshotDate={}", snapshotDate);
 
         try {
