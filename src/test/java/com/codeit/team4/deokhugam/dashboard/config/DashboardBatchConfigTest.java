@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularBookRepository;
 import com.codeit.team4.deokhugam.dashboard.repository.PopularReviewRepository;
 import com.codeit.team4.deokhugam.dashboard.repository.PowerUserRepository;
@@ -36,13 +37,7 @@ class DashboardBatchConfigTest {
     private JobLauncher jobLauncher;
 
     @Autowired
-    private Job popularBooksJob;
-
-    @Autowired
-    private Job popularReviewsJob;
-
-    @Autowired
-    private Job powerUsersJob;
+    private Job dashboardBatchJob;
 
     @Autowired
     private UserRepository userRepository;
@@ -87,40 +82,36 @@ class DashboardBatchConfigTest {
     @Test
     @DisplayName("인기 도서 Job 실행 성공")
     void popularBooksJob_success() throws Exception {
-        // when
-        JobExecution execution = jobLauncher.run(popularBooksJob, new JobParametersBuilder()
-                .addLocalDate("snapshotDate", snapshotDate)
-                .toJobParameters());
+        runAllPeriods("BOOK");
 
-        // then
-        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         assertThat(popularBookRepository.findAll()).isNotEmpty();
     }
 
     @Test
     @DisplayName("인기 리뷰 Job 실행 성공")
     void popularReviewsJob_success() throws Exception {
-        // when
-        JobExecution execution = jobLauncher.run(popularReviewsJob, new JobParametersBuilder()
-                .addLocalDate("snapshotDate", snapshotDate)
-                .toJobParameters());
+        runAllPeriods("REVIEW");
 
-        // then
-        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         assertThat(popularReviewRepository.findAll()).isNotEmpty();
     }
 
     @Test
     @DisplayName("파워 유저 Job 실행 성공")
     void powerUsersJob_success() throws Exception {
-        // when
-        JobExecution execution = jobLauncher.run(powerUsersJob, new JobParametersBuilder()
-                .addLocalDate("snapshotDate", snapshotDate)
-                .toJobParameters());
+        runAllPeriods("USER");
 
-        // then
-        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         assertThat(powerUserRepository.findAll()).isNotEmpty();
     }
 
+    private void runAllPeriods(String targetType) throws Exception {
+        for (PeriodType period : PeriodType.values()) {
+            JobExecution execution = jobLauncher.run(dashboardBatchJob, new JobParametersBuilder()
+                    .addLocalDate("snapshotDate", snapshotDate)
+                    .addString("targetType", targetType)
+                    .addString("period", period.name())
+                    .toJobParameters());
+
+            assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        }
+    }
 }

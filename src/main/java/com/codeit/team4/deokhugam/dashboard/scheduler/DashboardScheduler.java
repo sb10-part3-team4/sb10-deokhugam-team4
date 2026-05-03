@@ -1,7 +1,9 @@
 package com.codeit.team4.deokhugam.dashboard.scheduler;
 
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DashboardScheduler {
 
+    private static final List<String> TARGET_TYPES = List.of("BOOK", "REVIEW", "USER");
+
     private final JobLauncher jobLauncher;
     private final JobExplorer jobExplorer;
-    private final Job popularBooksJob;
-    private final Job popularReviewsJob;
-    private final Job powerUsersJob;
+    private final Job dashboardBatchJob;
 
     @Value("${dashboard.batch.zone}")
     private String zone;
@@ -47,24 +49,23 @@ public class DashboardScheduler {
     }
 
     private void runAllJobsForDate(LocalDate snapshotDate) {
-        JobParameters params = new JobParametersBuilder()
-                .addLocalDate("snapshotDate", snapshotDate)
-                .toJobParameters();
+        List<CompletableFuture<Void>> futures = TARGET_TYPES.stream()
+                .flatMap(targetType -> Arrays.stream(PeriodType.values())
+                        .map(period -> CompletableFuture.runAsync(
+                                () -> runJob(snapshotDate, targetType, period))))
+                .toList();
 
-        CompletableFuture.allOf(
-                CompletableFuture.runAsync(() -> runJob(popularBooksJob, params)),
-                CompletableFuture.runAsync(() -> runJob(popularReviewsJob, params)),
-                CompletableFuture.runAsync(() -> runJob(powerUsersJob, params))
-        ).join();
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
     }
 
-    private void runJob(Job job, JobParameters params) {
+    private void runJob(LocalDate snapshotDate, String targetType, PeriodType period) {
+        JobParameters params = buildParams(snapshotDate, targetType, period);
         try {
-            jobLauncher.run(job, params);
+            jobLauncher.run(dashboardBatchJob, params);
         } catch (JobInstanceAlreadyCompleteException e) {
-            log.debug("{} 이미 완료됨, 스킵", job.getName());
+            log.debug("dashboardBatchJob 이미 완료됨, 스킵: {} {} {}", snapshotDate, targetType, period);
         } catch (Exception e) {
-            log.error("{} 실행 실패", job.getName(), e);
+            log.error("dashboardBatchJob 실행 실패: {} {} {}", snapshotDate, targetType, period, e);
         }
     }
 
@@ -85,17 +86,18 @@ public class DashboardScheduler {
     }
 
     private boolean allJobsCompletedForDate(LocalDate date) {
-        JobParameters params = new JobParametersBuilder()
-                .addLocalDate("snapshotDate", date)
-                .toJobParameters();
-
-        return isJobCompleted(popularBooksJob, params)
-                && isJobCompleted(popularReviewsJob, params)
-                && isJobCompleted(powerUsersJob, params);
+        for (String targetType : TARGET_TYPES) {
+            for (PeriodType period : PeriodType.values()) {
+                if (!isJobCompleted(buildParams(date, targetType, period))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
-    private boolean isJobCompleted(Job job, JobParameters params) {
-        var jobInstance = jobExplorer.getJobInstance(job.getName(), params);
+    private boolean isJobCompleted(JobParameters params) {
+        var jobInstance = jobExplorer.getJobInstance(dashboardBatchJob.getName(), params);
         if (jobInstance == null) {
             return false;
         }
@@ -107,5 +109,13 @@ public class DashboardScheduler {
 
         return executions.stream()
                 .anyMatch(e -> e.getStatus() == BatchStatus.COMPLETED);
+    }
+
+    private JobParameters buildParams(LocalDate snapshotDate, String targetType, PeriodType period) {
+        return new JobParametersBuilder()
+                .addLocalDate("snapshotDate", snapshotDate)
+                .addString("targetType", targetType)
+                .addString("period", period.name())
+                .toJobParameters();
     }
 }

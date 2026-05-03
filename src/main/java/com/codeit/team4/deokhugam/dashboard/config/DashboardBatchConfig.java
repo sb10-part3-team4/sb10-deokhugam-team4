@@ -27,83 +27,41 @@ public class DashboardBatchConfig {
     private final PlatformTransactionManager transactionManager;
 
     @Bean
-    public Job popularBooksJob() {
-        return new JobBuilder("popularBooksJob", jobRepository)
-                .start(popularBooksStep())
+    public Job dashboardBatchJob() {
+        return new JobBuilder("dashboardBatchJob", jobRepository)
+                .start(dashboardBatchStep())
                 .build();
     }
 
     @Bean
-    public Job popularReviewsJob() {
-        return new JobBuilder("popularReviewsJob", jobRepository)
-                .start(popularReviewsStep())
+    public Step dashboardBatchStep() {
+        return new StepBuilder("dashboardBatchStep", jobRepository)
+                .tasklet(dashboardBatchTasklet(), transactionManager)
                 .build();
     }
 
     @Bean
-    public Job powerUsersJob() {
-        return new JobBuilder("powerUsersJob", jobRepository)
-                .start(powerUsersStep())
-                .build();
-    }
-
-    @Bean
-    public Step popularBooksStep() {
-        return new StepBuilder("popularBooksStep", jobRepository)
-                .tasklet(popularBooksTasklet(), transactionManager)
-                .build();
-    }
-
-    @Bean
-    public Step popularReviewsStep() {
-        return new StepBuilder("popularReviewsStep", jobRepository)
-                .tasklet(popularReviewsTasklet(), transactionManager)
-                .build();
-    }
-
-    @Bean
-    public Step powerUsersStep() {
-        return new StepBuilder("powerUsersStep", jobRepository)
-                .tasklet(powerUsersTasklet(), transactionManager)
-                .build();
-    }
-
-    @Bean
-    public Tasklet popularBooksTasklet() {
+    public Tasklet dashboardBatchTasklet() {
         return (contribution, chunkContext) -> {
-            LocalDate snapshotDate = extractSnapshotDate(chunkContext);
-            for (PeriodType period : PeriodType.values()) {
-                dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
+            LocalDate snapshotDate = extractParam(chunkContext, "snapshotDate", LocalDate.class);
+            String targetType = extractParam(chunkContext, "targetType", String.class);
+            PeriodType period = PeriodType.valueOf(extractParam(chunkContext, "period", String.class));
+
+            switch (targetType) {
+                case "BOOK" -> dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
+                case "REVIEW" -> dashboardBatchService.updatePopularReviewsByPeriod(period, snapshotDate);
+                case "USER" -> dashboardBatchService.updatePowerUsersByPeriod(period, snapshotDate);
+                default -> throw new IllegalArgumentException("Unknown targetType: " + targetType);
             }
+
             return RepeatStatus.FINISHED;
         };
     }
 
-    @Bean
-    public Tasklet popularReviewsTasklet() {
-        return (contribution, chunkContext) -> {
-            LocalDate snapshotDate = extractSnapshotDate(chunkContext);
-            for (PeriodType period : PeriodType.values()) {
-                dashboardBatchService.updatePopularReviewsByPeriod(period, snapshotDate);
-            }
-            return RepeatStatus.FINISHED;
-        };
-    }
-
-    @Bean
-    public Tasklet powerUsersTasklet() {
-        return (contribution, chunkContext) -> {
-            LocalDate snapshotDate = extractSnapshotDate(chunkContext);
-            for (PeriodType period : PeriodType.values()) {
-                dashboardBatchService.updatePowerUsersByPeriod(period, snapshotDate);
-            }
-            return RepeatStatus.FINISHED;
-        };
-    }
-
-    private LocalDate extractSnapshotDate(ChunkContext chunkContext) {
-        return (LocalDate) chunkContext.getStepContext()
+    @SuppressWarnings("unchecked")
+    private <T> T extractParam(ChunkContext chunkContext, String key, Class<T> type) {
+        return (T) chunkContext.getStepContext()
                 .getJobParameters()
-                .get("snapshotDate");
+                .get(key);
     }
 }
