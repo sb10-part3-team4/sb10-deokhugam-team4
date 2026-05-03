@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,6 +122,18 @@ public class DashboardFacade {
                 null,
                 hasNext
         );
+    }
+
+    @CacheEvict(value = POPULAR_BOOKS, allEntries = true)
+    public void evictPopularBooksCache() {
+    }
+
+    @CacheEvict(value = POPULAR_REVIEWS, allEntries = true)
+    public void evictPopularReviewsCache() {
+    }
+
+    @CacheEvict(value = POWER_USERS, allEntries = true)
+    public void evictPowerUsersCache() {
     }
 
     private <T> List<T> trimToLimit(List<T> results, int limit) {

@@ -3,6 +3,11 @@ spring:
     name: deokhugam
   profiles:
     default: local
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
   jpa:
     open-in-view: false
     properties:

@@ -69,9 +69,11 @@ class DashboardFacadeTest {
     }
 
     private void runBatch(LocalDate snapshotDate) {
-        dashboardBatchService.updatePopularBooks(snapshotDate);
-        dashboardBatchService.updatePopularReviews(snapshotDate);
-        dashboardBatchService.updatePowerUsers(snapshotDate);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
+            dashboardBatchService.updatePopularReviewsByPeriod(period, snapshotDate);
+            dashboardBatchService.updatePowerUsersByPeriod(period, snapshotDate);
+        }
     }
 
     @Nested

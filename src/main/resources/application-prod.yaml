@@ -39,7 +39,7 @@ user:
 
 dashboard:
   batch:
-    cron: "0 0 3 * * *"
+    cron: "0 0 * * * *"
     zone: "Asia/Seoul"
 
 notification:

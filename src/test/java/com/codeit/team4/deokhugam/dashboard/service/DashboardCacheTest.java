@@ -84,9 +84,11 @@ class DashboardCacheTest {
         reviewRepository.saveAndFlush(new Review(book, user, "캐시 테스트 리뷰", 5));
 
         LocalDate today = LocalDate.now(ZoneId.of(zone));
-        dashboardBatchService.updatePopularBooks(today);
-        dashboardBatchService.updatePopularReviews(today);
-        dashboardBatchService.updatePowerUsers(today);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, today);
+            dashboardBatchService.updatePopularReviewsByPeriod(period, today);
+            dashboardBatchService.updatePowerUsersByPeriod(period, today);
+        }
     }
 
     @AfterEach
@@ -138,7 +140,9 @@ class DashboardCacheTest {
         );
         reviewRepository.saveAndFlush(new Review(newBook, user, "새 리뷰", 4));
         LocalDate today = LocalDate.now(ZoneId.of(zone));
-        dashboardBatchService.updatePopularBooks(today);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, today);
+        }
 
         // 배치 후 조회 → 새 데이터 반영
         PageResponse<PopularBookResponse> secondResult = dashboardFacade.getPopularBooks(param);
@@ -191,7 +195,9 @@ class DashboardCacheTest {
                 new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "7777777777", null)
         );
         reviewRepository.saveAndFlush(new Review(newBook, user, "새 리뷰", 4));
-        dashboardBatchService.updatePopularReviews(LocalDate.now(ZoneId.of(zone)));
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularReviewsByPeriod(period, LocalDate.now(ZoneId.of(zone)));
+        }
 
         PageResponse<PopularReviewResponse> second = dashboardFacade.getPopularReviews(param);
         assertThat(second.content()).hasSize(2);
@@ -225,7 +231,9 @@ class DashboardCacheTest {
                 new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "6666666666", null)
         );
         reviewRepository.saveAndFlush(new Review(newBook, newUser, "새 리뷰", 4));
-        dashboardBatchService.updatePowerUsers(LocalDate.now(ZoneId.of(zone)));
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePowerUsersByPeriod(period, LocalDate.now(ZoneId.of(zone)));
+        }
 
         PageResponse<PowerUserResponse> second = dashboardFacade.getPowerUsers(param);
         assertThat(second.content()).hasSize(2);

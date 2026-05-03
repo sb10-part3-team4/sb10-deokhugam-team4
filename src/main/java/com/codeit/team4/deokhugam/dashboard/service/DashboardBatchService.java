@@ -29,14 +29,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_BOOKS;
-import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_REVIEWS;
-import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POWER_USERS;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class DashboardBatchService {
 
     private final PopularBookRepository popularBookRepository;
@@ -60,46 +53,16 @@ public class DashboardBatchService {
     private final UserService userService;
     private final BookService bookService;
 
+    private final DashboardFacade dashboardFacade;
+
     private final ApplicationEventPublisher eventPublisher;
 
     public static LocalDate defaultSnapshotDate(String zone) {
         return LocalDate.now(ZoneId.of(zone)).minusDays(1);
     }
 
-    @CacheEvict(value = POPULAR_BOOKS, allEntries = true)
-    public void updatePopularBooks(LocalDate snapshotDate) {
-        log.info("인기 도서 배치 시작: snapshotDate={}", snapshotDate);
-
-        for (PeriodType period : PeriodType.values()) {
-            updatePopularBooksByPeriod(period, snapshotDate);
-        }
-
-        log.info("인기 도서 배치 완료: snapshotDate={}", snapshotDate);
-    }
-
-    @CacheEvict(value = POPULAR_REVIEWS, allEntries = true)
-    public void updatePopularReviews(LocalDate snapshotDate) {
-        log.info("인기 리뷰 배치 시작: snapshotDate={}", snapshotDate);
-
-        for (PeriodType period : PeriodType.values()) {
-            updatePopularReviewsByPeriod(period, snapshotDate);
-        }
-
-        log.info("인기 리뷰 배치 완료: snapshotDate={}", snapshotDate);
-    }
-
-    @CacheEvict(value = POWER_USERS, allEntries = true)
-    public void updatePowerUsers(LocalDate snapshotDate) {
-        log.info("파워 유저 배치 시작: snapshotDate={}", snapshotDate);
-
-        for (PeriodType period : PeriodType.values()) {
-            updatePowerUsersByPeriod(period, snapshotDate);
-        }
-
-        log.info("파워 유저 배치 완료: snapshotDate={}", snapshotDate);
-    }
-
-    private void updatePopularBooksByPeriod(PeriodType period, LocalDate snapshotDate) {
+    @Transactional
+    public void updatePopularBooksByPeriod(PeriodType period, LocalDate snapshotDate) {
         popularBookRepository.deleteByPeriodAndSnapshotDate(period, snapshotDate);
 
         List<PopularBookSearchModel> results = popularBookAggregator.findTopBooks(period, snapshotDate);
@@ -126,10 +89,12 @@ public class DashboardBatchService {
         }
 
         popularBookRepository.saveAll(popularBooks);
+        dashboardFacade.evictPopularBooksCache();
         log.info("인기 도서 {} 저장 완료: {}건", period, popularBooks.size());
     }
 
-    private void updatePopularReviewsByPeriod(PeriodType period, LocalDate snapshotDate) {
+    @Transactional
+    public void updatePopularReviewsByPeriod(PeriodType period, LocalDate snapshotDate) {
         popularReviewRepository.deleteByPeriodAndSnapshotDate(period, snapshotDate);
 
         List<PopularReviewSearchModel> results = popularReviewAggregator.findTopReviews(period, snapshotDate);
@@ -186,10 +151,12 @@ public class DashboardBatchService {
             }
         }
 
+        dashboardFacade.evictPopularReviewsCache();
         log.info("인기 리뷰 {} 저장 완료: {}건", period, popularReviews.size());
     }
 
-    private void updatePowerUsersByPeriod(PeriodType period, LocalDate snapshotDate) {
+    @Transactional
+    public void updatePowerUsersByPeriod(PeriodType period, LocalDate snapshotDate) {
         powerUserRepository.deleteByPeriodAndSnapshotDate(period, snapshotDate);
 
         List<PowerUserSearchModel> results = powerUserAggregator.findTopPowerUsers(period, snapshotDate);
@@ -215,6 +182,7 @@ public class DashboardBatchService {
         }
 
         powerUserRepository.saveAll(powerUsers);
+        dashboardFacade.evictPowerUsersCache();
         log.info("파워 유저 {} 저장 완료: {}건", period, powerUsers.size());
     }
 
