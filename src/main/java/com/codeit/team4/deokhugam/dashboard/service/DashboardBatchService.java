@@ -22,6 +22,7 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,10 @@ public class DashboardBatchService {
     private final BookService bookService;
 
     private final ApplicationEventPublisher eventPublisher;
+
+    public static LocalDate defaultSnapshotDate(String zone) {
+        return LocalDate.now(ZoneId.of(zone)).minusDays(1);
+    }
 
     @CacheEvict(value = POPULAR_BOOKS, allEntries = true)
     public void updatePopularBooks(LocalDate snapshotDate) {
