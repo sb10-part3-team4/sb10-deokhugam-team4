@@ -14,6 +14,7 @@ import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -57,11 +59,14 @@ class DashboardBatchConfigTest {
     @Autowired
     private PowerUserRepository powerUserRepository;
 
+    @Value("${dashboard.batch.zone}")
+    private String zone;
+
     private LocalDate snapshotDate;
 
     @BeforeEach
     void setUp() {
-        snapshotDate = LocalDate.now();
+        snapshotDate = LocalDate.now(ZoneId.of(zone));
         User user = userRepository.saveAndFlush(new User("batch@test.com", "배치테스터", "password123"));
         Book book = bookRepository.saveAndFlush(
                 new Book("배치 테스트 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "1234567890", null)
