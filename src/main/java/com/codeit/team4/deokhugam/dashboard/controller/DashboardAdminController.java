@@ -13,6 +13,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,6 +54,8 @@ public class DashboardAdminController implements DashboardAdminApi {
                         log.error("수동 배치 비정상 종료: {} {} status={}",
                                 targetType, period, execution.getStatus());
                     }
+                } catch (JobInstanceAlreadyCompleteException e) {
+                    log.debug("dashboardBatchJob 이미 완료됨, 스킵: {} {}", targetType, period);
                 } catch (Exception e) {
                     failureCount++;
                     log.error("수동 배치 실행 실패: {} {}", targetType, period, e);

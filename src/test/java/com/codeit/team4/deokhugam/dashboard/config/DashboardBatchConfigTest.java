@@ -156,6 +156,35 @@ class DashboardBatchConfigTest {
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
     }
 
+    @Test
+    @DisplayName("snapshotDate 누락 시 Job 실패")
+    void missingSnapshotDate_fail() throws Exception {
+        JobParameters params = new JobParametersBuilder()
+                .addString("targetType", "BOOK")
+                .addString("period", PeriodType.DAILY.name())
+                .addString("testRunId", testRunId)
+                .toJobParameters();
+
+        JobExecution execution = jobLauncher.run(dashboardBatchJob, params);
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+    }
+
+    @Test
+    @DisplayName("잘못된 period 시 Job 실패")
+    void invalidPeriod_fail() throws Exception {
+        JobParameters params = new JobParametersBuilder()
+                .addLocalDate("snapshotDate", snapshotDate)
+                .addString("targetType", "BOOK")
+                .addString("period", "INVALID")
+                .addString("testRunId", testRunId)
+                .toJobParameters();
+
+        JobExecution execution = jobLauncher.run(dashboardBatchJob, params);
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+    }
+
     private void runAllPeriods(String targetType) throws Exception {
         for (PeriodType period : PeriodType.values()) {
             JobExecution execution = jobLauncher.run(dashboardBatchJob, new JobParametersBuilder()

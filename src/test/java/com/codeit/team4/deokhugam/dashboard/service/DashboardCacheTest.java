@@ -37,6 +37,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 @Import(TestContainerConfig.class)
@@ -60,6 +62,9 @@ class DashboardCacheTest {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @MockitoSpyBean
     private PopularBookReader popularBookReader;
@@ -239,5 +244,64 @@ class DashboardCacheTest {
 
         PageResponse<PowerUserResponse> second = dashboardFacade.getPowerUsers(param);
         assertThat(second.content()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("인기 도서 배치 트랜잭션 롤백 시 캐시 유지 성공")
+    void popularBooksCacheRetainedOnRollback_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPopularBooks(param);
+
+        runBatchAndRollback(dashboardBatchService::updatePopularBooksByPeriod);
+
+        dashboardFacade.getPopularBooks(param);
+
+        verify(popularBookReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    @Test
+    @DisplayName("인기 리뷰 배치 트랜잭션 롤백 시 캐시 유지 성공")
+    void popularReviewsCacheRetainedOnRollback_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPopularReviews(param);
+
+        runBatchAndRollback(dashboardBatchService::updatePopularReviewsByPeriod);
+
+        dashboardFacade.getPopularReviews(param);
+
+        verify(popularReviewReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    @Test
+    @DisplayName("파워 유저 배치 트랜잭션 롤백 시 캐시 유지 성공")
+    void powerUsersCacheRetainedOnRollback_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPowerUsers(param);
+
+        runBatchAndRollback(dashboardBatchService::updatePowerUsersByPeriod);
+
+        dashboardFacade.getPowerUsers(param);
+
+        verify(powerUserReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    private void runBatchAndRollback(java.util.function.BiConsumer<PeriodType, LocalDate> batchCall) {
+        LocalDate today = LocalDate.now(ZoneId.of(zone));
+        new TransactionTemplate(transactionManager).execute(status -> {
+            for (PeriodType period : PeriodType.values()) {
+                batchCall.accept(period, today);
+            }
+            status.setRollbackOnly();
+            return null;
+        });
     }
 }
