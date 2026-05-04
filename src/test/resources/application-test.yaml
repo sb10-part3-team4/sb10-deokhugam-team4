@@ -1,4 +1,9 @@
 spring:
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
   test:
     database:
       replace: none

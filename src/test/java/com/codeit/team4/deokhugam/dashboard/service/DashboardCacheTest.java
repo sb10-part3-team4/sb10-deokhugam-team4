@@ -37,6 +37,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 @Import(TestContainerConfig.class)
@@ -61,6 +63,9 @@ class DashboardCacheTest {
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
     @MockitoSpyBean
     private PopularBookReader popularBookReader;
 
@@ -84,9 +89,11 @@ class DashboardCacheTest {
         reviewRepository.saveAndFlush(new Review(book, user, "캐시 테스트 리뷰", 5));
 
         LocalDate today = LocalDate.now(ZoneId.of(zone));
-        dashboardBatchService.updatePopularBooks(today);
-        dashboardBatchService.updatePopularReviews(today);
-        dashboardBatchService.updatePowerUsers(today);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, today);
+            dashboardBatchService.updatePopularReviewsByPeriod(period, today);
+            dashboardBatchService.updatePowerUsersByPeriod(period, today);
+        }
     }
 
     @AfterEach
@@ -138,7 +145,9 @@ class DashboardCacheTest {
         );
         reviewRepository.saveAndFlush(new Review(newBook, user, "새 리뷰", 4));
         LocalDate today = LocalDate.now(ZoneId.of(zone));
-        dashboardBatchService.updatePopularBooks(today);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, today);
+        }
 
         // 배치 후 조회 → 새 데이터 반영
         PageResponse<PopularBookResponse> secondResult = dashboardFacade.getPopularBooks(param);
@@ -191,7 +200,10 @@ class DashboardCacheTest {
                 new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "7777777777", null)
         );
         reviewRepository.saveAndFlush(new Review(newBook, user, "새 리뷰", 4));
-        dashboardBatchService.updatePopularReviews(LocalDate.now(ZoneId.of(zone)));
+        LocalDate today = LocalDate.now(ZoneId.of(zone));
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularReviewsByPeriod(period, today);
+        }
 
         PageResponse<PopularReviewResponse> second = dashboardFacade.getPopularReviews(param);
         assertThat(second.content()).hasSize(2);
@@ -225,9 +237,71 @@ class DashboardCacheTest {
                 new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "6666666666", null)
         );
         reviewRepository.saveAndFlush(new Review(newBook, newUser, "새 리뷰", 4));
-        dashboardBatchService.updatePowerUsers(LocalDate.now(ZoneId.of(zone)));
+        LocalDate today = LocalDate.now(ZoneId.of(zone));
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePowerUsersByPeriod(period, today);
+        }
 
         PageResponse<PowerUserResponse> second = dashboardFacade.getPowerUsers(param);
         assertThat(second.content()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("인기 도서 배치 트랜잭션 롤백 시 캐시 유지 성공")
+    void popularBooksCacheRetainedOnRollback_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPopularBooks(param);
+
+        runBatchAndRollback(dashboardBatchService::updatePopularBooksByPeriod);
+
+        dashboardFacade.getPopularBooks(param);
+
+        verify(popularBookReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    @Test
+    @DisplayName("인기 리뷰 배치 트랜잭션 롤백 시 캐시 유지 성공")
+    void popularReviewsCacheRetainedOnRollback_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPopularReviews(param);
+
+        runBatchAndRollback(dashboardBatchService::updatePopularReviewsByPeriod);
+
+        dashboardFacade.getPopularReviews(param);
+
+        verify(popularReviewReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    @Test
+    @DisplayName("파워 유저 배치 트랜잭션 롤백 시 캐시 유지 성공")
+    void powerUsersCacheRetainedOnRollback_success() {
+        DashboardSearchRequestParam param = new DashboardSearchRequestParam(
+                PeriodType.DAILY, SortDirection.ASC, null, null, 50
+        );
+
+        dashboardFacade.getPowerUsers(param);
+
+        runBatchAndRollback(dashboardBatchService::updatePowerUsersByPeriod);
+
+        dashboardFacade.getPowerUsers(param);
+
+        verify(powerUserReader, times(1)).findLatestSnapshotDate(PeriodType.DAILY);
+    }
+
+    private void runBatchAndRollback(java.util.function.BiConsumer<PeriodType, LocalDate> batchCall) {
+        LocalDate today = LocalDate.now(ZoneId.of(zone));
+        new TransactionTemplate(transactionManager).execute(status -> {
+            for (PeriodType period : PeriodType.values()) {
+                batchCall.accept(period, today);
+            }
+            status.setRollbackOnly();
+            return null;
+        });
     }
 }

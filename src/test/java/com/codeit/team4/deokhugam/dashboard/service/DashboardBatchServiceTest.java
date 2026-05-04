@@ -168,7 +168,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularBooks(today);
+            dashboardBatchService.updatePopularBooksByPeriod(PeriodType.DAILY, today);
 
             List<PopularBook> results = popularBookRepository.findAll();
             assertThat(results).isNotEmpty();
@@ -183,14 +183,12 @@ class DashboardBatchServiceTest {
             }
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularBooks(today);
+            dashboardBatchService.updatePopularBooksByPeriod(PeriodType.DAILY, today);
 
-            for (PeriodType period : PeriodType.values()) {
-                List<PopularBook> byPeriod = popularBookRepository.findAll().stream()
-                        .filter(pb -> pb.getPeriod() == period && pb.getSnapshotDate().equals(today))
-                        .toList();
-                assertThat(byPeriod).hasSizeLessThanOrEqualTo(4);
-            }
+            List<PopularBook> byPeriod = popularBookRepository.findAll().stream()
+                    .filter(pb -> pb.getPeriod() == PeriodType.DAILY && pb.getSnapshotDate().equals(today))
+                    .toList();
+            assertThat(byPeriod).hasSizeLessThanOrEqualTo(4);
         }
 
         @Test
@@ -202,7 +200,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book2, user, "그냥그래요", 1));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularBooks(today);
+            dashboardBatchService.updatePopularBooksByPeriod(PeriodType.DAILY, today);
 
             List<PopularBook> dailyBooks = popularBookRepository.findAll().stream()
                     .filter(pb -> pb.getPeriod() == PeriodType.DAILY && pb.getSnapshotDate().equals(today))
@@ -219,7 +217,7 @@ class DashboardBatchServiceTest {
         @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
         void updatePopularBooks_noReviews_success() {
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularBooks(today);
+            dashboardBatchService.updatePopularBooksByPeriod(PeriodType.DAILY, today);
 
             assertThat(popularBookRepository.findAll()).isEmpty();
         }
@@ -231,7 +229,9 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularBooks(today);
+            for (PeriodType period : PeriodType.values()) {
+                dashboardBatchService.updatePopularBooksByPeriod(period, today);
+            }
 
             for (PeriodType period : PeriodType.values()) {
                 List<PopularBook> byPeriod = popularBookRepository.findAll().stream()
@@ -256,7 +256,8 @@ class DashboardBatchServiceTest {
                     .where(REVIEWS.ID.eq(oldReview.getId())).execute();
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularBooks(today);
+            dashboardBatchService.updatePopularBooksByPeriod(PeriodType.DAILY, today);
+            dashboardBatchService.updatePopularBooksByPeriod(PeriodType.ALL_TIME, today);
 
             PopularBook dailyBook = popularBookRepository.findAll().stream()
                     .filter(pb -> pb.getPeriod() == PeriodType.DAILY && pb.getSnapshotDate().equals(today))
@@ -294,7 +295,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book2, user, "괜찮아요", 3));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
 
             List<PopularReview> results = popularReviewRepository.findAll();
             assertThat(results).isNotEmpty();
@@ -309,14 +310,12 @@ class DashboardBatchServiceTest {
             }
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
 
-            for (PeriodType period : PeriodType.values()) {
-                List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
-                        .filter(pr -> pr.getPeriod() == period && pr.getSnapshotDate().equals(today))
-                        .toList();
-                assertThat(byPeriod).hasSize(20);
-            }
+            List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
+                    .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
+                    .toList();
+            assertThat(byPeriod).hasSize(20);
         }
 
         @Test
@@ -335,7 +334,7 @@ class DashboardBatchServiceTest {
             insertComments(review2.getId(), user.getId(), 1);
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
 
             List<PopularReview> dailyReviews = popularReviewRepository.findAll().stream()
                     .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
@@ -363,7 +362,8 @@ class DashboardBatchServiceTest {
             insertCommentsAt(review.getId(), user.getId(), 5, daysAgo(1));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.ALL_TIME, today);
 
             PopularReview dailyReview = popularReviewRepository.findAll().stream()
                     .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
@@ -406,7 +406,7 @@ class DashboardBatchServiceTest {
                     .execute();
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
 
             PopularReview dailyReview = popularReviewRepository.findAll().stream()
                     .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
@@ -429,7 +429,7 @@ class DashboardBatchServiceTest {
             // 오늘 시작 시각 → DAILY에 포함
             insertReviewLikesAt(review.getId(), 2, startOfToday);
 
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
 
             PopularReview dailyReview = popularReviewRepository.findAll().stream()
                     .filter(pr -> pr.getPeriod() == PeriodType.DAILY && pr.getSnapshotDate().equals(today))
@@ -442,7 +442,7 @@ class DashboardBatchServiceTest {
         @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
         void updatePopularReviews_noReviews_success() {
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            dashboardBatchService.updatePopularReviewsByPeriod(PeriodType.DAILY, today);
 
             assertThat(popularReviewRepository.findAll()).isEmpty();
         }
@@ -454,7 +454,9 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book, user, "좋아요", 5));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePopularReviews(today);
+            for (PeriodType period : PeriodType.values()) {
+                dashboardBatchService.updatePopularReviewsByPeriod(period, today);
+            }
 
             for (PeriodType period : PeriodType.values()) {
                 List<PopularReview> byPeriod = popularReviewRepository.findAll().stream()
@@ -476,7 +478,7 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePowerUsers(today);
+            dashboardBatchService.updatePowerUsersByPeriod(PeriodType.DAILY, today);
 
             List<PowerUser> results = powerUserRepository.findAll();
             assertThat(results).isNotEmpty();
@@ -492,14 +494,12 @@ class DashboardBatchServiceTest {
             }
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePowerUsers(today);
+            dashboardBatchService.updatePowerUsersByPeriod(PeriodType.DAILY, today);
 
-            for (PeriodType period : PeriodType.values()) {
-                List<PowerUser> byPeriod = powerUserRepository.findAll().stream()
-                        .filter(pu -> pu.getPeriod() == period && pu.getSnapshotDate().equals(today))
-                        .toList();
-                assertThat(byPeriod).hasSize(10);
-            }
+            List<PowerUser> byPeriod = powerUserRepository.findAll().stream()
+                    .filter(pu -> pu.getPeriod() == PeriodType.DAILY && pu.getSnapshotDate().equals(today))
+                    .toList();
+            assertThat(byPeriod).hasSize(10);
         }
 
         @Test
@@ -522,7 +522,7 @@ class DashboardBatchServiceTest {
             insertReviewLikes(review3.getId(), otherUser.getId(), 1);
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePowerUsers(today);
+            dashboardBatchService.updatePowerUsersByPeriod(PeriodType.DAILY, today);
 
             List<PowerUser> dailyUsers = powerUserRepository.findAll().stream()
                     .filter(pu -> pu.getPeriod() == PeriodType.DAILY && pu.getSnapshotDate().equals(today))
@@ -550,7 +550,8 @@ class DashboardBatchServiceTest {
             insertCommentsAt(review.getId(), user.getId(), 10, daysAgo(1));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePowerUsers(today);
+            dashboardBatchService.updatePowerUsersByPeriod(PeriodType.DAILY, today);
+            dashboardBatchService.updatePowerUsersByPeriod(PeriodType.ALL_TIME, today);
 
             PowerUser dailyUser = powerUserRepository.findAll().stream()
                     .filter(pu -> pu.getPeriod() == PeriodType.DAILY && pu.getSnapshotDate().equals(today))
@@ -573,7 +574,7 @@ class DashboardBatchServiceTest {
         @DisplayName("리뷰 없을 때 빈 결과 반환 성공")
         void updatePowerUsers_noReviews_success() {
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePowerUsers(today);
+            dashboardBatchService.updatePowerUsersByPeriod(PeriodType.DAILY, today);
 
             assertThat(powerUserRepository.findAll()).isEmpty();
         }
@@ -585,7 +586,9 @@ class DashboardBatchServiceTest {
             reviewRepository.saveAndFlush(new Review(book1, user, "좋아요", 5));
 
             LocalDate today = LocalDate.now(ZoneId.of(zone));
-            dashboardBatchService.updatePowerUsers(today);
+            for (PeriodType period : PeriodType.values()) {
+                dashboardBatchService.updatePowerUsersByPeriod(period, today);
+            }
 
             for (PeriodType period : PeriodType.values()) {
                 List<PowerUser> byPeriod = powerUserRepository.findAll().stream()

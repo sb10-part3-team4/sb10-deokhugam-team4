@@ -66,7 +66,9 @@ class PopularBookReaderTest {
     }
 
     private void runBatch(LocalDate snapshotDate) {
-        dashboardBatchService.updatePopularBooks(snapshotDate);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
+        }
     }
 
     @Nested
