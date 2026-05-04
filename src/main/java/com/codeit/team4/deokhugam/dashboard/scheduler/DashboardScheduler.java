@@ -3,9 +3,7 @@ package com.codeit.team4.deokhugam.dashboard.scheduler;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
@@ -26,6 +24,7 @@ import org.springframework.stereotype.Component;
 public class DashboardScheduler {
 
     private static final List<String> TARGET_TYPES = List.of("BOOK", "REVIEW", "USER");
+    private static final int BACKFILL_DAYS = 30;
 
     private final JobLauncher jobLauncher;
     private final JobExplorer jobExplorer;
@@ -49,19 +48,21 @@ public class DashboardScheduler {
     }
 
     private void runAllJobsForDate(LocalDate snapshotDate) {
-        List<CompletableFuture<Void>> futures = TARGET_TYPES.stream()
-                .flatMap(targetType -> Arrays.stream(PeriodType.values())
-                        .map(period -> CompletableFuture.runAsync(
-                                () -> runJob(snapshotDate, targetType, period))))
-                .toList();
-
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+        for (String targetType : TARGET_TYPES) {
+            for (PeriodType period : PeriodType.values()) {
+                runJob(snapshotDate, targetType, period);
+            }
+        }
     }
 
     private void runJob(LocalDate snapshotDate, String targetType, PeriodType period) {
         JobParameters params = buildParams(snapshotDate, targetType, period);
         try {
-            jobLauncher.run(dashboardBatchJob, params);
+            JobExecution execution = jobLauncher.run(dashboardBatchJob, params);
+            if (execution.getStatus() != BatchStatus.COMPLETED) {
+                log.error("dashboardBatchJob 비정상 종료: {} {} {} status={}",
+                        snapshotDate, targetType, period, execution.getStatus());
+            }
         } catch (JobInstanceAlreadyCompleteException e) {
             log.debug("dashboardBatchJob 이미 완료됨, 스킵: {} {} {}", snapshotDate, targetType, period);
         } catch (Exception e) {
@@ -70,19 +71,13 @@ public class DashboardScheduler {
     }
 
     private LocalDate findStartDate(LocalDate today) {
-        LocalDate candidate = today;
-
-        for (LocalDate date = today.minusDays(1); !date.isBefore(today.minusDays(30)); date = date.minusDays(1)) {
-            if (allJobsCompletedForDate(date)) {
-                candidate = date.plusDays(1);
-                break;
+        LocalDate earliest = today.minusDays(BACKFILL_DAYS);
+        for (LocalDate date = earliest; !date.isAfter(today); date = date.plusDays(1)) {
+            if (!allJobsCompletedForDate(date)) {
+                return date;
             }
         }
-
-        if (candidate.isAfter(today)) {
-            return today;
-        }
-        return candidate;
+        return today.plusDays(1);
     }
 
     private boolean allJobsCompletedForDate(LocalDate date) {

@@ -3,6 +3,7 @@ package com.codeit.team4.deokhugam.dashboard.config;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import java.time.LocalDate;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -43,9 +44,9 @@ public class DashboardBatchConfig {
     @Bean
     public Tasklet dashboardBatchTasklet() {
         return (contribution, chunkContext) -> {
-            LocalDate snapshotDate = extractParam(chunkContext, "snapshotDate", LocalDate.class);
-            String targetType = extractParam(chunkContext, "targetType", String.class);
-            PeriodType period = PeriodType.valueOf(extractParam(chunkContext, "period", String.class));
+            LocalDate snapshotDate = extractParam(chunkContext, "snapshotDate");
+            String targetType = extractParam(chunkContext, "targetType");
+            PeriodType period = PeriodType.valueOf(extractParam(chunkContext, "period"));
 
             switch (targetType) {
                 case "BOOK" -> dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
@@ -59,9 +60,11 @@ public class DashboardBatchConfig {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T extractParam(ChunkContext chunkContext, String key, Class<T> type) {
-        return (T) chunkContext.getStepContext()
+    private <T> T extractParam(ChunkContext chunkContext, String key) {
+        Object value = chunkContext.getStepContext()
                 .getJobParameters()
                 .get(key);
+        Objects.requireNonNull(value, "필수 JobParameter 누락: " + key);
+        return (T) value;
     }
 }

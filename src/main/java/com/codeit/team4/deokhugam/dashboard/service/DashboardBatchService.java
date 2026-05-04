@@ -34,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -89,7 +91,7 @@ public class DashboardBatchService {
         }
 
         popularBookRepository.saveAll(popularBooks);
-        dashboardFacade.evictPopularBooksCache();
+        evictAfterCommit(dashboardFacade::evictPopularBooksCache);
         log.info("인기 도서 {} 저장 완료: {}건", period, popularBooks.size());
     }
 
@@ -151,7 +153,7 @@ public class DashboardBatchService {
             }
         }
 
-        dashboardFacade.evictPopularReviewsCache();
+        evictAfterCommit(dashboardFacade::evictPopularReviewsCache);
         log.info("인기 리뷰 {} 저장 완료: {}건", period, popularReviews.size());
     }
 
@@ -182,8 +184,21 @@ public class DashboardBatchService {
         }
 
         powerUserRepository.saveAll(powerUsers);
-        dashboardFacade.evictPowerUsersCache();
+        evictAfterCommit(dashboardFacade::evictPowerUsersCache);
         log.info("파워 유저 {} 저장 완료: {}건", period, powerUsers.size());
+    }
+
+    private void evictAfterCommit(Runnable evict) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    evict.run();
+                }
+            });
+        } else {
+            evict.run();
+        }
     }
 
     private boolean shouldPublish(PeriodType period, LocalDate snapshotDate) {

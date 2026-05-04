@@ -195,8 +195,9 @@ class DashboardCacheTest {
                 new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "7777777777", null)
         );
         reviewRepository.saveAndFlush(new Review(newBook, user, "새 리뷰", 4));
+        LocalDate today = LocalDate.now(ZoneId.of(zone));
         for (PeriodType period : PeriodType.values()) {
-            dashboardBatchService.updatePopularReviewsByPeriod(period, LocalDate.now(ZoneId.of(zone)));
+            dashboardBatchService.updatePopularReviewsByPeriod(period, today);
         }
 
         PageResponse<PopularReviewResponse> second = dashboardFacade.getPopularReviews(param);
@@ -231,8 +232,9 @@ class DashboardCacheTest {
                 new Book("새 책", "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), "6666666666", null)
         );
         reviewRepository.saveAndFlush(new Review(newBook, newUser, "새 리뷰", 4));
+        LocalDate today = LocalDate.now(ZoneId.of(zone));
         for (PeriodType period : PeriodType.values()) {
-            dashboardBatchService.updatePowerUsersByPeriod(period, LocalDate.now(ZoneId.of(zone)));
+            dashboardBatchService.updatePowerUsersByPeriod(period, today);
         }
 
         PageResponse<PowerUserResponse> second = dashboardFacade.getPowerUsers(param);

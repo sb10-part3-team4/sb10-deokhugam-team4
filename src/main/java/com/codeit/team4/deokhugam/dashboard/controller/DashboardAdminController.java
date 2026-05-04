@@ -7,7 +7,9 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -36,22 +38,32 @@ public class DashboardAdminController implements DashboardAdminApi {
         LocalDate snapshotDate = DashboardBatchService.defaultSnapshotDate(zone);
         log.info("수동 배치 실행 요청: snapshotDate={}", snapshotDate);
 
-        try {
-            for (String targetType : TARGET_TYPES) {
-                for (PeriodType period : PeriodType.values()) {
-                    JobParameters params = new JobParametersBuilder()
-                            .addLocalDate("snapshotDate", snapshotDate)
-                            .addString("targetType", targetType)
-                            .addString("period", period.name())
-                            .toJobParameters();
-                    jobLauncher.run(dashboardBatchJob, params);
+        int failureCount = 0;
+        for (String targetType : TARGET_TYPES) {
+            for (PeriodType period : PeriodType.values()) {
+                JobParameters params = new JobParametersBuilder()
+                        .addLocalDate("snapshotDate", snapshotDate)
+                        .addString("targetType", targetType)
+                        .addString("period", period.name())
+                        .toJobParameters();
+                try {
+                    JobExecution execution = jobLauncher.run(dashboardBatchJob, params);
+                    if (execution.getStatus() != BatchStatus.COMPLETED) {
+                        failureCount++;
+                        log.error("수동 배치 비정상 종료: {} {} status={}",
+                                targetType, period, execution.getStatus());
+                    }
+                } catch (Exception e) {
+                    failureCount++;
+                    log.error("수동 배치 실행 실패: {} {}", targetType, period, e);
                 }
             }
-        } catch (Exception e) {
-            log.error("수동 배치 실행 실패", e);
-            return ResponseEntity.internalServerError().build();
         }
 
+        if (failureCount > 0) {
+            log.error("수동 배치 일부 실패: failureCount={}", failureCount);
+            return ResponseEntity.internalServerError().build();
+        }
         return ResponseEntity.noContent().build();
     }
 }
