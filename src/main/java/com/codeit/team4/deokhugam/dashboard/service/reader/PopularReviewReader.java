@@ -40,5 +40,4 @@ public class PopularReviewReader {
                 .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
                 .fetch(PopularReviewViewModel::fromRecord);
     }
-
 }

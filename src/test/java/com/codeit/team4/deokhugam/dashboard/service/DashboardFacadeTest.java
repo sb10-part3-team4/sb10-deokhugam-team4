@@ -1,5 +1,8 @@
 package com.codeit.team4.deokhugam.dashboard.service;
 
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_BOOKS;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POPULAR_REVIEWS;
+import static com.codeit.team4.deokhugam.global.cache.RedisCacheKey.POWER_USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -20,6 +23,7 @@ import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +57,9 @@ class DashboardFacadeTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     @Value("${dashboard.batch.zone}")
     private String zone;
 
@@ -62,6 +70,19 @@ class DashboardFacadeTest {
         user = userRepository.saveAndFlush(new User("test@test.com", "테스터", "password123"));
     }
 
+    @AfterEach
+    void tearDown() {
+        clearCache(POPULAR_BOOKS);
+        clearCache(POPULAR_REVIEWS);
+        clearCache(POWER_USERS);
+    }
+
+    private void clearCache(String name) {
+        if (cacheManager.getCache(name) != null) {
+            cacheManager.getCache(name).clear();
+        }
+    }
+
     private Book createBook(String title, String isbn) {
         return bookRepository.saveAndFlush(
                 new Book(title, "저자", "설명", "출판사", LocalDate.of(2024, 1, 1), isbn, null)
@@ -69,9 +90,11 @@ class DashboardFacadeTest {
     }
 
     private void runBatch(LocalDate snapshotDate) {
-        dashboardBatchService.updatePopularBooks(snapshotDate);
-        dashboardBatchService.updatePopularReviews(snapshotDate);
-        dashboardBatchService.updatePowerUsers(snapshotDate);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
+            dashboardBatchService.updatePopularReviewsByPeriod(period, snapshotDate);
+            dashboardBatchService.updatePowerUsersByPeriod(period, snapshotDate);
+        }
     }
 
     @Nested
