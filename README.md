@@ -15,7 +15,7 @@
 ***
 
 ## 기술 스택
-* Backend: Java 17, Spring Boot, Spring Data JPA, JOOQ, MapStruct, Flyway
+* Backend: Java 17, Spring Boot, Spring Data JPA, JOOQ, MapStruct, Flyway, Testcontainers
 * Database: PostgreSQL
 * Cache & 분산락 : Redis(AWS ElastiCache Valkey, Redisson)
 * Infrastructure: AWS ECS, AWS ECR, AWS RDS, AWS S3
