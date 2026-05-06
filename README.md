@@ -26,8 +26,8 @@
 ## 팀원별 구현 기능 상세
 
 ### 송시연
- <img width="1432" height="1264" alt="image" src="https://github.com/user-attachments/assets/0ed2ac19-e1d5-4e33-8cc7-64a6ca61c40d" />
- <img width="1460" height="1186" alt="image" src="https://github.com/user-attachments/assets/b3b71e61-67f1-40c3-9a55-1311a47c8f8a" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/0ed2ac19-e1d5-4e33-8cc7-64a6ca61c40d" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/b3b71e61-67f1-40c3-9a55-1311a47c8f8a" />
 
 * #### 리뷰
   * 리뷰 관련 CRUD...
