@@ -1,7 +1,8 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.service.reader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
@@ -65,7 +66,9 @@ class PopularBookReaderTest {
     }
 
     private void runBatch(LocalDate snapshotDate) {
-        dashboardBatchService.updatePopularBooks(snapshotDate);
+        for (PeriodType period : PeriodType.values()) {
+            dashboardBatchService.updatePopularBooksByPeriod(period, snapshotDate);
+        }
     }
 
     @Nested

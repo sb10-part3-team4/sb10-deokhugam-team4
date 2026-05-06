@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.service.reader;
 
 import static com.codeit.team4.deokhugam.jooq.tables.PowerUsers.POWER_USERS;
 

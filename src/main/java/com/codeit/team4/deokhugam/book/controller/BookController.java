@@ -5,7 +5,7 @@ import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.book.service.BookService;
-import com.codeit.team4.deokhugam.book.service.BookQueryService;
+import com.codeit.team4.deokhugam.book.service.query.BookQueryService;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;

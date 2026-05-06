@@ -1,11 +1,11 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.service.reader;
 
-import static com.codeit.team4.deokhugam.jooq.tables.PopularBooks.POPULAR_BOOKS;
+import static com.codeit.team4.deokhugam.jooq.tables.PopularReviews.POPULAR_REVIEWS;
 
-import com.codeit.team4.deokhugam.dashboard.builder.PopularBookReadQueryBuilder;
+import com.codeit.team4.deokhugam.dashboard.builder.PopularReviewReadQueryBuilder;
 import com.codeit.team4.deokhugam.dashboard.dto.DashboardSearchRequestParam;
 import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
-import com.codeit.team4.deokhugam.dashboard.model.PopularBookViewModel;
+import com.codeit.team4.deokhugam.dashboard.model.PopularReviewViewModel;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -17,28 +17,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class PopularBookReader {
+public class PopularReviewReader {
 
     private final DSLContext dsl;
-    private final PopularBookReadQueryBuilder readQueryBuilder;
+    private final PopularReviewReadQueryBuilder readQueryBuilder;
 
     public LocalDate findLatestSnapshotDate(PeriodType period) {
-        return dsl.select(DSL.max(POPULAR_BOOKS.SNAPSHOT_DATE))
-                .from(POPULAR_BOOKS)
-                .where(POPULAR_BOOKS.PERIOD.eq(period.name()))
+        return dsl.select(DSL.max(POPULAR_REVIEWS.SNAPSHOT_DATE))
+                .from(POPULAR_REVIEWS)
+                .where(POPULAR_REVIEWS.PERIOD.eq(period.name()))
                 .fetchOneInto(LocalDate.class);
     }
 
-    public List<PopularBookViewModel> findPopularBooks(
+    public List<PopularReviewViewModel> findPopularReviews(
             DashboardSearchRequestParam param,
             LocalDate snapshotDate
     ) {
-        return dsl.select(PopularBookViewModel.toSelectedFields())
-                .from(POPULAR_BOOKS)
+        return dsl.select(PopularReviewViewModel.toSelectedFields())
+                .from(POPULAR_REVIEWS)
                 .where(readQueryBuilder.buildCondition(param, snapshotDate))
                 .orderBy(readQueryBuilder.buildOrderBy(param.direction()))
                 .limit(param.limit() + 1) // +1로 다음 페이지 존재 여부(hasNext) 판단
-                .fetch(PopularBookViewModel::fromRecord);
+                .fetch(PopularReviewViewModel::fromRecord);
     }
-
 }

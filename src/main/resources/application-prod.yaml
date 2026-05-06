@@ -23,7 +23,7 @@ management:
   metrics:
     distribution:
       percentiles:
-        http.server.requests: 0.5, 0.95, 0.99
+        http.server.requests: 0.95
 
 logging:
   level:
@@ -39,7 +39,7 @@ user:
 
 dashboard:
   batch:
-    cron: "0 0 3 * * *"
+    cron: "0 0 * * * *"
     zone: "Asia/Seoul"
 
 notification:

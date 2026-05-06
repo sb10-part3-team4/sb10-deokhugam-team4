@@ -19,16 +19,22 @@ public record PowerUserSearchModel(
         int commentCount
 ) {
 
+    public static final Field<Integer> PERIOD_LIKE_COUNT =
+            DSL.coalesce(DSL.field("period_likes.like_count", Integer.class), 0);
+
+    public static final Field<Integer> PERIOD_COMMENT_COUNT =
+            DSL.coalesce(DSL.field("period_comments.comment_count", Integer.class), 0);
+
     private static final Field<BigDecimal> REVIEW_SCORE_SUM = DSL.sum(
-            REVIEWS.LIKE_COUNT.cast(BigDecimal.class).mul(PopularReview.LIKE_COUNT_WEIGHT)
-                    .add(REVIEWS.COMMENT_COUNT.cast(BigDecimal.class).mul(PopularReview.COMMENT_COUNT_WEIGHT))
+            PERIOD_LIKE_COUNT.cast(BigDecimal.class).mul(PopularReview.LIKE_COUNT_WEIGHT)
+                    .add(PERIOD_COMMENT_COUNT.cast(BigDecimal.class).mul(PopularReview.COMMENT_COUNT_WEIGHT))
     ).as("review_score_sum");
 
     private static final Field<BigDecimal> LIKE_COUNT_SUM =
-            DSL.sum(REVIEWS.LIKE_COUNT).as("like_count_sum");
+            DSL.sum(PERIOD_LIKE_COUNT).as("like_count_sum");
 
     private static final Field<BigDecimal> COMMENT_COUNT_SUM =
-            DSL.sum(REVIEWS.COMMENT_COUNT).as("comment_count_sum");
+            DSL.sum(PERIOD_COMMENT_COUNT).as("comment_count_sum");
 
     public static List<Field<?>> toSelectedFields() {
         return List.of(

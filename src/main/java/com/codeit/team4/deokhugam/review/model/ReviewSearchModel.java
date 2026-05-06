@@ -2,6 +2,7 @@ package com.codeit.team4.deokhugam.review.model;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.ReviewLikes.REVIEW_LIKES;
+import static com.codeit.team4.deokhugam.jooq.tables.ReviewStatistics.REVIEW_STATISTICS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 
@@ -47,7 +48,7 @@ public record ReviewSearchModel(
                 REVIEWS.CONTENT,
                 REVIEWS.RATING,
                 REVIEWS.LIKE_COUNT,
-                REVIEWS.COMMENT_COUNT,
+                DSL.coalesce(REVIEW_STATISTICS.COMMENT_COUNT, 0).as("comment_count"),
                 likedByMe,
                 REVIEWS.CREATED_AT,
                 REVIEWS.UPDATED_AT
@@ -65,7 +66,7 @@ public record ReviewSearchModel(
                 rec.get(REVIEWS.CONTENT),
                 rec.get(REVIEWS.RATING),
                 rec.get(REVIEWS.LIKE_COUNT),
-                rec.get(REVIEWS.COMMENT_COUNT),
+                rec.get("comment_count", Integer.class),
                 rec.get(DSL.field("liked_by_me", Boolean.class)),
                 rec.get(REVIEWS.CREATED_AT).toInstant(),
                 rec.get(REVIEWS.UPDATED_AT).toInstant()

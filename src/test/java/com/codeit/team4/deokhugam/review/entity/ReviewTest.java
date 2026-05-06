@@ -30,7 +30,6 @@ class ReviewTest {
         assertThat(review.getRating()).isEqualTo(rating);
         assertThat(review.getContent()).isEqualTo("좋은 책입니다");
         assertThat(review.getLikeCount()).isZero();
-        assertThat(review.getCommentCount()).isZero();
     }
 
     @ParameterizedTest

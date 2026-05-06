@@ -1,5 +1,4 @@
-package com.codeit.team4.deokhugam.notification.service;
-
+package com.codeit.team4.deokhugam.notification.service.query;
 import com.codeit.team4.deokhugam.book.entity.Book;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;

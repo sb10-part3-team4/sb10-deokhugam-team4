@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.dashboard.service;
+package com.codeit.team4.deokhugam.dashboard.service.aggregator;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Books.BOOKS;
 import static com.codeit.team4.deokhugam.jooq.tables.Reviews.REVIEWS;
@@ -9,8 +9,10 @@ import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.model.PopularReviewSearchModel;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Table;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +27,20 @@ public class PopularReviewAggregator {
     private final PopularReviewAggregationQueryBuilder aggregationQueryBuilder;
 
     public List<PopularReviewSearchModel> findTopReviews(PeriodType period, LocalDate snapshotDate) {
+        Table<?> periodLikes = aggregationQueryBuilder.buildPeriodLikeCountTable(period, snapshotDate);
+        Table<?> periodComments = aggregationQueryBuilder.buildPeriodCommentCountTable(period, snapshotDate);
+
         return dsl.select(PopularReviewSearchModel.toSelectedFields())
                 .from(REVIEWS)
                 .join(BOOKS).on(REVIEWS.BOOK_ID.eq(BOOKS.ID))
                 .join(USERS).on(REVIEWS.USER_ID.eq(USERS.ID))
+                .leftJoin(periodLikes).on(periodLikes.field("review_id", UUID.class).eq(REVIEWS.ID))
+                .leftJoin(periodComments).on(periodComments.field("review_id", UUID.class).eq(REVIEWS.ID))
                 .where(aggregationQueryBuilder.buildCondition(period, snapshotDate))
-                .orderBy(aggregationQueryBuilder.buildOrderBy())
+                .orderBy(aggregationQueryBuilder.buildOrderBy(
+                        PopularReviewSearchModel.PERIOD_LIKE_COUNT,
+                        PopularReviewSearchModel.PERIOD_COMMENT_COUNT
+                ))
                 .limit(POPULAR_REVIEW_LIMIT)
                 .fetch(PopularReviewSearchModel::fromRecord);
     }

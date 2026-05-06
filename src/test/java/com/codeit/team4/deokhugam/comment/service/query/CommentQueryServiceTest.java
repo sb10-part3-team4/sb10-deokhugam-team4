@@ -1,5 +1,4 @@
-package com.codeit.team4.deokhugam.comment.service;
-
+package com.codeit.team4.deokhugam.comment.service.query;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -150,11 +149,8 @@ class CommentQueryServiceTest {
         void getComments_FirstPage_Success() {
             // given: 댓글 3개 생성, 사이즈 2로 조회
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
-            reviewRepository.increaseCommentCount(review.getId());
 
             CommentSearchRequestParam param = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
@@ -168,7 +164,7 @@ class CommentQueryServiceTest {
             assertThat(result.hasNext()).isTrue();
             assertThat(result.nextCursor()).isNotNull();
             assertThat(result.nextAfter()).isNotNull();
-            assertThat(result.totalElements()).isEqualTo(3L);
+            assertThat(result.totalElements()).isNull();
         }
 
         @Test
@@ -176,11 +172,8 @@ class CommentQueryServiceTest {
         void getComments_CursorPagination_Success() {
             // given
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 1"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 2"));
-            reviewRepository.increaseCommentCount(review.getId());
             commentRepository.saveAndFlush(new Comment(user, review, "댓글 3"));
-            reviewRepository.increaseCommentCount(review.getId());
 
             CommentSearchRequestParam firstReq = new CommentSearchRequestParam(
                     review.getId(), SortDirection.DESC, null, null, 2
@@ -201,7 +194,7 @@ class CommentQueryServiceTest {
             assertThat(secondRes.content()).hasSize(1);
             assertThat(secondRes.content().get(0).content()).isEqualTo("댓글 1");
             assertThat(secondRes.hasNext()).isFalse();
-            assertThat(secondRes.totalElements()).isEqualTo(3L);
+            assertThat(secondRes.totalElements()).isNull();
         }
 
         @Test

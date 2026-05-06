@@ -4,6 +4,8 @@ import com.codeit.team4.deokhugam.comment.dto.CommentCreateRequest;
 import com.codeit.team4.deokhugam.comment.dto.CommentResponse;
 import com.codeit.team4.deokhugam.comment.dto.CommentUpdateRequest;
 import com.codeit.team4.deokhugam.comment.entity.Comment;
+import com.codeit.team4.deokhugam.comment.event.CommentCreatedEvent;
+import com.codeit.team4.deokhugam.comment.event.CommentDeletedEvent;
 import com.codeit.team4.deokhugam.comment.mapper.CommentMapper;
 import com.codeit.team4.deokhugam.comment.repository.CommentRepository;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
@@ -11,7 +13,6 @@ import com.codeit.team4.deokhugam.global.error.ErrorCode;
 import com.codeit.team4.deokhugam.global.lock.DistributedLock;
 import com.codeit.team4.deokhugam.notification.event.CommentEvent;
 import com.codeit.team4.deokhugam.review.entity.Review;
-import com.codeit.team4.deokhugam.review.repository.ReviewRepository;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import com.codeit.team4.deokhugam.user.entity.User;
 import com.codeit.team4.deokhugam.user.service.UserService;
@@ -33,7 +34,6 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final ReviewService reviewService;
     private final UserService userService;
-    private final ReviewRepository reviewRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -44,7 +44,7 @@ public class CommentService {
         Comment comment = new Comment(user, review, request.content());
         Comment savedComment = commentRepository.save(comment);
 
-        reviewRepository.increaseCommentCount(review.getId());
+        eventPublisher.publishEvent(new CommentCreatedEvent(review.getId()));
 
         eventPublisher.publishEvent(
                 new CommentEvent(
@@ -80,15 +80,15 @@ public class CommentService {
         Comment comment = findCommentById(commentId);
         validateCommentOwner(comment, userId, "논리 삭제");
 
+        UUID reviewId = comment.getReview().getId();
+
         int updatedRows = commentRepository.softDeleteWithCondition(commentId, Instant.now());
 
         if (updatedRows == 1) {
-            reviewRepository.decreaseCommentCount(comment.getReview().getId());
+            eventPublisher.publishEvent(new CommentDeletedEvent(reviewId));
             log.info("댓글 논리 삭제 완료: commentId={}, userId={}", commentId, userId);
         } else {
-            throw new BusinessException(
-                    ErrorCode.COMMENT_NOT_FOUND,
-                    String.format("이미 처리된 요청입니다: commentId=%s, userId=%s", commentId, userId));
+            throwAlreadyProcessedException(commentId, userId);
         }
     }
 
@@ -102,17 +102,26 @@ public class CommentService {
 
         validateCommentOwner(comment, userId, "물리 삭제");
 
+        UUID reviewId = comment.getReview().getId();
+        int updatedRows;
+
         // 논리 삭제 여부에 따른 분기 처리
         if (comment.getDeletedAt() == null) {
-            int updatedRows = commentRepository.hardDeleteWithCondition(commentId);
+            updatedRows = commentRepository.hardDeleteWithCondition(commentId);
+            // 물리 삭제가 성공했을 때만 리뷰의 댓글 카운트 감소
             if (updatedRows == 1) {
-                reviewRepository.decreaseCommentCount(comment.getReview().getId());
+                eventPublisher.publishEvent(new CommentDeletedEvent(reviewId));
             }
         } else {
-            commentRepository.hardDeleteForce(commentId);
+            updatedRows = commentRepository.hardDeleteForce(commentId);
         }
 
-        log.info("댓글 물리 삭제 완료: commentId={}, userId={}", commentId, userId);
+        // 어느 분기를 타든 실제로 지워진 row가 1개가 아니면 예외
+        if (updatedRows != 1) {
+            throwAlreadyProcessedException(commentId, userId);
+        }
+
+        log.info("댓글 물리 삭제 완료: commentId={} userId={}", commentId, userId);
     }
 
     // ========== Private Methods ==========
@@ -138,5 +147,12 @@ public class CommentService {
                             userId)
             );
         }
+    }
+
+    private void throwAlreadyProcessedException(UUID commentId, UUID userId) {
+        throw new BusinessException(
+                ErrorCode.COMMENT_NOT_FOUND,
+                String.format("이미 처리된 요청입니다: commentId=%s, userId=%s", commentId, userId)
+        );
     }
 }

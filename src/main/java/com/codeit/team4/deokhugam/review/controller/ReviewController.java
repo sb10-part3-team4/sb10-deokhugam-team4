@@ -3,7 +3,7 @@ package com.codeit.team4.deokhugam.review.controller;
 import com.codeit.team4.deokhugam.global.annotation.LoginUser;
 import com.codeit.team4.deokhugam.global.dto.DeokhugamUser;
 import com.codeit.team4.deokhugam.global.response.PageResponse;
-import com.codeit.team4.deokhugam.review.service.ReviewQueryService;
+import com.codeit.team4.deokhugam.review.service.query.ReviewQueryService;
 import com.codeit.team4.deokhugam.review.service.ReviewService;
 import org.springdoc.core.annotations.ParameterObject;
 import com.codeit.team4.deokhugam.review.controller.api.ReviewApi;

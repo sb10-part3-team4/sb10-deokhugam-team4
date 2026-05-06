@@ -1,4 +1,4 @@
-package com.codeit.team4.deokhugam.user.service;
+package com.codeit.team4.deokhugam.user.service.query;
 
 import static com.codeit.team4.deokhugam.jooq.tables.Users.USERS;
 

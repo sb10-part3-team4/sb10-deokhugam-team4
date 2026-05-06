@@ -9,7 +9,10 @@ import com.codeit.team4.deokhugam.book.dto.BookResponse;
 import com.codeit.team4.deokhugam.book.dto.BookUpdateRequest;
 import com.codeit.team4.deokhugam.book.dto.NaverBookSearchResponse;
 import com.codeit.team4.deokhugam.book.entity.Book;
+import com.codeit.team4.deokhugam.book.entity.BookStatistics;
 import com.codeit.team4.deokhugam.book.repository.BookRepository;
+import com.codeit.team4.deokhugam.book.repository.BookStatisticsRepository;
+import java.math.BigDecimal;
 import com.codeit.team4.deokhugam.config.TestContainerConfig;
 import com.codeit.team4.deokhugam.global.error.BusinessException;
 import com.codeit.team4.deokhugam.global.error.ErrorCode;
@@ -33,6 +36,9 @@ class BookServiceTest {
 
     @Autowired
     BookRepository bookRepository;
+
+    @Autowired
+    BookStatisticsRepository bookStatisticsRepository;
 
     @Autowired
     BookService bookService;
@@ -206,12 +212,32 @@ class BookServiceTest {
         assertThat(result.id()).isEqualTo(bookId);
         assertThat(result.title()).isEqualTo(book.title());
         assertThat(result.author()).isEqualTo(book.author());
+        assertThat(result.reviewCount()).isZero();
+        assertThat(result.rating()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
 
-        // DB 확인
-        Book savedBook = bookRepository.findByIdAndDeletedAtIsNull(bookId).orElseThrow();
-        assertThat(savedBook.getId()).isEqualTo(result.id());
-        assertThat(savedBook.getTitle()).isEqualTo(result.title());
-        assertThat(savedBook.getAuthor()).isEqualTo(result.author());
+    @Test
+    @DisplayName("도서 조회 시 통계 반영 성공")
+    void get_detail_with_statistics_success() {
+        // given
+        BookCreateRequest request = new BookCreateRequest(
+                "통계 테스트 책", "저자", "설명",
+                "출판사", LocalDate.of(2026, 1, 1),
+                "9788955823509"
+        );
+        BookResponse book = bookService.createBook(request, null);
+
+        BookStatistics stats = new BookStatistics(book.id());
+        stats.onReviewCreated(5);
+        stats.onReviewCreated(3);
+        bookStatisticsRepository.saveAndFlush(stats);
+
+        // when
+        BookResponse result = bookService.getBook(book.id());
+
+        // then
+        assertThat(result.reviewCount()).isEqualTo(2);
+        assertThat(result.rating()).isEqualByComparingTo(new BigDecimal("4.00"));
     }
 
     @Test

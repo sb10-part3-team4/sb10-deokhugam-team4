@@ -1,13 +1,20 @@
 package com.codeit.team4.deokhugam.dashboard.scheduler;
 
+import com.codeit.team4.deokhugam.dashboard.entity.PeriodType;
 import com.codeit.team4.deokhugam.dashboard.service.DashboardBatchService;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,35 +23,94 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DashboardScheduler {
 
-    private final DashboardBatchService dashboardBatchService;
+    private static final List<String> TARGET_TYPES = List.of("BOOK", "REVIEW", "USER");
+    private static final int BACKFILL_DAYS = 30;
+
+    private final JobLauncher jobLauncher;
+    private final JobExplorer jobExplorer;
+    private final Job dashboardBatchJob;
 
     @Value("${dashboard.batch.zone}")
     private String zone;
 
-    //TODO: Lock 추가 후 개선 예정
     @Scheduled(cron = "${dashboard.batch.cron}", zone = "${dashboard.batch.zone}")
     public void runDashboardBatch() {
-        LocalDate snapshotDate = LocalDate.now(ZoneId.of(zone));
-        log.info("대시보드 배치 스케줄러 시작: snapshotDate={}", snapshotDate);
+        LocalDate today = DashboardBatchService.defaultSnapshotDate(zone);
+        LocalDate startDate = findStartDate(today);
 
-        try {
-            dashboardBatchService.updatePopularBooks(snapshotDate);
-        } catch (Exception e) {
-            log.error("인기 도서 배치 실패", e);
-        }
+        log.info("대시보드 배치 스케줄러 시작: startDate={}, today={}", startDate, today);
 
-        try {
-            dashboardBatchService.updatePopularReviews(snapshotDate);
-        } catch (Exception e) {
-            log.error("인기 리뷰 배치 실패", e);
-        }
-
-        try {
-            dashboardBatchService.updatePowerUsers(snapshotDate);
-        } catch (Exception e) {
-            log.error("파워 유저 배치 실패", e);
+        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
+            runAllJobsForDate(date);
         }
 
         log.info("대시보드 배치 스케줄러 종료");
+    }
+
+    private void runAllJobsForDate(LocalDate snapshotDate) {
+        for (String targetType : TARGET_TYPES) {
+            for (PeriodType period : PeriodType.values()) {
+                runJob(snapshotDate, targetType, period);
+            }
+        }
+    }
+
+    private void runJob(LocalDate snapshotDate, String targetType, PeriodType period) {
+        JobParameters params = buildParams(snapshotDate, targetType, period);
+        try {
+            JobExecution execution = jobLauncher.run(dashboardBatchJob, params);
+            if (execution.getStatus() != BatchStatus.COMPLETED) {
+                log.error("dashboardBatchJob 비정상 종료: {} {} {} status={}",
+                        snapshotDate, targetType, period, execution.getStatus());
+            }
+        } catch (JobInstanceAlreadyCompleteException e) {
+            log.debug("dashboardBatchJob 이미 완료됨, 스킵: {} {} {}", snapshotDate, targetType, period);
+        } catch (Exception e) {
+            log.error("dashboardBatchJob 실행 실패: {} {} {}", snapshotDate, targetType, period, e);
+        }
+    }
+
+    private LocalDate findStartDate(LocalDate today) {
+        LocalDate earliest = today.minusDays(BACKFILL_DAYS);
+        for (LocalDate date = earliest; !date.isAfter(today); date = date.plusDays(1)) {
+            if (!allJobsCompletedForDate(date)) {
+                return date;
+            }
+        }
+        return today.plusDays(1);
+    }
+
+    private boolean allJobsCompletedForDate(LocalDate date) {
+        for (String targetType : TARGET_TYPES) {
+            for (PeriodType period : PeriodType.values()) {
+                if (!isJobCompleted(buildParams(date, targetType, period))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isJobCompleted(JobParameters params) {
+        var jobInstance = jobExplorer.getJobInstance(dashboardBatchJob.getName(), params);
+        if (jobInstance == null) {
+            return false;
+        }
+
+        List<JobExecution> executions = jobExplorer.getJobExecutions(jobInstance);
+        if (executions == null || executions.isEmpty()) {
+            return false;
+        }
+
+        return executions.stream()
+                .anyMatch(e -> e.getStatus() == BatchStatus.COMPLETED);
+    }
+
+    private JobParameters buildParams(LocalDate snapshotDate, String targetType, PeriodType period) {
+        return new JobParametersBuilder()
+                .addLocalDate("snapshotDate", snapshotDate)
+                .addString("targetType", targetType)
+                .addString("period", period.name())
+                .toJobParameters();
     }
 }
