@@ -1,10 +1,134 @@
-# 덕후감 (Deokhugam)
+# 덕후감 - Chicken Squad
+팀 노션 : https://www.notion.so/sb10-part3-team4-e4147b8a4b99836aab2e81f37c1a51b6<br>
+팀 깃허브 : https://github.com/sb10-part3-team4/sb10-deokhugam-team4
+
+## 팀원 구성
+* 송시연(https://github.com/dstle)
+* 김진우(https://github.com/zinuzanu)
+* 임지호(https://github.com/jiho0420)
+* 정수현(https://github.com/JeongSooHyeon)
+***
+
+## 프로젝트 소개
+* 도서 OCR ISBN 인식부터 리뷰, 댓글, 알림, 인기 도서 대시보드까지 제공하는 도서 커뮤니티 플랫폼
+* 프로젝트 기간 : 2026.04.14 ~ 2026.05.08
+***
+
+## 기술 스택
+* Backend: Java 17, Spring Boot, Spring Data JPA, JOOQ, MapStruct, Flyway, Testcontainers
+* Database: PostgreSQL
+* Cache & 분산락 : Redis(AWS ElastiCache Valkey, Redisson)
+* Infrastructure: AWS ECS, AWS ECR, AWS RDS, AWS S3
+* CI/CD: GitHub Actions
+* 공통 Tool: Git & GitHub, Discord, Notion, CodeRabbit
+***
+
+## 팀원별 구현 기능 상세
+
+### 송시연
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 리뷰
+    * 리뷰 관련 CRUD...
+
+### 김진우
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 사용자
+    * 사용자 관련 CRUD...
+
+### 임지호
+(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+* #### 댓글
+    * 댓글 관련 CRUD...
+
+### 정수현
+* #### 도서
+* <img width="600" alt="도서등록" src="https://github.com/user-attachments/assets/24c28620-db3f-4c37-8585-b08af8fbdbe3" />
+* <img width="600" alt="도서수정" src="https://github.com/user-attachments/assets/491716b8-baf9-45f6-8a49-9a5f77a45a4e" />
+* <img width="600" alt="도서조회" src="https://github.com/user-attachments/assets/9a644374-8c6a-46df-8028-b8bcbbc588db" />
+
+* Book 도메인
+    * Book 엔티티 설계
+    * 도서 CRUD API 구현 (생성 / 조회 / 수정 / 삭제 / 영구삭제)
+    * 커서 기반 페이지네이션 목록 조회 (jOOQ 활용)
+    * 네이버 Book API 연동 (ISBN 검색)
+    * OCR.space API 연동 (이미지에서 ISBN 자동 추출 → 도서 정보 반환) — PR #170
+    * AWS S3 썸네일 업로드 (파일 타입 검증, TransactionSynchronizationManager로 S3-DB 정합성 처리) — PR #164
+    * 분산락 적용 (createBook / updateBook / deleteBook에 @DistributedLock)
+      인프라 & CI/CD
+    * GitHub Actions CI 파이프라인 구축 (dev PR 시 테스트 + JaCoCo 80% 커버리지 검증)
+    * GitHub Actions CD 파이프라인 구축 (main push 시 ECR 빌드 → ECS 자동 배포)
+    * AWS ECS / EC2 인프라 구성 (Fargate → EC2 전환, IAM 역할 설정, ecs-task-def 관리)
+    * ElastiCache Redis 연동 전환 (EC2 직접 설치 → Valkey ElastiCache로 변경)
+    * CodeRabbit AI 코드리뷰 설정 (.coderabbit.yaml, 리뷰 규칙 작성)
+***
+
+## 파일 구조
+```
+src
+ ┣ main
+ ┃ ┣ java
+ ┃ ┃ ┣ com.codeit.team4.deokhugam
+ ┃ ┃ ┃ ┣ DeokhugamApplication.java
+ ┃ ┃ ┃ ┣ book
+ ┃ ┃ ┃ ┃ ┣ controller (BookController, BookApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / listener
+ ┃ ┃ ┃ ┣ comment
+ ┃ ┃ ┃ ┃ ┣ controller (CommentController, CommentApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / event / model
+ ┃ ┃ ┃ ┣ review
+ ┃ ┃ ┃ ┃ ┣ controller (ReviewController, ReviewApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / event / listener / converter / model
+ ┃ ┃ ┃ ┣ notification
+ ┃ ┃ ┃ ┃ ┣ controller (NotificationController, NotificationApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / event / listener / scheduler / model
+ ┃ ┃ ┃ ┣ user
+ ┃ ┃ ┃ ┃ ┣ controller (UserController, UserApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / scheduler
+ ┃ ┃ ┃ ┣ dashboard
+ ┃ ┃ ┃ ┃ ┣ controller (api)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service
+ ┃ ┃ ┃ ┃ ┃ ┣ DashboardFacade
+ ┃ ┃ ┃ ┃ ┃ ┣ DashboardBatchService
+ ┃ ┃ ┃ ┃ ┃ ┣ aggregator / reader
+ ┃ ┃ ┃ ┃ ┣ scheduler / builder / mapper / model
+ ┃ ┃ ┃ ┣ naver (NaverBookClient)
+ ┃ ┃ ┃ ┣ ocr (OcrSpaceClient)
+ ┃ ┃ ┃ ┣ s3 (S3Service, S3ServiceImpl)
+ ┃ ┃ ┃ ┗ global
+ ┃ ┃ ┃ ┃ ┣ config / error / filter / lock
+ ┃ ┃ ┃ ┃ ┣ cache / response
+ ┃ ┃ ┃ ┃ ┣ annotation / resolver
+ ┃ ┃ ┃ ┃ ┣ log / controller
+
+```
+***
+
+## 구현 홈페이지
+http://3.37.86.22:8080
+***
+
+## 프로젝트 회고록
+(제작한 발표자료 링크 혹은 첨부파일 첨부)
+***
+***
+
 
 ## 로컬 개발 환경 설정
 
 ### 1. 인프라 실행
 
-Docker Compose로 인프라를 실행합니다.
+Docker Compose로 PostgreSQL과 Redis를 실행합니다.
 
 ```bash
 docker compose up -d
@@ -12,8 +136,6 @@ docker compose up -d
 
 - PostgreSQL: `localhost:5433` (ID: deokhugam / PW: deokhugam / DB: deokhugam)
 - Redis: `localhost:6379`
-- Prometheus: `http://localhost:9090`
-- Grafana: `http://localhost:3000` (admin / admin)
 
 데이터는 `postgres-data` 볼륨에 유지됩니다.
 <br/>
@@ -53,16 +175,7 @@ docker volume rm <볼륨명>
 
 Flyway가 스키마를 자동 생성하므로 앱 실행 시 테이블이 만들어집니다.
 
-### 4. Grafana 설정
-
-Grafana 데이터소스 설정:
-1. `http://localhost:3000` 접속 → admin / admin 로그인
-2. Configuration → Data Sources → Add data source
-3. Prometheus 선택 → URL에 `http://prometheus:9090` 입력 → Save & Test
-
-Spring Boot 메트릭 엔드포인트: `http://localhost:8080/actuator/prometheus`
-
-### 5. 테스트
+### 4. 테스트
 
 ```bash
 ./gradlew test
