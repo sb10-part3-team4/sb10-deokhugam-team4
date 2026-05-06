@@ -29,6 +29,12 @@ management:
   endpoints:
     web:
       exposure:
+        include: health, info, metrics
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        hikaricp: true
         include: health, info
   cloudwatch:
     metrics:
