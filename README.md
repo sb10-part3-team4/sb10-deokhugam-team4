@@ -4,7 +4,7 @@
 
 ### 1. 인프라 실행
 
-Docker Compose로 PostgreSQL과 Redis를 실행합니다.
+Docker Compose로 인프라를 실행합니다.
 
 ```bash
 docker compose up -d
@@ -12,6 +12,8 @@ docker compose up -d
 
 - PostgreSQL: `localhost:5433` (ID: deokhugam / PW: deokhugam / DB: deokhugam)
 - Redis: `localhost:6379`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000` (admin / admin)
 
 데이터는 `postgres-data` 볼륨에 유지됩니다.
 <br/>
@@ -51,7 +53,16 @@ docker volume rm <볼륨명>
 
 Flyway가 스키마를 자동 생성하므로 앱 실행 시 테이블이 만들어집니다.
 
-### 4. 테스트
+### 4. Grafana 설정
+
+Grafana 데이터소스 설정:
+1. `http://localhost:3000` 접속 → admin / admin 로그인
+2. Configuration → Data Sources → Add data source
+3. Prometheus 선택 → URL에 `http://prometheus:9090` 입력 → Save & Test
+
+Spring Boot 메트릭 엔드포인트: `http://localhost:8080/actuator/prometheus`
+
+### 5. 테스트
 
 ```bash
 ./gradlew test
