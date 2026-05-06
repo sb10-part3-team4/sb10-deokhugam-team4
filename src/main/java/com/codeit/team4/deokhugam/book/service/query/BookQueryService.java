@@ -207,7 +207,7 @@ public class BookQueryService {
             case "publishedDate" -> BOOKS.PUBLISHED_DATE;
             case "rating" -> ratingField();
             case "reviewCount" -> DSL.coalesce(BOOK_STATISTICS.REVIEW_COUNT, 0);
-            case "title" -> BOOKS.TITLE;
+            case "title" -> BOOKS.TITLE.collate("ko-x-icu");
             default -> throw new IllegalStateException("지원하지 않는 정렬 기준: " + orderBy);
         };
     }
