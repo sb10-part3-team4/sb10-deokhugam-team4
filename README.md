@@ -41,9 +41,25 @@
     * 댓글 관련 CRUD...
 
 ### 정수현
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
 * #### 도서
-    * 도서 관련 CRUD...
+* <img width="1246" height="744" alt="도서등록" src="https://github.com/user-attachments/assets/24c28620-db3f-4c37-8585-b08af8fbdbe3" />
+* <img width="1230" height="724" alt="도서수정" src="https://github.com/user-attachments/assets/491716b8-baf9-45f6-8a49-9a5f77a45a4e" />
+* <img width="1324" height="945" alt="도서조회" src="https://github.com/user-attachments/assets/9a644374-8c6a-46df-8028-b8bcbbc588db" />
+   
+* Book 도메인 
+  * Book 엔티티 설계
+  * 도서 CRUD API 구현 (생성 / 조회 / 수정 / 삭제 / 영구삭제)
+  * 커서 기반 페이지네이션 목록 조회 (jOOQ 활용)
+  * 네이버 Book API 연동 (ISBN 검색)
+  * OCR.space API 연동 (이미지에서 ISBN 자동 추출 → 도서 정보 반환) — PR #170
+  * AWS S3 썸네일 업로드 (파일 타입 검증, TransactionSynchronizationManager로 S3-DB 정합성 처리) — PR #164
+  * 분산락 적용 (createBook / updateBook / deleteBook에 @DistributedLock)
+    인프라 & CI/CD
+  * GitHub Actions CI 파이프라인 구축 (dev PR 시 테스트 + JaCoCo 80% 커버리지 검증)
+  * GitHub Actions CD 파이프라인 구축 (main push 시 ECR 빌드 → ECS 자동 배포)
+  * AWS ECS / EC2 인프라 구성 (Fargate → EC2 전환, IAM 역할 설정, ecs-task-def 관리)
+  * ElastiCache Redis 연동 전환 (EC2 직접 설치 → Valkey ElastiCache로 변경)
+  * CodeRabbit AI 코드리뷰 설정 (.coderabbit.yaml, 리뷰 규칙 작성)
 ***
 
 ## 파일 구조
@@ -51,63 +67,49 @@
 src
  ┣ main
  ┃ ┣ java
- ┃ ┃ ┣ com
- ┃ ┃ ┃ ┣ example
- ┃ ┃ ┃ ┃ ┣ controller
- ┃ ┃ ┃ ┃ ┃ ┣ AuthController.java
- ┃ ┃ ┃ ┃ ┃ ┣ UserController.java
- ┃ ┃ ┃ ┃ ┃ ┗ AdminController.java
- ┃ ┃ ┃ ┃ ┣ model
- ┃ ┃ ┃ ┃ ┃ ┣ User.java
- ┃ ┃ ┃ ┃ ┃ ┗ Course.java
- ┃ ┃ ┃ ┃ ┣ repository
- ┃ ┃ ┃ ┃ ┃ ┣ UserRepository.java
- ┃ ┃ ┃ ┃ ┃ ┗ CourseRepository.java
+ ┃ ┃ ┣ com.codeit.team4.deokhugam
+ ┃ ┃ ┃ ┣ DeokhugamApplication.java
+ ┃ ┃ ┃ ┣ book
+ ┃ ┃ ┃ ┃ ┣ controller (BookController, BookApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / listener
+ ┃ ┃ ┃ ┣ comment
+ ┃ ┃ ┃ ┃ ┣ controller (CommentController, CommentApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / event / model
+ ┃ ┃ ┃ ┣ review
+ ┃ ┃ ┃ ┃ ┣ controller (ReviewController, ReviewApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / event / listener / converter / model
+ ┃ ┃ ┃ ┣ notification
+ ┃ ┃ ┃ ┃ ┣ controller (NotificationController, NotificationApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / event / listener / scheduler / model
+ ┃ ┃ ┃ ┣ user
+ ┃ ┃ ┃ ┃ ┣ controller (UserController, UserApi)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
+ ┃ ┃ ┃ ┃ ┣ service (query)
+ ┃ ┃ ┃ ┃ ┣ mapper / scheduler
+ ┃ ┃ ┃ ┣ dashboard
+ ┃ ┃ ┃ ┃ ┣ controller (api)
+ ┃ ┃ ┃ ┃ ┣ dto / entity / repository
  ┃ ┃ ┃ ┃ ┣ service
- ┃ ┃ ┃ ┃ ┃ ┣ AuthService.java
- ┃ ┃ ┃ ┃ ┃ ┣ UserService.java
- ┃ ┃ ┃ ┃ ┃ ┗ AdminService.java
- ┃ ┃ ┃ ┃ ┣ security
- ┃ ┃ ┃ ┃ ┃ ┣ SecurityConfig.java
- ┃ ┃ ┃ ┃ ┃ ┗ JwtAuthenticationEntryPoint.java
- ┃ ┃ ┃ ┃ ┣ dto
- ┃ ┃ ┃ ┃ ┃ ┣ LoginRequest.java
- ┃ ┃ ┃ ┃ ┃ ┗ UserResponse.java
- ┃ ┃ ┃ ┃ ┣ exception
- ┃ ┃ ┃ ┃ ┃ ┣ GlobalExceptionHandler.java
- ┃ ┃ ┃ ┃ ┃ ┗ ResourceNotFoundException.java
- ┃ ┃ ┃ ┃ ┣ utils
- ┃ ┃ ┃ ┃ ┃ ┣ JwtUtils.java
- ┃ ┃ ┃ ┃ ┃ ┗ UserMapper.java
- ┃ ┃ ┃ ┣ resources
- ┃ ┃ ┃ ┃ ┣ application.properties
- ┃ ┃ ┃ ┃ ┗ static
- ┃ ┃ ┃ ┃ ┃ ┣ css
- ┃ ┃ ┃ ┃ ┃ ┃ ┗ style.css
- ┃ ┃ ┃ ┃ ┃ ┣ js
- ┃ ┃ ┃ ┃ ┃ ┃ ┗ script.js
- ┃ ┃ ┃ ┣ webapp
- ┃ ┃ ┃ ┃ ┣ WEB-INF
- ┃ ┃ ┃ ┃ ┃ ┗ web.xml
- ┃ ┃ ┃ ┣ test
- ┃ ┃ ┃ ┃ ┣ java
- ┃ ┃ ┃ ┃ ┃ ┣ com
- ┃ ┃ ┃ ┃ ┃ ┃ ┣ example
- ┃ ┃ ┃ ┃ ┃ ┃ ┃ ┣ AuthServiceTest.java
- ┃ ┃ ┃ ┃ ┃ ┃ ┃ ┗ UserControllerTest.java
- ┃ ┃ ┃ ┃ ┃ ┃ ┗ ApplicationTests.java
- ┃ ┃ ┃ ┣ resources
- ┃ ┃ ┃ ┃ ┣ application.properties
- ┃ ┃ ┃ ┃ ┗ static
- ┃ ┃ ┃ ┃ ┃ ┣ css
- ┃ ┃ ┃ ┃ ┃ ┃ ┗ style.css
- ┃ ┃ ┃ ┃ ┃ ┣ js
- ┃ ┃ ┃ ┃ ┃ ┃ ┗ script.js
- ┣ pom.xml
- ┣ Application.java
- ┣ application.properties
- ┣ .gitignore
- ┗ README.md
+ ┃ ┃ ┃ ┃ ┃ ┣ DashboardFacade
+ ┃ ┃ ┃ ┃ ┃ ┣ DashboardBatchService
+ ┃ ┃ ┃ ┃ ┃ ┣ aggregator / reader
+ ┃ ┃ ┃ ┃ ┣ scheduler / builder / mapper / model
+ ┃ ┃ ┃ ┣ naver (NaverBookClient)
+ ┃ ┃ ┃ ┣ ocr (OcrSpaceClient)
+ ┃ ┃ ┃ ┣ s3 (S3Service, S3ServiceImpl)
+ ┃ ┃ ┃ ┗ global
+ ┃ ┃ ┃ ┃ ┣ config / error / filter / lock
+ ┃ ┃ ┃ ┃ ┣ cache / response
+ ┃ ┃ ┃ ┃ ┣ annotation / resolver
+ ┃ ┃ ┃ ┃ ┣ log / controller
 
 ```
 ***
