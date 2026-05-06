@@ -3,7 +3,7 @@ import { check, sleep } from 'k6';
 import { Counter, Trend } from 'k6/metrics';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
-const USER_COUNT = parseInt(__ENV.USER_COUNT || '10');
+const USER_COUNT = parseInt(__ENV.USER_COUNT || '10', 10);
 
 // 커스텀 메트릭
 const createSuccess = new Counter('review_create_success');

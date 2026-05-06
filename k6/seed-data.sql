@@ -14,7 +14,7 @@ FROM generate_series(1, 1000) AS i
 ON CONFLICT DO NOTHING;
 
 -- 2. 도서 500권
-INSERT INTO books (id, title, author, description, publisher, published_date, isbn, review_count, rating, created_at, updated_at)
+INSERT INTO books (id, title, author, description, publisher, published_date, isbn, created_at, updated_at)
 SELECT
     gen_random_uuid(),
     '테스트 도서 ' || i || ' - ' || md5(random()::text),
@@ -23,8 +23,6 @@ SELECT
     '출판사 ' || (i % 50),
     date '2020-01-01' + (random() * 1500)::int,
     '978' || lpad(i::text, 10, '0'),
-    0,
-    0,
     now() - (random() * interval '365 days'),
     now() - (random() * interval '30 days')
 FROM generate_series(1, 500) AS i
@@ -37,7 +35,7 @@ WITH user_ids AS (
 book_ids AS (
     SELECT id, row_number() OVER () AS rn FROM books WHERE deleted_at IS NULL LIMIT 500
 )
-INSERT INTO reviews (id, book_id, user_id, content, rating, like_count, comment_count, created_at, updated_at)
+INSERT INTO reviews (id, book_id, user_id, content, rating, like_count, created_at, updated_at)
 SELECT
     gen_random_uuid(),
     b.id,
@@ -52,7 +50,6 @@ SELECT
         END,
     (random() * 4 + 1)::int,
     (random() * 20)::int,
-    (random() * 5)::int,
     now() - (random() * interval '365 days'),
     now() - (random() * interval '30 days')
 FROM user_ids u
@@ -60,20 +57,7 @@ CROSS JOIN book_ids b
 WHERE random() < 0.1  -- 10% 확률로 조합 선택 → 약 50000건
 ON CONFLICT DO NOTHING;
 
--- 4. books 테이블의 review_count, rating 갱신
-UPDATE books SET
-    review_count = sub.cnt,
-    rating = sub.avg_rating,
-    updated_at = now()
-FROM (
-    SELECT book_id, count(*) AS cnt, round(avg(rating), 2) AS avg_rating
-    FROM reviews
-    WHERE deleted_at IS NULL
-    GROUP BY book_id
-) sub
-WHERE books.id = sub.book_id;
-
--- 5. book_statistics 갱신
+-- 4. book_statistics 갱신
 INSERT INTO book_statistics (book_id, rating_sum, review_count)
 SELECT book_id, sum(rating), count(*)
 FROM reviews
@@ -83,7 +67,7 @@ ON CONFLICT (book_id) DO UPDATE SET
     rating_sum = EXCLUDED.rating_sum,
     review_count = EXCLUDED.review_count;
 
--- 6. 좋아요 약 100000건
+-- 5. 좋아요 약 100000건
 WITH review_ids AS (
     SELECT id, row_number() OVER () AS rn FROM reviews WHERE deleted_at IS NULL LIMIT 50000
 ),
@@ -101,18 +85,19 @@ CROSS JOIN user_ids u
 WHERE random() < 0.002  -- 약 100000건
 ON CONFLICT DO NOTHING;
 
--- 7. 댓글 약 30000건
+-- 6. 댓글 약 30000건
 WITH review_ids AS (
     SELECT id FROM reviews WHERE deleted_at IS NULL LIMIT 50000
 ),
-user_ids AS (
-    SELECT id FROM users WHERE deleted_at IS NULL LIMIT 1000
+user_arr AS (
+    SELECT array_agg(id) AS ids
+    FROM (SELECT id FROM users WHERE deleted_at IS NULL LIMIT 1000) u
 )
 INSERT INTO comments (id, review_id, user_id, content, created_at, updated_at)
 SELECT
     gen_random_uuid(),
     r.id,
-    (SELECT id FROM user_ids ORDER BY random() LIMIT 1),
+    (SELECT ids[floor(random() * array_length(ids, 1) + 1)::int] FROM user_arr),
     CASE (random() * 3)::int
         WHEN 0 THEN '공감합니다!'
         WHEN 1 THEN '좋은 리뷰 감사합니다.'
@@ -124,6 +109,18 @@ SELECT
 FROM review_ids r
 WHERE random() < 0.6
 ON CONFLICT DO NOTHING;
+
+-- 7. review_statistics 갱신 (각 리뷰의 댓글 수 집계)
+INSERT INTO review_statistics (review_id, comment_count)
+SELECT r.id, COUNT(c.id)
+FROM reviews r
+LEFT JOIN comments c
+    ON c.review_id = r.id
+   AND c.deleted_at IS NULL
+WHERE r.deleted_at IS NULL
+GROUP BY r.id
+ON CONFLICT (review_id) DO UPDATE SET
+    comment_count = EXCLUDED.comment_count;
 
 -- 8. 알림 약 10000건 (confirmed=false만 먼저, confirmed=true는 confirmed_at과 함께)
 WITH review_data AS (
@@ -167,4 +164,5 @@ UNION ALL SELECT 'reviews', count(*) FROM reviews WHERE deleted_at IS NULL
 UNION ALL SELECT 'review_likes', count(*) FROM review_likes
 UNION ALL SELECT 'comments', count(*) FROM comments WHERE deleted_at IS NULL
 UNION ALL SELECT 'notifications', count(*) FROM notifications
-UNION ALL SELECT 'book_statistics', count(*) FROM book_statistics;
+UNION ALL SELECT 'book_statistics', count(*) FROM book_statistics
+UNION ALL SELECT 'review_statistics', count(*) FROM review_statistics;
