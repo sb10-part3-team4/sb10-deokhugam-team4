@@ -64,53 +64,45 @@
 
 ## 파일 구조
 ```
-src
- ┣ main
- ┃ ┣ java
- ┃ ┃ ┣ com.codeit.team4.deokhugam
- ┃ ┃ ┃ ┣ DeokhugamApplication.java
- ┃ ┃ ┃ ┣ book
- ┃ ┃ ┃ ┃ ┣ controller (BookController, BookApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / listener
- ┃ ┃ ┃ ┣ comment
- ┃ ┃ ┃ ┃ ┣ controller (CommentController, CommentApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / event / model
- ┃ ┃ ┃ ┣ review
- ┃ ┃ ┃ ┃ ┣ controller (ReviewController, ReviewApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / event / listener / converter / model
- ┃ ┃ ┃ ┣ notification
- ┃ ┃ ┃ ┃ ┣ controller (NotificationController, NotificationApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / event / listener / scheduler / model
- ┃ ┃ ┃ ┣ user
- ┃ ┃ ┃ ┃ ┣ controller (UserController, UserApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / scheduler
- ┃ ┃ ┃ ┣ dashboard
- ┃ ┃ ┃ ┃ ┣ controller (api)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service
- ┃ ┃ ┃ ┃ ┃ ┣ DashboardFacade
- ┃ ┃ ┃ ┃ ┃ ┣ DashboardBatchService
- ┃ ┃ ┃ ┃ ┃ ┣ aggregator / reader
- ┃ ┃ ┃ ┃ ┣ scheduler / builder / mapper / model
- ┃ ┃ ┃ ┣ naver (NaverBookClient)
- ┃ ┃ ┃ ┣ ocr (OcrSpaceClient)
- ┃ ┃ ┃ ┣ s3 (S3Service, S3ServiceImpl)
- ┃ ┃ ┃ ┗ global
- ┃ ┃ ┃ ┃ ┣ config / error / filter / lock
- ┃ ┃ ┃ ┃ ┣ cache / response
- ┃ ┃ ┃ ┃ ┣ annotation / resolver
- ┃ ┃ ┃ ┃ ┣ log / controller
-
+├── k6
+├── monitoring
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── codeit
+    │   │           └── team4
+    │   │               └── deokhugam
+    │   │                   ├── book
+    │   │                   ├── comment
+    │   │                   ├── dashboard
+    │   │                   ├── global
+    │   │                   ├── naver
+    │   │                   ├── notification
+    │   │                   ├── ocr
+    │   │                   ├── review
+    │   │                   ├── s3
+    │   │                   └── user
+    │   └── resources
+    │       └── db
+    │           └── migration
+    └── test
+            ├── java
+            │   └── com
+            │       └── codeit
+            │           └── team4
+            │               └── deokhugam
+            │                   ├── book
+            │                   ├── comment
+            │                   ├── config
+            │                   ├── dashboard
+            │                   ├── global
+            │                   ├── notification
+            │                   ├── ocr
+            │                   ├── review
+            │                   ├── s3
+            │                   └── user
+            └── resources
 ```
 ***
 
