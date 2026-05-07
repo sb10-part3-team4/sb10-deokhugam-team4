@@ -93,7 +93,6 @@
     * 일별 로그 AWS S3 자동 백업 및 적재 파이프라인 구축 (@Scheduled 활용)
 
 ### 정수현
-* #### 도서
 <img width="600" alt="도서등록" src="https://github.com/user-attachments/assets/24c28620-db3f-4c37-8585-b08af8fbdbe3" />
 <img width="600" alt="도서수정" src="https://github.com/user-attachments/assets/491716b8-baf9-45f6-8a49-9a5f77a45a4e" />
 <img width="600" alt="도서조회" src="https://github.com/user-attachments/assets/9a644374-8c6a-46df-8028-b8bcbbc588db" />
