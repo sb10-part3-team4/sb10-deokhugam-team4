@@ -49,7 +49,8 @@
 ### 김진우
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/4da3f6a6-a8dd-4e29-b04c-1e4762c1564a" />
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/a104afe3-7789-4f18-87c1-043612fc62cb" />
-<img width="600" alt="image" src="https://github.com/user-attachments/assets/3da0403c-c731-4bfc-9d05-442cc57f1c77" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/3e48675e-996b-41a9-bc74-5fa40c7f968b" />
+
 
 * User 도메인
   * 사용자 도메인 설계 및 CRUD (회원가입 / 로그인 / 조회 / 수정 / 논리 삭제 / 물리 삭제)
