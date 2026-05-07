@@ -47,8 +47,6 @@
     * P6Spy: 로컬 SQL 로깅 (`developmentOnly`로 prod jar 제외)
 
 ### 김진우
-
-### 김진우
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/4da3f6a6-a8dd-4e29-b04c-1e4762c1564a" />
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/a104afe3-7789-4f18-87c1-043612fc62cb" />
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/3da0403c-c731-4bfc-9d05-442cc57f1c77" />
