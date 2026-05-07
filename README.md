@@ -26,23 +26,23 @@
 ## 팀원별 구현 기능 상세
 
 ### 송시연
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/b9a5a79e-6039-40f1-aa5c-258c42c4939b" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/e28dfca7-bc04-4652-9a34-cce0be20c641" />
 
-* Review 도메인
-    * 리뷰 CRUD + 좋아요 토글 API
-    * 동일 (도서, 사용자) 중복 리뷰 차단 (unique 부분 인덱스 + 분산락 이중 방어)
-    * fetch join으로 N+1 제거
 
 * Dashboard 도메인
     * 인기 도서 / 인기 리뷰 / 파워 유저 집계
     * jOOQ로 점수 산식 SQL 빌드, LIMIT N으로 상위만 저장
-
+* Review 도메인
+    * 리뷰 CRUD + 좋아요 토글 API
+    * 동일 (도서, 사용자) 중복 리뷰 차단 (unique 부분 인덱스 + 분산락 이중 방어)
+    * fetch join으로 N+1 제거
 * 공통 / 인프라
     * 이벤트 기반 도서 통계 (동기, AFTER_COMMIT): 리뷰 CUD 시 Spring Event 발행 → `@TransactionalEventListener(AFTER_COMMIT)`으로 같은 스레드에서 동기 처리, 트랜잭션 롤백 시 통계도 함께 롤백
     * Redis 분산락: `@DistributedLock` 어노테이션 + AOP, SpEL 기반 키 추출. `@Order`로 락 어드바이스를 `@Transactional` 바깥에 배치해 락 해제 시점이 커밋 + AFTER_COMMIT 리스너 종료 시점이 되도록 보장
     * Spring Batch: 대시보드 배치를 12 Job(기간 4 × 종류 3)으로 분리. 1시간 cron + 최근 30일 실패 날짜 자동 재시도, 성공 Job 자동 스킵
     * jOOQ + Flyway + Testcontainers 세팅: Testcontainers로 PostgreSQL을 띄워 Flyway 마이그레이션 후 jOOQ 코드 자동 생성 (`generateJooq` 태스크)
-    * 모니터링: 운영은 CloudWatch (Micrometer cloudwatch2 registry), 로컬은 docker-compose로 Grafana + Prometheus 띄워 `/actuator/prometheus` 수집
+    * 모니터링: 운영 -> CloudWatch (Micrometer cloudwatch2 registry), 로컬 -> docker-compose로 Grafana + Prometheus
     * k6 부하 테스트: 리뷰 동시 생성 시나리오로 분산락 동작·p95 검증
     * P6Spy: 로컬 SQL 로깅 (`developmentOnly`로 prod jar 제외)
 
