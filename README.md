@@ -47,9 +47,31 @@
     * P6Spy: 로컬 SQL 로깅 (`developmentOnly`로 prod jar 제외)
 
 ### 김진우
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
-* #### 사용자
-    * 사용자 관련 CRUD...
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/4da3f6a6-a8dd-4e29-b04c-1e4762c1564a" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/a104afe3-7789-4f18-87c1-043612fc62cb" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/3e48675e-996b-41a9-bc74-5fa40c7f968b" />
+
+
+* User 도메인
+  * 사용자 도메인 설계 및 CRUD (회원가입 / 로그인 / 조회 / 수정 / 논리 삭제 / 물리 삭제)
+  * PasswordEncoder 기반 비밀번호 암호화 저장 및 검증 로직 구현
+  * 이메일 중복 검증 및 이메일·닉네임·비밀번호 입력값 유효성 검사 로직 적용
+  * 헤더(Deokhugam-Request-User-ID) 기반 인증 처리 및 LoginUser ArgumentResolver 적용
+  * 논리 삭제(DELETED 상태 전환) 후 24시간 경과 시 `@Scheduled` cron 기반 물리 삭제 배치 구현
+  * Redis 분산락 기반 회원가입 동시성 제어 적용
+  * jOOQ 기반 만료 사용자 물리 삭제 쿼리 구현
+
+* Notification 도메인
+  * 알림 도메인 설계 및 CRUD (알림 목록 조회 / 읽음 처리 / 전체 읽음 처리)
+  * 좋아요 / 댓글 / 인기 리뷰 랭킹(기간별 TOP 10) 이벤트 기반 알림 생성 로직 구현
+  * jOOQ 기반 커서 페이지네이션 알림 목록 조회 구현 (최근순 정렬, CREATED_AT 커서)
+  * 확인 후 1주일 경과한 알림 `@Scheduled` cron 기반 자동 삭제 배치 구현
+
+* 이벤트 / 비동기 처리
+  * ApplicationEventPublisher 기반 도메인 이벤트 발행 구조 설계
+  * `@TransactionalEventListener(AFTER_COMMIT)` + `@Async` 기반 비동기 알림 이벤트 처리 구현
+  * 알림 저장 로직에 `REQUIRES_NEW` 적용으로 독립 트랜잭션 보장
+  * ThreadPoolTaskExecutor 기반 비동기 스레드풀 설정 및 거절 정책 적용
 
 ### 임지호
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/33fb5d67-7a4e-4b7c-9952-b64d69c9b069" />
