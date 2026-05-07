@@ -55,14 +55,14 @@
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/33fb5d67-7a4e-4b7c-9952-b64d69c9b069" />
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/39b063cc-f1c2-40ce-bdc3-3bca737559e4" />
 
-* #### 댓글
+* 댓글
     * 댓글 도메인 설계 및 CRUD API 구현 (생성 / 조회 / 수정 / 논리·물리 삭제)
     * 댓글 단건/목록 조회 API 및 커서 기반 페이지네이션 구현 (jOOQ 활용)
     * 댓글 수 갱신 로직 구현 (Redis 분산 락 적용)
     * 댓글 생성/삭제 카운트 로직 구현 (이벤트 기반 아키텍처 도입)
     * Comment 도메인 단위 테스트 커버리지 보강
 
-* #### 로그
+* 로그
     * 커스텀 로깅 필터 구현 (고유 요청 Trace ID 생성 및 IP 주소 트래킹)
     * 응답 헤더 내 요청 ID 정보 추가 및 로그 레벨·출력 형식 정의
     * 일별 로그 AWS S3 자동 백업 및 적재 파이프라인 구축 (@Scheduled 활용)
