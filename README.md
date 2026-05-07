@@ -48,6 +48,11 @@
 
 ### 김진우
 
+### 김진우
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/4da3f6a6-a8dd-4e29-b04c-1e4762c1564a" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/a104afe3-7789-4f18-87c1-043612fc62cb" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/3da0403c-c731-4bfc-9d05-442cc57f1c77" />
+
 * User 도메인
   * 사용자 도메인 설계 및 CRUD (회원가입 / 로그인 / 조회 / 수정 / 논리 삭제 / 물리 삭제)
   * PasswordEncoder 기반 비밀번호 암호화 저장 및 검증 로직 구현
