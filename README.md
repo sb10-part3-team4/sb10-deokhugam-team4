@@ -1,4 +1,7 @@
 # 덕후감 - Chicken Squad
+
+[![codecov](https://codecov.io/gh/sb10-part3-team4/sb10-deokhugam-team4/branch/dev/graph/badge.svg)](https://codecov.io/gh/sb10-part3-team4/sb10-deokhugam-team4)
+
 팀 노션 : https://www.notion.so/sb10-part3-team4-e4147b8a4b99836aab2e81f37c1a51b6<br>
 팀 깃허브 : https://github.com/sb10-part3-team4/sb10-deokhugam-team4
 
