@@ -1,4 +1,7 @@
 # 덕후감 - Chicken Squad
+
+[![codecov](https://codecov.io/gh/sb10-part3-team4/sb10-deokhugam-team4/branch/dev/graph/badge.svg)](https://codecov.io/gh/sb10-part3-team4/sb10-deokhugam-team4)
+
 팀 노션 : https://www.notion.so/sb10-part3-team4-e4147b8a4b99836aab2e81f37c1a51b6<br>
 팀 깃허브 : https://github.com/sb10-part3-team4/sb10-deokhugam-team4
 
@@ -90,10 +93,9 @@
     * 일별 로그 AWS S3 자동 백업 및 적재 파이프라인 구축 (@Scheduled 활용)
 
 ### 정수현
-* #### 도서
-* <img width="600" alt="도서등록" src="https://github.com/user-attachments/assets/24c28620-db3f-4c37-8585-b08af8fbdbe3" />
-* <img width="600" alt="도서수정" src="https://github.com/user-attachments/assets/491716b8-baf9-45f6-8a49-9a5f77a45a4e" />
-* <img width="600" alt="도서조회" src="https://github.com/user-attachments/assets/9a644374-8c6a-46df-8028-b8bcbbc588db" />
+<img width="600" alt="도서등록" src="https://github.com/user-attachments/assets/24c28620-db3f-4c37-8585-b08af8fbdbe3" />
+<img width="600" alt="도서수정" src="https://github.com/user-attachments/assets/491716b8-baf9-45f6-8a49-9a5f77a45a4e" />
+<img width="600" alt="도서조회" src="https://github.com/user-attachments/assets/9a644374-8c6a-46df-8028-b8bcbbc588db" />
 
 * Book 도메인
     * Book 엔티티 설계
@@ -103,7 +105,7 @@
     * OCR.space API 연동 (이미지에서 ISBN 자동 추출 → 도서 정보 반환) — PR #170
     * AWS S3 썸네일 업로드 (파일 타입 검증, TransactionSynchronizationManager로 S3-DB 정합성 처리) — PR #164
     * 분산락 적용 (createBook / updateBook / deleteBook에 @DistributedLock)
-      인프라 & CI/CD
+* 인프라 & CI/CD
     * GitHub Actions CI 파이프라인 구축 (dev PR 시 테스트 + JaCoCo 80% 커버리지 검증)
     * GitHub Actions CD 파이프라인 구축 (main push 시 ECR 빌드 → ECS 자동 배포)
     * AWS ECS / EC2 인프라 구성 (Fargate → EC2 전환, IAM 역할 설정, ecs-task-def 관리)
