@@ -27,8 +27,24 @@
 
 ### 송시연
 (자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
-* #### 리뷰
-    * 리뷰 관련 CRUD...
+
+* Review 도메인
+    * 리뷰 CRUD + 좋아요 토글 API
+    * 동일 (도서, 사용자) 중복 리뷰 차단 (unique 부분 인덱스 + 분산락 이중 방어)
+    * fetch join으로 N+1 제거
+
+* Dashboard 도메인
+    * 인기 도서 / 인기 리뷰 / 파워 유저 집계
+    * jOOQ로 점수 산식 SQL 빌드, LIMIT N으로 상위만 저장
+
+* 공통 / 인프라
+    * 이벤트 기반 도서 통계 (동기, AFTER_COMMIT): 리뷰 CUD 시 Spring Event 발행 → `@TransactionalEventListener(AFTER_COMMIT)`으로 같은 스레드에서 동기 처리, 트랜잭션 롤백 시 통계도 함께 롤백
+    * Redis 분산락: `@DistributedLock` 어노테이션 + AOP, SpEL 기반 키 추출. `@Order`로 락 어드바이스를 `@Transactional` 바깥에 배치해 락 해제 시점이 커밋 + AFTER_COMMIT 리스너 종료 시점이 되도록 보장
+    * Spring Batch: 대시보드 배치를 12 Job(기간 4 × 종류 3)으로 분리. 1시간 cron + 최근 30일 실패 날짜 자동 재시도, 성공 Job 자동 스킵
+    * jOOQ + Flyway + Testcontainers 세팅: Testcontainers로 PostgreSQL을 띄워 Flyway 마이그레이션 후 jOOQ 코드 자동 생성 (`generateJooq` 태스크)
+    * 모니터링: 운영은 CloudWatch (Micrometer cloudwatch2 registry), 로컬은 docker-compose로 Grafana + Prometheus 띄워 `/actuator/prometheus` 수집
+    * k6 부하 테스트: 리뷰 동시 생성 시나리오로 분산락 동작·p95 검증
+    * P6Spy: 로컬 SQL 로깅 (`developmentOnly`로 prod jar 제외)
 
 ### 김진우
 (자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
@@ -64,53 +80,45 @@
 
 ## 파일 구조
 ```
-src
- ┣ main
- ┃ ┣ java
- ┃ ┃ ┣ com.codeit.team4.deokhugam
- ┃ ┃ ┃ ┣ DeokhugamApplication.java
- ┃ ┃ ┃ ┣ book
- ┃ ┃ ┃ ┃ ┣ controller (BookController, BookApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / listener
- ┃ ┃ ┃ ┣ comment
- ┃ ┃ ┃ ┃ ┣ controller (CommentController, CommentApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / event / model
- ┃ ┃ ┃ ┣ review
- ┃ ┃ ┃ ┃ ┣ controller (ReviewController, ReviewApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / event / listener / converter / model
- ┃ ┃ ┃ ┣ notification
- ┃ ┃ ┃ ┃ ┣ controller (NotificationController, NotificationApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / event / listener / scheduler / model
- ┃ ┃ ┃ ┣ user
- ┃ ┃ ┃ ┃ ┣ controller (UserController, UserApi)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service (query)
- ┃ ┃ ┃ ┃ ┣ mapper / scheduler
- ┃ ┃ ┃ ┣ dashboard
- ┃ ┃ ┃ ┃ ┣ controller (api)
- ┃ ┃ ┃ ┃ ┣ dto / entity / repository
- ┃ ┃ ┃ ┃ ┣ service
- ┃ ┃ ┃ ┃ ┃ ┣ DashboardFacade
- ┃ ┃ ┃ ┃ ┃ ┣ DashboardBatchService
- ┃ ┃ ┃ ┃ ┃ ┣ aggregator / reader
- ┃ ┃ ┃ ┃ ┣ scheduler / builder / mapper / model
- ┃ ┃ ┃ ┣ naver (NaverBookClient)
- ┃ ┃ ┃ ┣ ocr (OcrSpaceClient)
- ┃ ┃ ┃ ┣ s3 (S3Service, S3ServiceImpl)
- ┃ ┃ ┃ ┗ global
- ┃ ┃ ┃ ┃ ┣ config / error / filter / lock
- ┃ ┃ ┃ ┃ ┣ cache / response
- ┃ ┃ ┃ ┃ ┣ annotation / resolver
- ┃ ┃ ┃ ┃ ┣ log / controller
-
+├── k6
+├── monitoring
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── codeit
+    │   │           └── team4
+    │   │               └── deokhugam
+    │   │                   ├── book
+    │   │                   ├── comment
+    │   │                   ├── dashboard
+    │   │                   ├── global
+    │   │                   ├── naver
+    │   │                   ├── notification
+    │   │                   ├── ocr
+    │   │                   ├── review
+    │   │                   ├── s3
+    │   │                   └── user
+    │   └── resources
+    │       └── db
+    │           └── migration
+    └── test
+        ├── java
+        │   └── com
+        │       └── codeit
+        │           └── team4
+        │               └── deokhugam
+        │                   ├── book
+        │                   ├── comment
+        │                   ├── config
+        │                   ├── dashboard
+        │                   ├── global
+        │                   ├── notification
+        │                   ├── ocr
+        │                   ├── review
+        │                   ├── s3
+        │                   └── user
+        └── resources
 ```
 ***
 
@@ -121,6 +129,7 @@ http://3.37.86.22:8080
 ## 프로젝트 회고록
 (제작한 발표자료 링크 혹은 첨부파일 첨부)
 ***
+
 ***
 
 
