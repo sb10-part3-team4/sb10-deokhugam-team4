@@ -162,7 +162,7 @@ http://3.37.86.22:8080
 ***
 
 ## 프로젝트 회고록
-[발표_자료.pdf](https://drive.google.com/file/d/16i5HWPvXmrMtpMQqsk6YHgBPD28YYZvn/view?usp=drive_link)
+[발표_자료.pdf](https://drive.google.com/file/d/1s3yFIva0LGRlpgoa4ZRIDCK_gFjbNcVz/view?usp=drive_link)
 ***
 
 
